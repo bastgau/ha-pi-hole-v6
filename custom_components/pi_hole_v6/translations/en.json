@@ -71,6 +71,11 @@
                 "unit_of_measurement": "seconds"
             }
         },
+        "switch": {
+            "group": {
+                "name": "yyyyy Group {group_name}"
+            }
+        },
         "update": {
             "core_update_available": {
                 "name": "Core update available"
