@@ -19,41 +19,41 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         translation_key="ads_blocked_today",
     ),
     SensorEntityDescription(
-        key="ads_percentage_today",
-        translation_key="ads_percentage_today",
+        key="ads_percentage_blocked_today",
+        translation_key="ads_percentage_blocked_today",
         native_unit_of_measurement=PERCENTAGE,
     ),
     SensorEntityDescription(
-        key="clients_ever_seen",
-        translation_key="clients_ever_seen",
+        key="seen_clients",
+        translation_key="seen_clients",
     ),
     SensorEntityDescription(
         key="dns_queries_today",
         translation_key="dns_queries_today",
     ),
     SensorEntityDescription(
-        key="domains_being_blocked",
-        translation_key="domains_being_blocked",
+        key="domains_blocked",
+        translation_key="domains_blocked",
     ),
     SensorEntityDescription(
-        key="queries_cached",
-        translation_key="queries_cached",
+        key="dns_queries_cached",
+        translation_key="dns_queries_cached",
     ),
     SensorEntityDescription(
-        key="queries_forwarded",
-        translation_key="queries_forwarded",
+        key="dns_queries_forwarded",
+        translation_key="dns_queries_forwarded",
     ),
     SensorEntityDescription(
-        key="unique_clients",
-        translation_key="unique_clients",
+        key="dns_unique_clients",
+        translation_key="dns_unique_clients",
     ),
     SensorEntityDescription(
-        key="unique_domains",
-        translation_key="unique_domains",
+        key="dns_unique_domains",
+        translation_key="dns_unique_domains",
     ),
     SensorEntityDescription(
-        key="timer",
-        translation_key="timer",
+        key="remaining_until_blocking_mode",
+        translation_key="remaining_until_blocking_mode",
     ),
 )
 
@@ -95,8 +95,8 @@ class PiHoleV6Sensor(PiHoleV6Entity, SensorEntity):
         """Initialize a Pi-hole V6 sensor."""
         super().__init__(api, coordinator, name, server_unique_id)
         self.entity_description = description
-
         self._attr_unique_id = f"{self._server_unique_id}/{description.key}"
+        self.entity_id = f"sensor.{name}_{description.key}"
 
     @property
     def native_value(self) -> StateType:
@@ -105,21 +105,21 @@ class PiHoleV6Sensor(PiHoleV6Entity, SensorEntity):
         match self.entity_description.key:
             case "ads_blocked_today":
                 return self.api.cache_summary["queries"]["blocked"]
-            case "ads_percentage_today":
+            case "ads_percentage_blocked_today":
                 return self.api.cache_summary["queries"]["percent_blocked"]
-            case "clients_ever_seen":
+            case "seen_clients":
                 return self.api.cache_summary["clients"]["total"]
             case "dns_queries_today":
                 return self.api.cache_summary["queries"]["total"]
-            case "domains_being_blocked":
+            case "domains_blocked":
                 return self.api.cache_summary["gravity"]["domains_being_blocked"]
-            case "queries_cached":
+            case "dns_queries_cached":
                 return self.api.cache_summary["queries"]["cached"]
-            case "queries_forwarded":
+            case "dns_queries_forwarded":
                 return self.api.cache_summary["queries"]["forwarded"]
-            case "unique_clients":
+            case "dns_unique_clients":
                 return self.api.cache_summary["clients"]["active"]
-            case "unique_domains":
+            case "dns_unique_domains":
                 return self.api.cache_summary["queries"]["unique_domains"]
             case "timer":
                 value: int | None = self.api.cache_blocking["timer"]

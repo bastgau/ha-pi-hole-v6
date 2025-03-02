@@ -6,7 +6,7 @@ import logging
 from typing import Any
 
 import voluptuous as vol
-from homeassistant.components.switch import SwitchEntity
+from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
@@ -52,6 +52,14 @@ async def async_setup_entry(
     ]
 
     for group in hole_data.api.cache_groups:
+        description: SwitchEntityDescription = SwitchEntityDescription(
+            key="group",
+            translation_key="group",
+            translation_placeholders={
+                "group_name": group,
+            },
+        )
+
         switches.append(
             PiHoleV6Group(
                 hole_data.api,
@@ -59,6 +67,7 @@ async def async_setup_entry(
                 name,
                 entry.entry_id,
                 group,
+                description,
             )
         )
 
@@ -161,6 +170,8 @@ class PiHoleV6Switch(PiHoleV6Entity, SwitchEntity):
 class PiHoleV6Group(PiHoleV6Entity, SwitchEntity):
     """Representation of a Pi-hole V6 group."""
 
+    entity_description: SwitchEntityDescription
+    _attr_has_entity_name = True
     _attr_icon = "mdi:account-multiple"
     _attr_translation_key = "group"
 
@@ -171,19 +182,13 @@ class PiHoleV6Group(PiHoleV6Entity, SwitchEntity):
         name: str,
         server_unique_id: str,
         group: str,
+        description: SwitchEntityDescription,
     ) -> None:
         super().__init__(api, coordinator, name, server_unique_id)
-
+        self.entity_description = description
+        self._attr_unique_id = f"{self._server_unique_id}/{name}_group_{group.lower()}"
+        self.entity_id = f"switch.{name}_group_{group.lower()}"
         self._group = group
-
-        self._attr_translation_placeholders = {
-            "groupName": group,
-        }
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique id of the group."""
-        return f"{self._server_unique_id}/Group/{self._group}"
 
     @property
     def is_on(self) -> bool:

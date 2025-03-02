@@ -79,6 +79,7 @@ class PiHoleV6BinarySensor(PiHoleV6Entity, BinarySensorEntity):
         super().__init__(api, coordinator, name, server_unique_id)
         self.entity_description = description
         self._attr_unique_id = f"{self._server_unique_id}/{description.key}"
+        self.entity_id = f"binary_sensor.{name}_{description.key}"
 
     @property
     def is_on(self) -> bool:

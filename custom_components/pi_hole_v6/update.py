@@ -33,8 +33,12 @@ UPDATE_ENTITY_TYPES: tuple[PiHoleV6UpdateEntityDescription, ...] = (
         translation_key="core_update_available",
         title="Pi-hole Core",
         entity_category=EntityCategory.DIAGNOSTIC,
-        installed_version=lambda versions: versions.get("core").get("local", {}).get("version", None),
-        latest_version=lambda versions: versions.get("core").get("remote", {}).get("version", None),
+        installed_version=lambda versions: versions.get("core")
+        .get("local", {})
+        .get("version", None),
+        latest_version=lambda versions: versions.get("core")
+        .get("remote", {})
+        .get("version", None),
         release_base_url="https://github.com/pi-hole/pi-hole/releases/tag",
     ),
     PiHoleV6UpdateEntityDescription(
@@ -42,8 +46,12 @@ UPDATE_ENTITY_TYPES: tuple[PiHoleV6UpdateEntityDescription, ...] = (
         translation_key="web_update_available",
         title="Pi-hole Web interface",
         entity_category=EntityCategory.DIAGNOSTIC,
-        installed_version=lambda versions: versions.get("web").get("local", {}).get("version", None),
-        latest_version=lambda versions: versions.get("web").get("remote", {}).get("version", None),
+        installed_version=lambda versions: versions.get("web")
+        .get("local", {})
+        .get("version", None),
+        latest_version=lambda versions: versions.get("web")
+        .get("remote", {})
+        .get("version", None),
         release_base_url="https://github.com/pi-hole/AdminLTE/releases/tag",
     ),
     PiHoleV6UpdateEntityDescription(
@@ -51,8 +59,12 @@ UPDATE_ENTITY_TYPES: tuple[PiHoleV6UpdateEntityDescription, ...] = (
         translation_key="ftl_update_available",
         title="Pi-hole FTL DNS",
         entity_category=EntityCategory.DIAGNOSTIC,
-        installed_version=lambda versions: versions.get("ftl").get("local", {}).get("version", None),
-        latest_version=lambda versions: versions.get("ftl").get("remote", {}).get("version", None),
+        installed_version=lambda versions: versions.get("ftl")
+        .get("local", {})
+        .get("version", None),
+        latest_version=lambda versions: versions.get("ftl")
+        .get("remote", {})
+        .get("version", None),
         release_base_url="https://github.com/pi-hole/FTL/releases/tag",
     ),
 )
@@ -95,8 +107,8 @@ class PiHoleV6UpdateEntity(PiHoleV6Entity, UpdateEntity):
         """Initialize a Pi-hole update entity."""
         super().__init__(api, coordinator, name, server_unique_id)
         self.entity_description = description
-
         self._attr_unique_id = f"{self._server_unique_id}/{description.key}"
+        self.entity_id = f"update.{name}_{description.key}"
         self._attr_title = description.title
 
     @property

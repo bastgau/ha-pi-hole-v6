@@ -1,8 +1,5 @@
 {
     "config": {
-        "abort": {
-            "reauth_successful": "Re-authentication was successful."
-        },
         "error": {
             "cannot_connect": "Failed to connect to the server. Ensure that the server address and the port are correct.",
             "invalid_auth": "Invalid password provided. Ensure that your password is correct.",
@@ -19,7 +16,7 @@
                     "password": "Password to be used for login",
                     "url": "URL or address of your Pi-hole (ie: https://pi.hole:443/api)"
                 },
-                "description": "This integration allows you to retrieve statistics and interact with a Pi-hole V6 system.",
+                "description": "his integration allows you to retrieve statistics and interact with a Pi-hole V6 system.",
                 "title": "Pi-hole V6 Integration"
             }
         }
@@ -35,10 +32,10 @@
                 "name": "Ads blocked today",
                 "unit_of_measurement": "ads"
             },
-            "ads_percentage_today": {
+            "ads_percentage_blocked_today": {
                 "name": "Ads percentage blocked today"
             },
-            "clients_ever_seen": {
+            "seen_clients": {
                 "name": "Seen clients",
                 "unit_of_measurement": "clients"
             },
@@ -46,34 +43,34 @@
                 "name": "DNS queries today",
                 "unit_of_measurement": "queries"
             },
-            "domains_being_blocked": {
+            "domains_blocked": {
                 "name": "Domains blocked",
                 "unit_of_measurement": "domains"
             },
-            "queries_cached": {
+            "dns_queries_cached": {
                 "name": "DNS queries cached",
                 "unit_of_measurement": "queries"
             },
-            "queries_forwarded": {
+            "dns_queries_forwarded": {
                 "name": "DNS queries forwarded",
                 "unit_of_measurement": "queries"
             },
-            "unique_clients": {
+            "dns_unique_clients": {
                 "name": "DNS unique clients",
                 "unit_of_measurement": "clients"
             },
-            "unique_domains": {
+            "dns_unique_domains": {
                 "name": "DNS unique domains",
                 "unit_of_measurement": "domains"
             },
-            "timer": {
+            "remaining_until_blocking_mode": {
                 "name": "Remaining until blocking mode",
                 "unit_of_measurement": "seconds"
             }
         },
         "switch": {
             "group": {
-                "name": "Group {groupName}"
+                "name": "Group {group_name}"
             }
         },
         "update": {
@@ -91,7 +88,7 @@
     "services": {
         "disable": {
             "name": "Disable",
-            "description": "Disables configured Pi-hole(s) for an amount of time.",
+            "description": "Disables configured Pi-hole for an amount of time.",
             "fields": {
                 "duration": {
                     "description": "Time that the Pi-hole should be disabled for.",
@@ -100,8 +97,8 @@
             }
         },
         "enable": {
-            "name": "Enable",
-            "description": "Enables configured Pi-hole(s)."
+            "name": "Active",
+            "description": "Enables configured Pi-hole."
         }
     }
 }
