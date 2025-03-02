@@ -35,10 +35,10 @@
                 "name": "Ads blocked today",
                 "unit_of_measurement": "ads"
             },
-            "ads_percentage_today": {
+            "ads_percentage_blocked_today": {
                 "name": "Ads percentage blocked today"
             },
-            "clients_ever_seen": {
+            "seen_clients": {
                 "name": "Seen clients",
                 "unit_of_measurement": "clients"
             },
@@ -46,23 +46,23 @@
                 "name": "DNS queries today",
                 "unit_of_measurement": "queries"
             },
-            "domains_being_blocked": {
+            "domains_blocked": {
                 "name": "Domains blocked",
                 "unit_of_measurement": "domains"
             },
-            "queries_cached": {
+            "dns_queries_cached": {
                 "name": "DNS queries cached",
                 "unit_of_measurement": "queries"
             },
-            "queries_forwarded": {
+            "dns_queries_forwarded": {
                 "name": "DNS queries forwarded",
                 "unit_of_measurement": "queries"
             },
-            "unique_clients": {
+            "dns_unique_clients": {
                 "name": "DNS unique clients",
                 "unit_of_measurement": "clients"
             },
-            "unique_domains": {
+            "dns_unique_domains": {
                 "name": "DNS unique domains",
                 "unit_of_measurement": "domains"
             },
@@ -73,7 +73,7 @@
         },
         "switch": {
             "group": {
-                "name": "yyyyy Group {group_name}"
+                "name": "Group {group_name}"
             }
         },
         "update": {
