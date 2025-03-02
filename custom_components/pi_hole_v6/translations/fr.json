@@ -68,7 +68,7 @@
             },
             "remaining_until_blocking_mode": {
                 "name": "[FR] Remaining until blocking mode",
-                "unit_of_measurement": "[FR][FR][FR]seconds"
+                "unit_of_measurement": "[FR] seconds"
             }
         },
         "switch": {
