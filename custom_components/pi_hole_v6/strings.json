@@ -1,9 +1,5 @@
 {
     "config": {
-        "error": {
-            "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-            "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
-        },
         "abort": {
             "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
             "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
@@ -65,6 +61,10 @@
             "dns_unique_domains": {
                 "name": "DNS unique domains",
                 "unit_of_measurement": "[%key:component::pi_hole_v6::entity::sensor::seen_clients::unit_of_measurement%]"
+            },
+            "remaining_until_blocking_mode": {
+                "name": "Remaining until blocking mode",
+                "unit_of_measurement": "seconds"
             }
         },
         "switch": {

@@ -1,8 +1,5 @@
 {
     "config": {
-        "abort": {
-            "reauth_successful": "[FR] Re-authentication was successful."
-        },
         "error": {
             "cannot_connect": "[FR] Failed to connect to the server. Ensure that the server address and the port are correct.",
             "invalid_auth": "[FR] Invalid password provided. Ensure that your password is correct.",
