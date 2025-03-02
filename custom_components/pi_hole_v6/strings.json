@@ -2,22 +2,25 @@
     "config": {
         "abort": {
             "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+            "cannot_connect": "Failed to connect to the server. Ensure that the server address and the port are correct.",
+            "invalid_auth": "Invalid password provided. Ensure that your password is correct.",
+            "invalid_path": "Invalid API path specified. Please verify the endpoint URL.",
             "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
-        }
-    },
-    "step": {
-        "user": {
-            "data": {
-                "name": "Name",
-                "password": "Password",
-                "url": "Address"
-            },
-            "data_description": {
-                "password": "Password to be used for login",
-                "url": "URL or address of your Pi-hole (ie: https://pi.hole:443/api)"
-            },
-            "description": "This integration allows you to retrieve statistics and interact with a Pi-hole V6 system.",
-            "title": "Pi-hole V6 Integration"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "name": "Name",
+                    "password": "Password",
+                    "url": "Address"
+                },
+                "data_description": {
+                    "password": "Password to be used for login",
+                    "url": "URL or address of your Pi-hole (ie: https://pi.hole:443/api)"
+                },
+                "description": "This integration allows you to retrieve statistics and interact with a Pi-hole V6 system.",
+                "title": "Pi-hole V6 Integration"
+            }
         }
     },
     "entity": {
