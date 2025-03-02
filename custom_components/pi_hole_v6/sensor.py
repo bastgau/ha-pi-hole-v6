@@ -83,7 +83,6 @@ class PiHoleV6Sensor(PiHoleV6Entity, SensorEntity):
     """Representation of a Pi-hole V6 sensor."""
 
     entity_description: SensorEntityDescription
-    _attr_has_entity_name = True
 
     def __init__(
         self,
