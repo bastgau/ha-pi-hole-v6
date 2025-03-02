@@ -67,6 +67,17 @@ class GatewayTimeoutException(Exception):
         super().__init__(self.message)
 
 
+class MethodNotAllowedException(Exception):
+    """The class `MethodNotAllowedException` represents an exception that occurs when a request's HTTP method is not supported on the server."""
+
+    def __init__(  # noqa: D107
+        self,
+        message: str = "The HTTP method is not supported on the server.",
+    ) -> None:
+        self.message = message
+        super().__init__(self.message)
+
+
 class NotFoundException(Exception):
     """The class `NotFoundException` represents a situation where a requested resource does not exist."""
 
@@ -154,6 +165,7 @@ def handle_status(status_code: int) -> None:
         402: RequestFailedException,
         403: ForbiddenException,
         404: NotFoundException,
+        405: MethodNotAllowedException,
         429: TooManyRequestsException,
         500: ServerErrorException,
         502: BadGatewayException,
