@@ -1,107 +1,106 @@
 {
     "config": {
         "abort": {
-            "reauth_successful": "Re-authentication was successful."
+            "reauth_successful": "[EN] Re-authentication was successful."
         },
         "error": {
-            "cannot_connect": "Failed to connect to the server. Ensure that the server address and the port are correct.",
-            "invalid_auth": "Invalid password provided. Ensure that your password is correct.",
-            "invalid_path": "Invalid API path specified. Please verify the endpoint URL."
+            "cannot_connect": "[EN] Failed to connect to the server. Ensure that the server address and the port are correct.",
+            "invalid_auth": "[EN] Invalid password provided. Ensure that your password is correct.",
+            "invalid_path": "[EN] Invalid API path specified. Please verify the endpoint URL."
         },
         "step": {
             "user": {
                 "data": {
-                    "name": "Name",
-                    "password": "Password",
-                    "url": "Address"
+                    "name": "[EN] Name",
+                    "password": "[EN] Password",
+                    "url": "[EN] Address"
                 },
                 "data_description": {
-                    "password": "Password to be used for login",
-                    "url": "URL or address of your Pi-hole (ie: https://pi.hole:443/api)"
+                    "password": "[EN] Password to be used for login",
+                    "url": "[EN] URL or address of your Pi-hole (ie: https://pi.hole:443/api)"
                 },
-                "description": "This integration allows you to retrieve statistics and interact with a Pi-hole V6 system.",
-                "title": "Pi-hole V6 Integration"
+                "description": "[EN] his integration allows you to retrieve statistics and interact with a Pi-hole V6 system.",
+                "title": "[EN] Pi-hole V6 Integration"
             }
         }
     },
     "entity": {
         "binary_sensor": {
             "status": {
-                "name": "Status"
+                "name": "[EN] Status"
             }
         },
         "sensor": {
             "ads_blocked_today": {
-                "name": "Ads blocked today",
-                "unit_of_measurement": "ads"
+                "name": "[EN] Ads blocked today",
+                "unit_of_measurement": "[EN] ads"
             },
             "ads_percentage_blocked_today": {
-                "name": "Ads percentage blocked today"
+                "name": "[EN] Ads percentage blocked today"
             },
             "seen_clients": {
-                "name": "Seen clients",
-                "unit_of_measurement": "clients"
+                "name": "[EN] Seen clients",
+                "unit_of_measurement": "[EN] clients"
             },
             "dns_queries_today": {
-                "name": "DNS queries today",
-                "unit_of_measurement": "queries"
+                "name": "[EN] DNS queries today",
+                "unit_of_measurement": "[EN] queries"
             },
             "domains_blocked": {
-                "name": "Domains blocked",
-                "unit_of_measurement": "domains"
+                "name": "[EN] Domains blocked",
+                "unit_of_measurement": "[EN] domains"
             },
             "dns_queries_cached": {
-                "name": "DNS queries cached",
-                "unit_of_measurement": "queries"
+                "name": "[EN] DNS queries cached",
+                "unit_of_measurement": "[EN] queries"
             },
             "dns_queries_forwarded": {
-                "name": "DNS queries forwarded",
-                "unit_of_measurement": "queries"
+                "name": "[EN] DNS queries forwarded",
+                "unit_of_measurement": "[EN] queries"
             },
             "dns_unique_clients": {
-                "name": "DNS unique clients",
-                "unit_of_measurement": "clients"
+                "name": "[EN] DNS unique clients",
+                "unit_of_measurement": "[EN] clients"
             },
             "dns_unique_domains": {
-                "name": "DNS unique domains",
-                "unit_of_measurement": "domains"
+                "name": "[EN] DNS unique domains",
+                "unit_of_measurement": "[EN] domains"
             },
             "remaining_until_blocking_mode": {
-                "name": "Remaining until blocking mode",
-                "unit_of_measurement": "seconds"
+                "name": "[EN] Remaining until blocking mode",
+                "unit_of_measurement": "[EN] seconds"
             }
         },
         "switch": {
             "group": {
-                "name": "Group {group_name}"
+                "name": "[EN] Group {group_name}"
             }
         },
         "update": {
             "core_update_available": {
-                "name": "Core update available"
+                "name": "[EN] Core update available"
             },
             "ftl_update_available": {
-                "name": "FTL update available"
+                "name": "[EN] FTL update available"
             },
             "web_update_available": {
-                "name": "Web update available"
+                "name": "[EN] Web update available"
             }
         }
     },
     "services": {
         "disable": {
-            "name": "Disable",
-            "description": "Disables configured Pi-hole(s) for an amount of time.",
+            "name": "[EN] Disable",
+            "description": "[EN] Disables configured Pi-hole(s) for an amount of time.",
             "fields": {
                 "duration": {
-                    "description": "Time that the Pi-hole should be disabled for.",
-                    "name": "Duration"
+                    "description": "[EN] Time that the Pi-hole should be disabled for.",
+                    "name": "[EN] Duration"
                 }
             }
         },
         "enable": {
-            "name": "Enable",
-            "description": "Enables configured Pi-hole(s)."
+            "description": "[EN] Enables configured Pi-hole(s)."
         }
     }
 }

@@ -1,24 +1,5 @@
 {
     "config": {
-        "step": {
-            "configure": {
-                "data": {
-                    "url": "sssss"
-                }
-            },
-            "confirm_password": {
-                "data": {
-                    "password": "[%key:common::config_flow::data::password%]"
-                }
-            },
-            "reauth_confirm": {
-                "title": "Reauthenticate Pi-hole",
-                "description": "Please enter a new API key for Pi-hole at {host}/{location}",
-                "data": {
-                    "password": "[%key:common::config_flow::data::password%]"
-                }
-            }
-        },
         "error": {
             "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
             "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
@@ -26,6 +7,21 @@
         "abort": {
             "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
             "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+        }
+    },
+    "step": {
+        "user": {
+            "data": {
+                "name": "Name",
+                "password": "Password",
+                "url": "Address"
+            },
+            "data_description": {
+                "password": "Password to be used for login",
+                "url": "URL or address of your Pi-hole (ie: https://pi.hole:443/api)"
+            },
+            "description": "This integration allows you to retrieve statistics and interact with a Pi-hole V6 system.",
+            "title": "Pi-hole V6 Integration"
         }
     },
     "entity": {
@@ -73,7 +69,7 @@
         },
         "switch": {
             "group": {
-                "name": "xxxx Group {group_name}"
+                "name": "Group {group_name}"
             }
         },
         "update": {

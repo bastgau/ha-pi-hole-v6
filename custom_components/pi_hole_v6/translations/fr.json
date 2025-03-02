@@ -33,42 +33,42 @@
         "sensor": {
             "ads_blocked_today": {
                 "name": "[FR] Ads blocked today",
-                "unit_of_measurement": "ads"
+                "unit_of_measurement": "[FR] ads"
             },
             "ads_percentage_blocked_today": {
                 "name": "[FR] Ads percentage blocked today"
             },
             "seen_clients": {
                 "name": "[FR] Seen clients",
-                "unit_of_measurement": "clients"
+                "unit_of_measurement": "[FR] clients"
             },
             "dns_queries_today": {
                 "name": "[FR] DNS queries today",
-                "unit_of_measurement": "queries"
+                "unit_of_measurement": "[FR] queries"
             },
             "domains_blocked": {
                 "name": "[FR] Domains blocked",
-                "unit_of_measurement": "domains"
+                "unit_of_measurement": "[FR] domains"
             },
             "dns_queries_cached": {
                 "name": "[FR] DNS queries cached",
-                "unit_of_measurement": "queries"
+                "unit_of_measurement": "[FR] queries"
             },
             "dns_queries_forwarded": {
                 "name": "[FR] DNS queries forwarded",
-                "unit_of_measurement": "queries"
+                "unit_of_measurement": "[FR] queries"
             },
             "dns_unique_clients": {
                 "name": "[FR] DNS unique clients",
-                "unit_of_measurement": "clients"
+                "unit_of_measurement": "[FR] clients"
             },
             "dns_unique_domains": {
                 "name": "[FR] DNS unique domains",
-                "unit_of_measurement": "domains"
+                "unit_of_measurement": "[FR] domains"
             },
             "remaining_until_blocking_mode": {
                 "name": "[FR] Remaining until blocking mode",
-                "unit_of_measurement": "seconds"
+                "unit_of_measurement": "[FR][FR][FR]seconds"
             }
         },
         "switch": {
@@ -100,7 +100,6 @@
             }
         },
         "enable": {
-            "name": "[FR] Enable",
             "description": "[FR] Enables configured Pi-hole(s)."
         }
     }
