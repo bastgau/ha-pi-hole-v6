@@ -97,6 +97,7 @@
             }
         },
         "enable": {
+            "name": "Activer",
             "description": "Active le  service Pi-hole configuré."
         }
     }

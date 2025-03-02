@@ -97,6 +97,7 @@
             }
         },
         "enable": {
+            "name": "Active",
             "description": "Enables configured Pi-hole."
         }
     }
