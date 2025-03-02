@@ -1,103 +1,103 @@
 {
     "config": {
         "error": {
-            "cannot_connect": "[FR] Failed to connect to the server. Ensure that the server address and the port are correct.",
-            "invalid_auth": "[FR] Invalid password provided. Ensure that your password is correct.",
-            "invalid_path": "[FR] Invalid API path specified. Please verify the endpoint URL."
+            "cannot_connect": "Échec de la connexion au serveur. Assurez-vous que l'adresse du serveur et le port sont corrects.",
+            "invalid_auth": "Mot de passe invalide fourni. Assurez-vous que votre mot de passe est correct.",
+            "invalid_path": "Chemin d'API invalide spécifié. Veuillez vérifier l'URL du point de terminaison."
         },
         "step": {
             "user": {
                 "data": {
-                    "name": "[FR] Name",
-                    "password": "[FR] Password",
-                    "url": "[FR] Address"
+                    "name": "Nom",
+                    "password": "Mot de passe",
+                    "url": "Adresse"
                 },
                 "data_description": {
-                    "password": "[FR] Password to be used for login",
-                    "url": "[FR] URL or address of your Pi-hole (ie: https://pi.hole:443/api)"
+                    "password": "Mot de passe à utiliser pour la connexion",
+                    "url": "URL ou adresse de votre Pi-hole (ex: https://pi.hole:443/api)"
                 },
-                "description": "[FR] This integration allows you to retrieve statistics and interact with a Pi-hole V6 system.",
-                "title": "[FR] Pi-hole V6 Integration"
+                "description": "Cette intégration permet de récupérer des statistiques et d'interagir avec un système Pi-hole V6.",
+                "title": "Intégration Pi-hole V6"
             }
         }
     },
     "entity": {
         "binary_sensor": {
             "status": {
-                "name": "[FR] Status"
+                "name": "Statut"
             }
         },
         "sensor": {
             "ads_blocked_today": {
-                "name": "[FR] Ads blocked today",
-                "unit_of_measurement": "[FR] ads"
+                "name": "Publicités bloquées aujourd'hui",
+                "unit_of_measurement": "publicités"
             },
             "ads_percentage_blocked_today": {
-                "name": "[FR] Ads percentage blocked today"
+                "name": "Pourcentage de publicités bloquées aujourd'hui"
             },
             "seen_clients": {
-                "name": "[FR] Seen clients",
-                "unit_of_measurement": "[FR] clients"
+                "name": "Clients vus",
+                "unit_of_measurement": "clients"
             },
             "dns_queries_today": {
-                "name": "[FR] DNS queries today",
-                "unit_of_measurement": "[FR] queries"
+                "name": "Requêtes DNS aujourd'hui",
+                "unit_of_measurement": "requêtes"
             },
             "domains_blocked": {
-                "name": "[FR] Domains blocked",
-                "unit_of_measurement": "[FR] domains"
+                "name": "Domaines bloqués",
+                "unit_of_measurement": "domaines"
             },
             "dns_queries_cached": {
-                "name": "[FR] DNS queries cached",
-                "unit_of_measurement": "[FR] queries"
+                "name": "Requêtes DNS mises en cache",
+                "unit_of_measurement": "requêtes"
             },
             "dns_queries_forwarded": {
-                "name": "[FR] DNS queries forwarded",
-                "unit_of_measurement": "[FR] queries"
+                "name": "Requêtes DNS transférées",
+                "unit_of_measurement": "requêtes"
             },
             "dns_unique_clients": {
-                "name": "[FR] DNS unique clients",
-                "unit_of_measurement": "[FR] clients"
+                "name": "Clients DNS uniques",
+                "unit_of_measurement": "clients"
             },
             "dns_unique_domains": {
-                "name": "[FR] DNS unique domains",
-                "unit_of_measurement": "[FR] domains"
+                "name": "Domaines DNS uniques",
+                "unit_of_measurement": "domaines"
             },
             "remaining_until_blocking_mode": {
-                "name": "[FR] Remaining until blocking mode",
-                "unit_of_measurement": "[FR] seconds"
+                "name": "Temps restant avant le mode de blocage",
+                "unit_of_measurement": "secondes"
             }
         },
         "switch": {
             "group": {
-                "name": "[FR] Group {group_name}"
+                "name": "Groupe {group_name}"
             }
         },
         "update": {
             "core_update_available": {
-                "name": "[FR] Core update available"
+                "name": "Mise à jour du cœur disponible"
             },
             "ftl_update_available": {
-                "name": "[FR] FTL update available"
+                "name": "Mise à jour FTL disponible"
             },
             "web_update_available": {
-                "name": "[FR] Web update available"
+                "name": "Mise à jour web disponible"
             }
         }
     },
     "services": {
         "disable": {
-            "name": "[FR] Disable",
-            "description": "[FR] Disables configured Pi-hole(s) for an amount of time.",
+            "name": "Désactiver",
+            "description": "Désactive le service Pi-hole configuré pendant une certaine durée.",
             "fields": {
                 "duration": {
-                    "description": "[FR] Time that the Pi-hole should be disabled for.",
-                    "name": "[FR] Duration"
+                    "description": "Durée pendant laquelle le Pi-hole doit être désactivé.",
+                    "name": "Durée"
                 }
             }
         },
         "enable": {
-            "description": "[FR] Enables configured Pi-hole(s)."
+            "description": "Active le  service Pi-hole configuré."
         }
     }
 }

@@ -1,103 +1,103 @@
 {
     "config": {
         "error": {
-            "cannot_connect": "[EN] Failed to connect to the server. Ensure that the server address and the port are correct.",
-            "invalid_auth": "[EN] Invalid password provided. Ensure that your password is correct.",
-            "invalid_path": "[EN] Invalid API path specified. Please verify the endpoint URL."
+            "cannot_connect": "Failed to connect to the server. Ensure that the server address and the port are correct.",
+            "invalid_auth": "Invalid password provided. Ensure that your password is correct.",
+            "invalid_path": "Invalid API path specified. Please verify the endpoint URL."
         },
         "step": {
             "user": {
                 "data": {
-                    "name": "[EN] Name",
-                    "password": "[EN] Password",
-                    "url": "[EN] Address"
+                    "name": "Name",
+                    "password": "Password",
+                    "url": "Address"
                 },
                 "data_description": {
-                    "password": "[EN] Password to be used for login",
-                    "url": "[EN] URL or address of your Pi-hole (ie: https://pi.hole:443/api)"
+                    "password": "Password to be used for login",
+                    "url": "URL or address of your Pi-hole (ie: https://pi.hole:443/api)"
                 },
-                "description": "[EN] his integration allows you to retrieve statistics and interact with a Pi-hole V6 system.",
-                "title": "[EN] Pi-hole V6 Integration"
+                "description": "his integration allows you to retrieve statistics and interact with a Pi-hole V6 system.",
+                "title": "Pi-hole V6 Integration"
             }
         }
     },
     "entity": {
         "binary_sensor": {
             "status": {
-                "name": "[EN] Status"
+                "name": "Status"
             }
         },
         "sensor": {
             "ads_blocked_today": {
-                "name": "[EN] Ads blocked today",
-                "unit_of_measurement": "[EN] ads"
+                "name": "Ads blocked today",
+                "unit_of_measurement": "ads"
             },
             "ads_percentage_blocked_today": {
-                "name": "[EN] Ads percentage blocked today"
+                "name": "Ads percentage blocked today"
             },
             "seen_clients": {
-                "name": "[EN] Seen clients",
-                "unit_of_measurement": "[EN] clients"
+                "name": "Seen clients",
+                "unit_of_measurement": "clients"
             },
             "dns_queries_today": {
-                "name": "[EN] DNS queries today",
-                "unit_of_measurement": "[EN] queries"
+                "name": "DNS queries today",
+                "unit_of_measurement": "queries"
             },
             "domains_blocked": {
-                "name": "[EN] Domains blocked",
-                "unit_of_measurement": "[EN] domains"
+                "name": "Domains blocked",
+                "unit_of_measurement": "domains"
             },
             "dns_queries_cached": {
-                "name": "[EN] DNS queries cached",
-                "unit_of_measurement": "[EN] queries"
+                "name": "DNS queries cached",
+                "unit_of_measurement": "queries"
             },
             "dns_queries_forwarded": {
-                "name": "[EN] DNS queries forwarded",
-                "unit_of_measurement": "[EN] queries"
+                "name": "DNS queries forwarded",
+                "unit_of_measurement": "queries"
             },
             "dns_unique_clients": {
-                "name": "[EN] DNS unique clients",
-                "unit_of_measurement": "[EN] clients"
+                "name": "DNS unique clients",
+                "unit_of_measurement": "clients"
             },
             "dns_unique_domains": {
-                "name": "[EN] DNS unique domains",
-                "unit_of_measurement": "[EN] domains"
+                "name": "DNS unique domains",
+                "unit_of_measurement": "domains"
             },
             "remaining_until_blocking_mode": {
-                "name": "[EN] Remaining until blocking mode",
-                "unit_of_measurement": "[EN] seconds"
+                "name": "Remaining until blocking mode",
+                "unit_of_measurement": "seconds"
             }
         },
         "switch": {
             "group": {
-                "name": "[EN] Group {group_name}"
+                "name": "Group {group_name}"
             }
         },
         "update": {
             "core_update_available": {
-                "name": "[EN] Core update available"
+                "name": "Core update available"
             },
             "ftl_update_available": {
-                "name": "[EN] FTL update available"
+                "name": "FTL update available"
             },
             "web_update_available": {
-                "name": "[EN] Web update available"
+                "name": "Web update available"
             }
         }
     },
     "services": {
         "disable": {
-            "name": "[EN] Disable",
-            "description": "[EN] Disables configured Pi-hole(s) for an amount of time.",
+            "name": "Disable",
+            "description": "Disables configured Pi-hole for an amount of time.",
             "fields": {
                 "duration": {
-                    "description": "[EN] Time that the Pi-hole should be disabled for.",
-                    "name": "[EN] Duration"
+                    "description": "Time that the Pi-hole should be disabled for.",
+                    "name": "Duration"
                 }
             }
         },
         "enable": {
-            "description": "[EN] Enables configured Pi-hole(s)."
+            "description": "Enables configured Pi-hole."
         }
     }
 }
