@@ -9,31 +9,31 @@
       "ads_blocked_today": {
         "default": "mdi:close-octagon-outline"
       },
-      "ads_percentage_today": {
+      "ads_percentage_blocked_today": {
         "default": "mdi:close-octagon-outline"
       },
-      "clients_ever_seen": {
+      "seen_clients": {
         "default": "mdi:account-outline"
       },
       "dns_queries_today": {
         "default": "mdi:comment-question-outline"
       },
-      "domains_being_blocked": {
+      "domains_blocked": {
         "default": "mdi:block-helper"
       },
-      "queries_cached": {
+      "dns_queries_cached": {
         "default": "mdi:comment-question-outline"
       },
-      "queries_forwarded": {
+      "dns_queries_forwarded": {
         "default": "mdi:comment-question-outline"
       },
-      "unique_clients": {
+      "dns_unique_clients": {
         "default": "mdi:account-outline"
       },
-      "unique_domains": {
+      "dns_unique_domains": {
         "default": "mdi:domain"
       },
-      "timer": {
+      "remaining_until_blocking_mode": {
         "default": "mdi:timer-outline"
       }
     }

@@ -51,15 +51,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: PiHoleV6ConfigEntry) -> 
         "FTL Update Available": "ftl_update_available",
         "Status": "status",
         "Ads Blocked Today": "ads_blocked_today",
-        "Ads Percentage Blocked Today": "ads_percentage_today",
-        "Seen Clients": "clients_ever_seen",
+        "Ads Percentage Blocked Today": "ads_percentage_blocked_today",
+        "Seen Clients": "seen_clients",
         "DNS Queries Today": "dns_queries_today",
-        "Domains Blocked": "domains_being_blocked",
-        "DNS Queries Cached": "queries_cached",
-        "DNS Queries Forwarded": "queries_forwarded",
-        "DNS Unique Clients": "unique_clients",
-        "DNS Unique Domains": "unique_domains",
-        "Remaining until blocking mode": "timer",
+        "Domains Blocked": "domains_blocked",
+        "DNS Queries Cached": "dns_queries_cached",
+        "DNS Queries Forwarded": "dns_queries_forwarded",
+        "DNS Unique Clients": "dns_unique_clients",
+        "DNS Unique Domains": "dns_unique_domains",
+        "Remaining until blocking mode": "remaining_until_blocking_mode",
     }
 
     @callback

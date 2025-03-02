@@ -1,0 +1,104 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Échec de la connexion au serveur. Assurez-vous que l'adresse du serveur et le port sont corrects.",
+            "invalid_auth": "Mot de passe invalide fourni. Assurez-vous que votre mot de passe est correct.",
+            "invalid_path": "Chemin d'API invalide spécifié. Veuillez vérifier l'URL du point de terminaison."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "name": "Nom",
+                    "password": "Mot de passe",
+                    "url": "Adresse"
+                },
+                "data_description": {
+                    "password": "Mot de passe à utiliser pour la connexion",
+                    "url": "URL ou adresse de votre Pi-hole (ex: https://pi.hole:443/api)"
+                },
+                "description": "Cette intégration permet de récupérer des statistiques et d'interagir avec un système Pi-hole V6.",
+                "title": "Intégration Pi-hole V6"
+            }
+        }
+    },
+    "entity": {
+        "binary_sensor": {
+            "status": {
+                "name": "Statut"
+            }
+        },
+        "sensor": {
+            "ads_blocked_today": {
+                "name": "Publicités bloquées aujourd'hui",
+                "unit_of_measurement": "publicités"
+            },
+            "ads_percentage_blocked_today": {
+                "name": "Pourcentage de publicités bloquées aujourd'hui"
+            },
+            "seen_clients": {
+                "name": "Clients vus",
+                "unit_of_measurement": "clients"
+            },
+            "dns_queries_today": {
+                "name": "Requêtes DNS aujourd'hui",
+                "unit_of_measurement": "requêtes"
+            },
+            "domains_blocked": {
+                "name": "Domaines bloqués",
+                "unit_of_measurement": "domaines"
+            },
+            "dns_queries_cached": {
+                "name": "Requêtes DNS mises en cache",
+                "unit_of_measurement": "requêtes"
+            },
+            "dns_queries_forwarded": {
+                "name": "Requêtes DNS transférées",
+                "unit_of_measurement": "requêtes"
+            },
+            "dns_unique_clients": {
+                "name": "Clients DNS uniques",
+                "unit_of_measurement": "clients"
+            },
+            "dns_unique_domains": {
+                "name": "Domaines DNS uniques",
+                "unit_of_measurement": "domaines"
+            },
+            "remaining_until_blocking_mode": {
+                "name": "Temps restant avant le mode de blocage",
+                "unit_of_measurement": "secondes"
+            }
+        },
+        "switch": {
+            "group": {
+                "name": "Groupe {group_name}"
+            }
+        },
+        "update": {
+            "core_update_available": {
+                "name": "Mise à jour du cœur disponible"
+            },
+            "ftl_update_available": {
+                "name": "Mise à jour FTL disponible"
+            },
+            "web_update_available": {
+                "name": "Mise à jour web disponible"
+            }
+        }
+    },
+    "services": {
+        "disable": {
+            "name": "Désactiver",
+            "description": "Désactive le service Pi-hole configuré pendant une certaine durée.",
+            "fields": {
+                "duration": {
+                    "description": "Durée pendant laquelle le Pi-hole doit être désactivé.",
+                    "name": "Durée"
+                }
+            }
+        },
+        "enable": {
+            "name": "Activer",
+            "description": "Active le  service Pi-hole configuré."
+        }
+    }
+}
