@@ -15,6 +15,8 @@ from .const import DOMAIN
 class PiHoleV6Entity(CoordinatorEntity[DataUpdateCoordinator[None]]):
     """Representation of a Pi-hole V6 entity."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         api: PiholeAPI,

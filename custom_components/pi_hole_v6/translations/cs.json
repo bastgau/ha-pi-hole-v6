@@ -1,0 +1,107 @@
+{
+    "config": {
+        "abort": {
+            "reauth_successful": "Opětovné ověření bylo úspěšné."
+        },
+        "error": {
+            "cannot_connect": "Nepodařilo se připojit k serveru. Ujistěte se, že adresa serveru a port jsou správné.",
+            "invalid_auth": "Nesprávné heslo. Ujistěte se, že vaše heslo je správné.",
+            "invalid_path": "Nesprávná URL adresa API. Ověřte, prosím, URL API."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "name": "Jméno",
+                    "password": "Heslo",
+                    "url": "URL adresa API"
+                },
+                "data_description": {
+                    "password": "Heslo pro přihlášení",
+                    "url": "URL adresa vašeho Pi-hole (ie: https://pi.hole:443/api)"
+                },
+                "description": "Tato integrace umožňuje získávat statistiky a interagovat s Pi-hole V6.",
+                "title": "Pi-hole V6"
+            }
+        }
+    },
+    "entity": {
+        "binary_sensor": {
+            "status": {
+                "name": "Stav"
+            }
+        },
+        "sensor": {
+            "ads_blocked_today": {
+                "name": "Dnes blokované reklamy",
+                "unit_of_measurement": "reklam"
+            },
+            "ads_percentage_today": {
+                "name": "Poměr dnes blokovaných reklam"
+            },
+            "clients_ever_seen": {
+                "name": "Vidění klienti",
+                "unit_of_measurement": "klientů"
+            },
+            "dns_queries_today": {
+                "name": "Dnes DNS dotazů",
+                "unit_of_measurement": "dotazů"
+            },
+            "domains_being_blocked": {
+                "name": "Blokované domény",
+                "unit_of_measurement": "domén"
+            },
+            "queries_cached": {
+                "name": "Kešované DNS dotazy",
+                "unit_of_measurement": "dotazů"
+            },
+            "queries_forwarded": {
+                "name": "Přeposlané DNS dotazy",
+                "unit_of_measurement": "dotazů"
+            },
+            "unique_clients": {
+                "name": "Unikátní DNS klienti",
+                "unit_of_measurement": "klientů"
+            },
+            "unique_domains": {
+                "name": "Unikátní DNS domény",
+                "unit_of_measurement": "domén"
+            },
+            "timer": {
+                "name": "Zbývající čas do blokování",
+                "unit_of_measurement": "sekund"
+            }
+        },
+        "switch": {
+            "group": {
+                "name": "Skupina {groupName}"
+            }
+        },
+        "update": {
+            "core_update_available": {
+                "name": "Aktualizace Core"
+            },
+            "ftl_update_available": {
+                "name": "Aktualizace FTP"
+            },
+            "web_update_available": {
+                "name": "Aktualizace Web"
+            }
+        }
+    },
+    "services": {
+        "disable": {
+            "name": "Zakázat",
+            "description": "Zakáze Pi-hole na určitou dobu.",
+            "fields": {
+                "duration": {
+                    "description": "Doba, po kterou má být Pi-hole zakázán.",
+                    "name": "Doba"
+                }
+            }
+        },
+        "enable": {
+            "name": "Povolit",
+            "description": "Povolí Pi-hole."
+        }
+    }
+}
