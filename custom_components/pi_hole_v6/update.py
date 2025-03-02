@@ -95,7 +95,6 @@ class PiHoleV6UpdateEntity(PiHoleV6Entity, UpdateEntity):
     """Representation of a Pi-hole update entity."""
 
     entity_description: PiHoleV6UpdateEntityDescription
-    _attr_has_entity_name = True
 
     def __init__(
         self,

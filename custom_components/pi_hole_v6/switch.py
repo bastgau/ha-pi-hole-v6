@@ -95,6 +95,7 @@ class PiHoleV6Switch(PiHoleV6Entity, SwitchEntity):
     """Representation of a Pi-hole V6 switch."""
 
     _attr_icon = "mdi:pi-hole"
+    _attr_has_entity_name = False
 
     @property
     def name(self) -> str:
@@ -172,6 +173,7 @@ class PiHoleV6Group(PiHoleV6Entity, SwitchEntity):
     entity_description: SwitchEntityDescription
     _attr_has_entity_name = True
     _attr_icon = "mdi:account-multiple"
+    _attr_translation_key = "group"
 
     def __init__(
         self,
