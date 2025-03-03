@@ -126,7 +126,7 @@ class API:
         self._get_logger().debug("Status Code: %d", request.status)
         handle_status(request.status)
 
-        if request.status < 400 and request.text != "":
+        if request.status < 400 and request.status != 204 and request.text != "":
             try:
                 result_data = await request.json()
                 result_data_debug: dict[str, Any] = copy.deepcopy(result_data)
@@ -223,13 +223,16 @@ class API:
             "data": result["data"],
         }
 
-    async def call_logout(self) -> dict[str, Any]:
+    async def call_logout(self) -> dict[str, Any] | None:
         """Drop the current session.
 
         Returns:
           result (dict[str, Any]): A dictionary with the keys "code", "reason", and "data".
 
         """
+
+        if (self._sid is None):
+            return None;
 
         url: str = "/auth"
 
