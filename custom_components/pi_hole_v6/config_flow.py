@@ -6,7 +6,6 @@ import logging
 from typing import Any
 
 import voluptuous as vol
-
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_URL
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -16,6 +15,8 @@ from .const import DEFAULT_NAME, DEFAULT_PASSWORD, DEFAULT_URL, DOMAIN
 from .exceptions import (
     ClientConnectorException,
     ContentTypeException,
+    ForbiddenException,
+    MethodNotAllowedException,
     NotFoundException,
     UnauthorizedException,
 )
@@ -95,10 +96,14 @@ class PiHoleV6dFlowHandler(ConfigFlow, domain=DOMAIN):
         except ClientConnectorException as err:
             _LOGGER.debug("Connection failed: %s", err)
             return {CONF_URL: "cannot_connect"}
-        except (NotFoundException, ContentTypeException) as err:
+        except (
+            NotFoundException,
+            ContentTypeException,
+            MethodNotAllowedException,
+        ) as err:
             _LOGGER.debug("Connection failed: %s", err)
             return {CONF_URL: "invalid_path"}
-        except UnauthorizedException as err:
+        except (UnauthorizedException, ForbiddenException) as err:
             _LOGGER.debug("Connection failed: %s", err)
             return {CONF_PASSWORD: "invalid_auth"}
 
