@@ -6,8 +6,8 @@ import logging
 from dataclasses import dataclass
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_URL, Platform
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_URL, EVENT_HOMEASSISTANT_STOP, Platform
+from homeassistant.core import HomeAssistant, callback, Event
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -84,6 +84,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: PiHoleV6ConfigEntry) -> 
         url=url,
         password=password,
         logger=_LOGGER,
+    )
+
+    async def async_logout(_: Event) -> None:
+        await api_client.call_logout()
+
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_logout)
     )
 
     async def async_update_data() -> None:
