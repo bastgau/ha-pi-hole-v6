@@ -1,6 +1,20 @@
 """The above classes represent the specific exceptions raised during the Pi-Hole API calls."""
 
 
+class AbortLogoutException(Exception):
+    """The class `AbortLogoutException` represents an exception when a logout is not relevant and can be avoided."""
+
+    code: int = 499
+    reason: str = "No logout needed."
+
+    def __init__(  # noqa: D107
+        self,
+        message: str = "Logout call is not relevant. Maybe no session is active.",
+    ) -> None:
+        self.message = message
+        super().__init__(self.message)
+
+
 class BadGatewayException(Exception):
     """The class `BadGatewayException` represents an exception for receiving an invalid response from an upstream server."""
 
@@ -171,6 +185,7 @@ def handle_status(status_code: int) -> None:
         502: BadGatewayException,
         503: ServiceUnavailableException,
         504: GatewayTimeoutException,
+        499: AbortLogoutException,
     }
 
     if status_code in exception_map:
