@@ -22,6 +22,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="ads_percentage_blocked_today",
         translation_key="ads_percentage_blocked_today",
         native_unit_of_measurement=PERCENTAGE,
+        suggested_display_precision=2,
     ),
     SensorEntityDescription(
         key="seen_clients",
