@@ -31,7 +31,7 @@ The "Pi-Hole V6 Integration" adds compatibility with the new API in Home Assista
 The following sensors are currently implemented :
 
 <p align="center" width="100%">
-    <img src="img/entitites.jpg" width="300">
+    <img src="img/release-v1.6.0.png" width="600">
 </p>
 
 ## Installation
