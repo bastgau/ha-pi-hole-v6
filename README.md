@@ -34,6 +34,14 @@ The following sensors are currently implemented :
     <img src="img/release-v1.6.0.png" width="600">
 </p>
 
+## Translation
+
+The integration is currentlu translated in few langages :
+
+- Czech (thanks [@kukulich](https://github.com/kukulich))
+- English
+- French
+
 ## Installation
 
 ### Installation via HACS
