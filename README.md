@@ -36,7 +36,7 @@ The following sensors are currently implemented :
 
 ## Translation
 
-The integration is currentlu translated in few langages :
+The integration is currently translated in few langages :
 
 - Czech (thanks [@kukulich](https://github.com/kukulich))
 - English
