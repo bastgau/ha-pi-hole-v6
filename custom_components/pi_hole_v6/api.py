@@ -11,6 +11,7 @@ import requests
 from aiohttp import ClientError, ContentTypeError
 
 from .exceptions import (
+    AbortLogoutException,
     ClientConnectorException,
     ContentTypeException,
     UnauthorizedException,
@@ -87,6 +88,7 @@ class API:
         """
 
         await self._check_authentification(action)
+        await self._abort_logout(action)
         await self._request_login(action)
 
         self._get_logger().debug("Session ID Hash: %s", self._get_sid_hash(self._sid))
@@ -128,8 +130,9 @@ class API:
 
         if request.status < 400 and request.text != "":
             try:
-                result_data = await request.json()
-                result_data_debug: dict[str, Any] = copy.deepcopy(result_data)
+                if request.status != 204:
+                    result_data = await request.json()
+                    result_data_debug: dict[str, Any] = copy.deepcopy(result_data)
 
                 if action == "login":
                     result_data_debug["session"]["sid"] = "[redacted]"
@@ -169,6 +172,12 @@ class API:
 
         if action != "login" and self._sid is None:
             await self.call_login()
+
+    async def _abort_logout(self, action: str) -> None:
+        """..."""
+
+        if action == "logout" and self._sid is None:
+            raise AbortLogoutException()
 
     def _get_sid_hash(self, sid: str) -> str | None:
         """..."""
@@ -233,13 +242,20 @@ class API:
 
         url: str = "/auth"
 
-        result: dict[str, Any] = await self._call(
-            url,
-            action="logout",
-            method="DELETE",
-        )
+        result: dict[str, Any] = {"code": None, "reason": None, "data": {}}
 
-        self._sid = None
+        try:
+            result = await self._call(
+                url,
+                action="logout",
+                method="DELETE",
+            )
+
+            self._sid = None
+
+        except AbortLogoutException as err:
+            result["code"] = err.code
+            result["reason"] = err.reason
 
         return {
             "code": result["code"],
