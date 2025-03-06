@@ -30,7 +30,7 @@ PLATFORMS = [
     Platform.SENSOR,
     Platform.SWITCH,
     Platform.UPDATE,
-    # Platform.NUMBER
+    # Platform.NUMBER,
 ]
 
 type PiHoleV6ConfigEntry = ConfigEntry[PiHoleV6Data]
