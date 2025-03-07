@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import datetime
 import logging
 from typing import Any
 
@@ -78,7 +79,7 @@ async def async_setup_entry(
     platform.async_register_entity_service(
         SERVICE_DISABLE,
         {
-            vol.Required(SERVICE_DISABLE_ATTR_DURATION): vol.All(
+            vol.Optional(SERVICE_DISABLE_ATTR_DURATION): vol.All(
                 cv.time_period_str, cv.positive_timedelta
             ),
         },
@@ -114,13 +115,13 @@ class PiHoleV6Switch(PiHoleV6Entity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the service."""
-        await self.async_turn(action="enable")
+        await self.async_turn_switch(action="enable")
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the service."""
-        await self.async_turn(action="disable")
+        await self.async_turn_switch(action="disable")
 
-    async def async_turn(self, action: str, duration: Any = None) -> None:
+    async def async_turn_switch(self, action: str, duration: Any = None) -> None:
         """Turn on/off the service."""
 
         try:
@@ -150,21 +151,34 @@ class PiHoleV6Switch(PiHoleV6Entity, SwitchEntity):
     async def async_service_disable(self, duration: Any = None) -> None:
         """..."""
 
-        duration_seconds = duration.total_seconds()
+        duration_seconds = None
 
-        _LOGGER.debug(
-            "Disabling Pi-hole '%s' for %d seconds",
-            self.name,
-            duration_seconds,
-        )
+        if isinstance(duration, datetime.timedelta):
+            duration_seconds = duration.total_seconds()
 
-        await self.async_turn(action="disable", duration=duration_seconds)
+        if isinstance(duration, int):
+            duration_seconds = duration
+
+        if duration is None:
+            _LOGGER.debug(
+                "Disabling Pi-hole '%s' indefinitely",
+                self.name,
+            )
+
+        else:
+            _LOGGER.debug(
+                "Disabling Pi-hole '%s' for %d seconds",
+                self.name,
+                duration_seconds,
+            )
+
+        await self.async_turn_switch(action="disable", duration=duration_seconds)
 
     async def async_service_enable(self) -> None:
         """..."""
 
         _LOGGER.debug("Enabling Pi-hole '%s'", self.name)
-        await self.async_turn(action="enable")
+        await self.async_turn_switch(action="enable")
 
 
 class PiHoleV6Group(PiHoleV6Entity, SwitchEntity):
@@ -197,13 +211,13 @@ class PiHoleV6Group(PiHoleV6Entity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the group."""
-        await self.async_turn(action="enable")
+        await self.async_turn_group(action="enable")
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the group."""
-        await self.async_turn(action="disable")
+        await self.async_turn_group(action="disable")
 
-    async def async_turn(self, action: str) -> None:
+    async def async_turn_group(self, action: str) -> None:
         """Turn on/off the group."""
 
         try:
@@ -231,3 +245,9 @@ class PiHoleV6Group(PiHoleV6Entity, SwitchEntity):
             _LOGGER.error(
                 "Unable to %s Pi-hole V6 group %s: %s", action, self._group, err
             )
+
+    async def async_service_enable(self) -> None:
+        """..."""
+
+    async def async_service_disable(self, duration: Any = None) -> None:
+        """..."""
