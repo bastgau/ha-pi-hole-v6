@@ -39,7 +39,6 @@ class PiHoleV6Entity(CoordinatorEntity[DataUpdateCoordinator[None]]):
         return DeviceInfo(
             identifiers={(DOMAIN, self._server_unique_id)},
             name=self._name,
-            manufacturer="bastgau",
             configuration_url=config_url,
             model="Pi-hole V6",
         )
