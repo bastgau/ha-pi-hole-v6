@@ -1,4 +1,4 @@
-# Pi-Hole V6 Integration for Home Assistant
+# Pi-hole V6 Integration for Home Assistant
 
 [![Maintenair : bastgau](https://img.shields.io/badge/maintener-bastgau-orange?logo=github&logoColor=%23959da5&labelColor=%232d333a)](https://github.com/bastgau)
 [![Made with Python](https://img.shields.io/badge/Made_with-Python-blue?style=flat&logo=python&logoColor=%23959da5&labelColor=%232d333a)](https://www.python.org/)
@@ -17,16 +17,16 @@ Original component : [Pi-hole](https://www.home-assistant.io/integrations/pi_hol
 
 ## Description
 
-Due to major changes in the Pi-Hole API, the native Home Assistant integration was no longer functional. 
+Due to major changes in the Pi-hole API, the native Home Assistant integration was no longer functional. 
 
-The "Pi-Hole V6 Integration" adds compatibility with the new API in Home Assistant. This integration aims to restore compatibility and provide Pi-Hole management directly from Home Assistant.
+The "Pi-hole V6 Integration" adds compatibility with the new API in Home Assistant. This integration aims to restore compatibility and provide Pi-hole management directly from Home Assistant.
 
 ## Features
 
-- Monitor Pi-Hole status.
-- Enable/Disable Pi-Hole via Home Assistant.
+- Monitor Pi-hole status.
+- Enable/Disable Pi-hole via Home Assistant.
 - Retrieve filtering statistics.
-- Compatibility with the Pi-Hole V6 API.
+- Compatibility with the Pi-hole V6 API.
 
 The following sensors are currently implemented :
 
@@ -49,7 +49,7 @@ The integration is currently translated in few langages :
 1. Open Home Assistant and go to HACS.
 2. Navigate to "Integrations" and click on "Add a custom repository".
 3. Add the GitHub repository URL of the integration.
-4. Search for "Pi-Hole V6 Integration" and install it.
+4. Search for "Pi-hole V6 Integration" and install it.
 5. Restart Home Assistant.
 
 ### Manual Installation
