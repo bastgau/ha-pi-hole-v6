@@ -8,7 +8,7 @@ classifiers = [
   "Programming Language :: Python :: 3.13",
   "Programming Language :: Python :: 3",
 ]
-description = "This custom integration restores compatibility between Home Assistant and Pi-Hole, which is no longer supported by the native integration due to API changes. "
+description = "This custom integration restores compatibility between Home Assistant and Pi-hole, which is no longer supported by the native integration due to API changes. "
 documentation = "https://github.com/bastgau/ha-pi-hole-v6"
 homepage = "https://github.com/bastgau/ha-pi-hole-v6"
 license = "MIT"
@@ -20,7 +20,7 @@ repository = "https://github.com/bastgau/ha-pi-hole-v6"
 version = "0.0.0"
 
 [tool.poetry.dependencies]
-homeassistant = "2025.3.0b2"
+homeassistant = "2025.3.0"
 python = ">=3.13,<3.14"
 
 [tool.poetry.group.dev.dependencies]

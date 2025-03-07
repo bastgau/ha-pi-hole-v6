@@ -1,4 +1,4 @@
-"""The above classes represent the specific exceptions raised during the Pi-Hole API calls."""
+"""The above classes represent the specific exceptions raised during the Pi-hole API calls."""
 
 
 class AbortLogoutException(Exception):

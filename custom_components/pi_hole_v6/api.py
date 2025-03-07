@@ -1,4 +1,4 @@
-"""The above class represents Pi-Hole API Client with methods for authentication, retrieving summary data, managing blocking status, and logging requests."""
+"""The above class represents Pi-hole API Client with methods for authentication, retrieving summary data, managing blocking status, and logging requests."""
 
 import asyncio
 import copy
@@ -20,7 +20,7 @@ from .exceptions import (
 
 
 class API:
-    """Pi-Hole API Client."""
+    """Pi-hole API Client."""
 
     _logger: logging.Logger | None
     _password: Any = ""
@@ -41,7 +41,7 @@ class API:
         password: str = "",
         logger: logging.Logger | None = None,
     ) -> None:
-        """Initialize Pi-Hole API Client object with an API URL and an optional logger.
+        """Initialize Pi-hole API Client object with an API URL and an optional logger.
 
         Args:
           url (str): Represents the URL of API endpoint. Defaults to "http://pi.hole".

@@ -3,7 +3,7 @@
 from datetime import timedelta
 
 DOMAIN = "pi_hole_v6"
-DEFAULT_NAME = "Pi-Hole"
+DEFAULT_NAME = "Pi-hole"
 DEFAULT_URL = "https://pi.hole:443/api"
 DEFAULT_PASSWORD = "xxxxx"
 
