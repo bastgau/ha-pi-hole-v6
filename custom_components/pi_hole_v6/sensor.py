@@ -55,6 +55,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="remaining_until_blocking_mode",
         translation_key="remaining_until_blocking_mode",
+        suggested_display_precision=0,
     ),
 )
 
@@ -122,7 +123,7 @@ class PiHoleV6Sensor(PiHoleV6Entity, SensorEntity):
                 return self.api.cache_summary["clients"]["active"]
             case "dns_unique_domains":
                 return self.api.cache_summary["queries"]["unique_domains"]
-            case "timer":
+            case "remaining_until_blocking_mode":
                 value: int | None = self.api.cache_blocking["timer"]
                 return value if value is not None else 0
 
