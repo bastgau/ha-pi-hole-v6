@@ -41,6 +41,8 @@ The integration is currently translated in few langages :
 - Czech (thanks [@kukulich](https://github.com/kukulich))
 - English
 - French
+- German (thanks Christian)
+- Spanish (thanks [@dmbuil](https://github.com/dmbuil))
 
 ## Installation
 
@@ -51,6 +53,10 @@ The integration is currently translated in few langages :
 3. Add the GitHub repository URL of the integration.
 4. Search for "Pi-hole V6 Integration" and install it.
 5. Restart Home Assistant.
+
+### One-click intallation
+
+[![Open your Home Assistant instance and start setting up a new integration.](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=bastgau&repository=ha-pi-hole-v6&category=Integration)
 
 ### Manual Installation
 
