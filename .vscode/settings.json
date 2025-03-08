@@ -1,7 +1,7 @@
 {
-    "[python]": {
-        "_editor.defaultFormatter": "ms-python.black-formatter"
-    },
-    "python.formatting.provider": "none",
-    "files.insertFinalNewline": true
+    "files.insertFinalNewline": true,
+    "files.exclude": {
+        ".ruff_cache": true,
+        "**/__pycache__": true
+    }
 }
