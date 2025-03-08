@@ -1,6 +1,10 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Service is already configured."
+        },
         "error": {
+            "incorrect_data_expected": "Failed to retrieve the data in the correct structure.",
             "cannot_connect": "Failed to connect to the server. Ensure that the server address and the port are correct.",
             "invalid_auth": "Invalid password provided. Ensure that your password is correct.",
             "invalid_path": "Invalid API path specified. Please verify the endpoint URL."
@@ -16,7 +20,7 @@
                     "password": "Password to be used for login",
                     "url": "URL or address of your Pi-hole (ie: https://pi.hole:443/api)"
                 },
-                "description": "his integration allows you to retrieve statistics and interact with a Pi-hole V6 system.",
+                "description": "This integration allows you to retrieve statistics and interact with a Pi-hole V6 system.",
                 "title": "Pi-hole V6 Integration"
             }
         }

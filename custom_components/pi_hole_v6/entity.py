@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -39,7 +39,8 @@ class PiHoleV6Entity(CoordinatorEntity[DataUpdateCoordinator[None]]):
         return DeviceInfo(
             identifiers={(DOMAIN, self._server_unique_id)},
             name=self._name,
-            manufacturer="bastgau",
+            manufacturer="Pi-hole",
             configuration_url=config_url,
-            model="Pi-hole V6",
+            model="Pi-hole ",
+            sw_version="v6",
         )

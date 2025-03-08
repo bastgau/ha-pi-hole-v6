@@ -40,10 +40,11 @@
             "extensions": [
                 "ms-python.python",
                 "github.vscode-pull-request-github",
-                "ryanluker.vscode-coverage-gutters",
                 "ms-python.vscode-pylance",
                 "charliermarsh.ruff",
-                "ms-python.black-formatter"
+                "ms-python.black-formatter",
+                "tamasfe.even-better-toml",
+                "eamodio.gitlens"
             ],
             "settings": {
                 "files.eol": "\n",

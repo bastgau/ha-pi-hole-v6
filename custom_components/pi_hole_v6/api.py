@@ -359,9 +359,7 @@ class API:
             "data": result["data"],
         }
 
-    async def call_blocking_disabled(
-        self, duration: int | None = 120
-    ) -> dict[str, Any]:
+    async def call_blocking_disabled(self, duration: int | None) -> dict[str, Any]:
         """Disable blocking for DNS requests.
 
         Args:
@@ -372,13 +370,18 @@ class API:
 
         """
 
+        timer: int = 0
+
+        if duration is not None:
+            timer = duration
+
         url: str = "/dns/blocking"
 
         result: dict[str, Any] = await self._call(
             url,
             action="blocking_disabled",
             method="POST",
-            data={"blocking": False, "timer": duration},
+            data={"blocking": False, "timer": timer},
         )
 
         self.cache_blocking = result["data"]
