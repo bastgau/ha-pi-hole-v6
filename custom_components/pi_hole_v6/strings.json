@@ -1,7 +1,10 @@
 {
     "config": {
+        "error": {
+            "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+        },
         "abort": {
-            "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+            "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
             "cannot_connect": "Failed to connect to the server. Ensure that the server address and the port are correct.",
             "invalid_auth": "Invalid password provided. Ensure that your password is correct.",
             "invalid_path": "Invalid API path specified. Please verify the endpoint URL.",

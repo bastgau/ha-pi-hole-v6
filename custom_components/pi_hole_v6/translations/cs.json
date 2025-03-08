@@ -1,9 +1,10 @@
 {
     "config": {
         "abort": {
-            "reauth_successful": "Opětovné ověření bylo úspěšné."
+            "already_configured": "Služba je již nakonfigurována."
         },
         "error": {
+            "incorrect_data_expected": "Nepodařilo se načíst data ve správné struktuře.",
             "cannot_connect": "Nepodařilo se připojit k serveru. Ujistěte se, že adresa serveru a port jsou správné.",
             "invalid_auth": "Nesprávné heslo. Ujistěte se, že vaše heslo je správné.",
             "invalid_path": "Nesprávná URL adresa API. Ověřte, prosím, URL API."

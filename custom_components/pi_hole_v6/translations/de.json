@@ -1,6 +1,10 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Der Dienst ist bereits konfiguriert."
+        },
         "error": {
+            "incorrect_data_expected": "Fehler beim Abrufen der Daten in der richtigen Struktur.",
             "cannot_connect": "Verbindung mit dem Server konnte nicht hergestellt werden. Stelle sicher, das die Serveradresse und der Port korrekt sind.",
             "invalid_auth": "Falsches Passwort. Überprüfe das eingegebene Passwort.",
             "invalid_path": "Falscher API Pfad angegeben. Bitte überprüfe die Endpunkt URL."

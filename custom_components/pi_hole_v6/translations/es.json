@@ -1,6 +1,10 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "El servicio ya está configurado."
+        },
         "error": {
+            "incorrect_data_expected": "Error al recuperar los datos en la estructura correcta.",
             "cannot_connect": "Error al conectar con el servidor. Asegúrate de que la dirección del servidor y el puerto son correctos.",
             "invalid_auth": "Contraseña inválida introducida. Asegúrate de que tu contraseña es correcta.",
             "invalid_path": "Ruta de API inválida especificada. Verifica la URL de la conexión."
