@@ -46,7 +46,7 @@ class PiHoleV6dFlowHandler(ConfigFlow, domain=DOMAIN):
                 CONF_PASSWORD: user_input[CONF_PASSWORD],
             }
 
-            await self.async_set_unique_id(user_input[CONF_NAME])
+            await self.async_set_unique_id(user_input[CONF_URL].lower())
             self._abort_if_unique_id_configured()
 
             if not (errors := await self._async_try_connect()):
