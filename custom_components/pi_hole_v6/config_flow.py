@@ -46,13 +46,8 @@ class PiHoleV6dFlowHandler(ConfigFlow, domain=DOMAIN):
                 CONF_PASSWORD: user_input[CONF_PASSWORD],
             }
 
-            self._async_abort_entries_match(
-                {
-                    CONF_NAME: user_input[CONF_NAME],
-                    CONF_URL: user_input[CONF_URL],
-                    CONF_PASSWORD: user_input[CONF_PASSWORD],
-                }
-            )
+            await self.async_set_unique_id(user_input[CONF_URL].lower())
+            self._abort_if_unique_id_configured()
 
             if not (errors := await self._async_try_connect()):
                 return self.async_create_entry(
@@ -108,9 +103,9 @@ class PiHoleV6dFlowHandler(ConfigFlow, domain=DOMAIN):
             return {CONF_PASSWORD: "invalid_auth"}
 
         if not isinstance(await api_client.call_summary(), dict):
-            return {"base": "coco"}
+            return {"base": "incorrect_data_expected"}
 
         if not isinstance(await api_client.call_blocking_status(), dict):
-            return {"base": "coco"}
+            return {"base": "incorrect_data_expected"}
 
         return {}
