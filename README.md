@@ -42,6 +42,7 @@ The integration is currently translated in few langages :
 - English
 - French
 - German (thanks Christian)
+- Russian (thanls [@ProFiLeR4100](https://github.com/ProFiLeR4100))
 - Spanish (thanks [@dmbuil](https://github.com/dmbuil))
 
 ## Installation
