@@ -1,0 +1,108 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Сервіс вже налаштований."
+        },
+        "error": {
+            "incorrect_data_expected": "Не вдалося отримати дані в коректному форматі.",
+            "cannot_connect": "Не вдалося підключитися до сервера. Переконайтеся, що адреса сервера та порт коректні.",
+            "invalid_auth": "Наданий неправильний пароль. Перевірте, що пароль правильний.",
+            "invalid_path": "Неправильний шлях до API. Будь ласка, перевірте посилання."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "name": "Ім'я",
+                    "password": "Пароль",
+                    "url": "Адреса"
+                },
+                "data_description": {
+                    "password": "Пароль, який використовується для входу",
+                    "url": "Посилання на ваш екземпляр Pi-hole (приклад: https://pi.hole:443/api)"
+                },
+                "description": "Ця інтеграція дозволяє вам отримати статистику та взаємодіяти з Pi-hole V6.",
+                "title": "Інтеграція з Pi-hole V6"
+            }
+        }
+    },
+    "entity": {
+        "binary_sensor": {
+            "status": {
+                "name": "Стан"
+            }
+        },
+        "sensor": {
+            "ads_blocked_today": {
+                "name": "Заблоковано сьогодні реклам",
+                "unit_of_measurement": "реклам"
+            },
+            "ads_percentage_blocked_today": {
+                "name": "Заблоковано сьогодні реклам у відсотках"
+            },
+            "seen_clients": {
+                "name": "Клієнтів помічено",
+                "unit_of_measurement": "клієнтів"
+            },
+            "dns_queries_today": {
+                "name": "DNS запитів сьогодні",
+                "unit_of_measurement": "запитів"
+            },
+            "domains_blocked": {
+                "name": "Заблоковано доменів",
+                "unit_of_measurement": "доменів"
+            },
+            "dns_queries_cached": {
+                "name": "Закешованих DNS запитів",
+                "unit_of_measurement": "запитів"
+            },
+            "dns_queries_forwarded": {
+                "name": "Перенаправлених DNS запитів",
+                "unit_of_measurement": "запитів"
+            },
+            "dns_unique_clients": {
+                "name": "Унікальних клієнтів у DNS",
+                "unit_of_measurement": "клієнтів"
+            },
+            "dns_unique_domains": {
+                "name": "Унікальні домени в DNS",
+                "unit_of_measurement": "доменів"
+            },
+            "remaining_until_blocking_mode": {
+                "name": "Залишилось до режиму блокування",
+                "unit_of_measurement": "секунд"
+            }
+        },
+        "switch": {
+            "group": {
+                "name": "Група {group_name}"
+            }
+        },
+        "update": {
+            "core_update_available": {
+                "name": "Доступне оновлення ядра"
+            },
+            "ftl_update_available": {
+                "name": "Доступне оновлення FTL"
+            },
+            "web_update_available": {
+                "name": "Доступне веб-оновлення"
+            }
+        }
+    },
+    "services": {
+        "disable": {
+            "name": "Вимкнути",
+            "description": "Вимикає конфігурований Pi-hole на певний час.",
+            "fields": {
+                "duration": {
+                    "description": "Час у секундах на який Pi-hole буде вимкнено.",
+                    "name": "Тривалість"
+                }
+            }
+        },
+        "enable": {
+            "name": "Увімкнути",
+            "description": "Вимикає конфігурований Pi-hole."
+        }
+    }
+}
