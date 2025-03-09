@@ -65,7 +65,7 @@ The integration is currently translated in few langages :
 3. Restart Home Assistant.
 
 
-### Support & Contributions
+## Support & Contributions
 
 If you encounter any issues or wish to contribute to improving this integration, feel free to open an issue or a pull request on the GitHub repository.
 
