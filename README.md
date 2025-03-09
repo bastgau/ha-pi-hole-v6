@@ -44,6 +44,7 @@ The integration is currently translated in few langages :
 - German (thanks Christian)
 - Russian (thanks [@ProFiLeR4100](https://github.com/ProFiLeR4100))
 - Spanish (thanks [@dmbuil](https://github.com/dmbuil))
+- Ukrainian (thanks [@ProFiLeR4100](https://github.com/ProFiLeR4100))
 
 ## Installation
 
