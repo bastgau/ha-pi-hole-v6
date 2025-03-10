@@ -16,16 +16,16 @@
         "default": "mdi:account-outline"
       },
       "dns_queries_today": {
-        "default": "mdi:comment-question-outline"
+        "default": "mdi:dns"
       },
       "domains_blocked": {
-        "default": "mdi:block-helper"
+        "default": "mdi:domain"
       },
       "dns_queries_cached": {
-        "default": "mdi:comment-question-outline"
+        "default": "mdi:cached"
       },
       "dns_queries_forwarded": {
-        "default": "mdi:comment-question-outline"
+        "default": "mdi:share-outline"
       },
       "dns_unique_clients": {
         "default": "mdi:account-outline"
