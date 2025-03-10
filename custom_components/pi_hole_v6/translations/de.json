@@ -21,7 +21,7 @@
                     "url": "URL oder Adresse von deinem Pi-hole (ie: https://pi.hole:443/api)"
                 },
                 "description": "Diese Integration erlaubt das interagieren und abrufen von Statistiken mit einer Pi-hole V6 Installation.",
-                "title": "Pi-hole V6 Integration"
+                "title": "Pi-hole V6"
             }
         }
     },
@@ -79,13 +79,13 @@
         },
         "update": {
             "core_update_available": {
-                "name": "Core update verfügbar"
+                "name": "Core update"
             },
             "ftl_update_available": {
-                "name": "FTL update verfügbar"
+                "name": "FTL update"
             },
             "web_update_available": {
-                "name": "Web update verfügbar"
+                "name": "Web update"
             }
         }
     },
