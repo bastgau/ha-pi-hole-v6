@@ -79,13 +79,13 @@
         },
         "update": {
             "core_update_available": {
-                "name": "Core update available"
+                "name": "Core update"
             },
             "ftl_update_available": {
-                "name": "FTL update available"
+                "name": "FTL update"
             },
             "web_update_available": {
-                "name": "Web update available"
+                "name": "Web update"
             }
         }
     },

@@ -79,13 +79,13 @@
         },
         "update": {
             "core_update_available": {
-                "name": "Mise à jour du cœur disponible"
+                "name": "Mise à jour du cœur"
             },
             "ftl_update_available": {
-                "name": "Mise à jour FTL disponible"
+                "name": "Mise à jour FTL"
             },
             "web_update_available": {
-                "name": "Mise à jour web disponible"
+                "name": "Mise à jour web"
             }
         }
     },

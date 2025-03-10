@@ -79,13 +79,13 @@
     },
     "update": {
       "core_update_available": {
-        "name": "Aktualizácia Core dostupná"
+        "name": "Aktualizácia Core"
       },
       "ftl_update_available": {
-        "name": "Aktualizácia FTL dostupná"
+        "name": "Aktualizácia FTL"
       },
       "web_update_available": {
-        "name": "Aktualizácia Web dostupná"
+        "name": "Aktualizácia Web"
       }
     }
   },

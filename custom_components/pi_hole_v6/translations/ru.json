@@ -79,13 +79,13 @@
         },
         "update": {
             "core_update_available": {
-                "name": "Доступно обновление ядра"
+                "name": "Oбновление ядра"
             },
             "ftl_update_available": {
-                "name": "Доступно обновление FTL"
+                "name": "Oбновление FTL"
             },
             "web_update_available": {
-                "name": "Доступно веб-обновление"
+                "name": "Веб-обновление"
             }
         }
     },
