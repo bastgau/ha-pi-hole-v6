@@ -1,0 +1,108 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "Služba je už nakonfigurovaná."
+    },
+    "error": {
+      "incorrect_data_expected": "Nepodarilo sa načítať dáta v správnej štruktúre.",
+      "cannot_connect": "Nepodarilo sa pripojiť k serveru. Uistite sa že adresa servera a port sú správne.",
+      "invalid_auth": "Zadané heslo neplatné. Uistite sa že vaše heslo je správne.",
+      "invalid_path": "Zadaná neplatná cesta API. Skontrolujte URL koncového bodu."
+    },
+    "step": {
+      "user": {
+        "data": {
+          "name": "Meno",
+          "password": "Heslo",
+          "url": "Adresa"
+        },
+        "data_description": {
+          "password": "Heslo ktoré sa použije na prihlásenie",
+          "url": "URL alebo adresa vášho Pi-hole (napr.: https://pi.hole:443/api)"
+        },
+        "description": "Táto integrácia vám umožňuje získať štatistiky a interagovať so systémom Pi-hole V6.",
+        "title": "Pi-hole V6 Integrácia"
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "status": {
+        "name": "Stav"
+      }
+    },
+    "sensor": {
+      "ads_blocked_today": {
+        "name": "Zablokované reklamy dnes",
+        "unit_of_measurement": "reklamy"
+      },
+      "ads_percentage_blocked_today": {
+        "name": "Zablokované reklamy dnes percento"
+      },
+      "seen_clients": {
+        "name": "Videní klienti",
+        "unit_of_measurement": "klienti"
+      },
+      "dns_queries_today": {
+        "name": "DNS dotazy dnes",
+        "unit_of_measurement": "dotazy"
+      },
+      "domains_blocked": {
+        "name": "Domény zablokované",
+        "unit_of_measurement": "domény"
+      },
+      "dns_queries_cached": {
+        "name": "DNS dotazy uložené vo vyrovnávacej pamäti",
+        "unit_of_measurement": "dotazy"
+      },
+      "dns_queries_forwarded": {
+        "name": "DNS dotazy presmerované",
+        "unit_of_measurement": "dotazy"
+      },
+      "dns_unique_clients": {
+        "name": "DNS jedineční klienti",
+        "unit_of_measurement": "klienti"
+      },
+      "dns_unique_domains": {
+        "name": "DNS jedinečné domény",
+        "unit_of_measurement": "domény"
+      },
+      "remaining_until_blocking_mode": {
+        "name": "Zostáva do režimu blokovania",
+        "unit_of_measurement": "sekundy"
+      }
+    },
+    "switch": {
+      "group": {
+        "name": "Skupina {group_name}"
+      }
+    },
+    "update": {
+      "core_update_available": {
+        "name": "Aktualizácia Core dostupná"
+      },
+      "ftl_update_available": {
+        "name": "Aktualizácia FTL dostupná"
+      },
+      "web_update_available": {
+        "name": "Aktualizácia Web dostupná"
+      }
+    }
+  },
+  "services": {
+    "disable": {
+      "name": "Deaktivovať",
+      "description": "Deaktivuje nakonfigurovaný Pi-hole na určitý čas.",
+      "fields": {
+        "duration": {
+          "description": "Čas na ktorý má byť Pi-hole deaktivovaný.",
+          "name": "Trvanie"
+        }
+      }
+    },
+    "enable": {
+      "name": "Aktivovať",
+      "description": "Aktivuje nakonfigurovaný Pi-hole."
+    }
+  }
+}
