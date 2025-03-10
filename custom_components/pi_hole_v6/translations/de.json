@@ -21,7 +21,7 @@
                     "url": "URL oder Adresse von deinem Pi-hole (ie: https://pi.hole:443/api)"
                 },
                 "description": "Diese Integration erlaubt das interagieren und abrufen von Statistiken mit einer Pi-hole V6 Installation.",
-                "title": "Pi-hole V6 Integration"
+                "title": "Pi-hole V6"
             }
         }
     },
