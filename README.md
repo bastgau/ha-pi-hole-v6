@@ -43,6 +43,7 @@ The integration is currently translated in few langages :
 - French
 - German (thanks Christian)
 - Russian (thanks [@ProFiLeR4100](https://github.com/ProFiLeR4100))
+- Slovak (thanks [@milandzuris](https://github.com/milandzuris))
 - Spanish (thanks [@dmbuil](https://github.com/dmbuil))
 - Ukrainian (thanks [@ProFiLeR4100](https://github.com/ProFiLeR4100))
 
