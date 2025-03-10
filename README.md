@@ -64,6 +64,20 @@ The integration is currently translated in few langages :
 2. Place the integration folder in the custom_components directory of Home Assistant.
 3. Restart Home Assistant.
 
+## Debugging
+
+It is possible to show the info and debug logs for the Pi-hole V6 integration, to do this you need to enable logging in the configuration.yaml, example below:
+
+```
+logger:
+  default: warning
+  logs:
+    # Log for Pi-hole V6 integation
+    custom_components.pi_hole_v6: debug
+```
+
+Logs do not remove sensitive information so careful what you share, check what you are about to share and blank identifying information.
+
 
 ### Support & Contributions
 
