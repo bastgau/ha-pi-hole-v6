@@ -5,23 +5,23 @@
         },
         "error": {
             "incorrect_data_expected": "Nepodařilo se načíst data ve správné struktuře.",
-            "cannot_connect": "Nepodařilo se připojit k serveru. Ujistěte se, že adresa serveru a port jsou správné.",
-            "invalid_auth": "Nesprávné heslo. Ujistěte se, že vaše heslo je správné.",
-            "invalid_path": "Nesprávná URL adresa API. Ověřte, prosím, URL API."
+            "cannot_connect": "Nepodařilo se připojit k serveru. Ujistěte se že adresa serveru a port jsou správné.",
+            "invalid_auth": "Zadané heslo je neplatné. Ujistěte se že vaše heslo je správné.",
+            "invalid_path": "Zadaná neplatná cesta API. Zkontrolujte URL koncového bodu."
         },
         "step": {
             "user": {
                 "data": {
                     "name": "Jméno",
                     "password": "Heslo",
-                    "url": "URL adresa API"
+                    "url": "Adresa"
                 },
                 "data_description": {
-                    "password": "Heslo pro přihlášení",
-                    "url": "URL adresa vašeho Pi-hole (ie: https://pi.hole:443/api)"
+                    "password": "Heslo, které se použije k přihlášení",
+                    "url": "URL nebo adresa vašeho Pi-hole (např.: https://pi.hole:443/api)"
                 },
-                "description": "Tato integrace umožňuje získávat statistiky a interagovat s Pi-hole V6.",
-                "title": "Pi-hole V6"
+                "description": "Tato integrace vám umožňuje získat statistiky a interagovat se systémem Pi-hole V6.",
+                "title": "Pi-hole V6 Integrace"
             }
         }
     },
@@ -33,43 +33,43 @@
         },
         "sensor": {
             "ads_blocked_today": {
-                "name": "Dnes blokované reklamy",
-                "unit_of_measurement": "reklam"
+                "name": "Zablokované reklamy dnes",
+                "unit_of_measurement": "reklamy"
             },
             "ads_percentage_blocked_today": {
-                "name": "Poměr dnes blokovaných reklam"
+                "name": "Zablokované reklamy dnes procento"
             },
             "seen_clients": {
                 "name": "Vidění klienti",
-                "unit_of_measurement": "klientů"
+                "unit_of_measurement": "klienti"
             },
             "dns_queries_today": {
-                "name": "Dnes DNS dotazů",
-                "unit_of_measurement": "dotazů"
+                "name": "DNS dotazy dnes",
+                "unit_of_measurement": "dotazy"
             },
             "domains_blocked": {
-                "name": "Blokované domény",
-                "unit_of_measurement": "domén"
+                "name": "Domény zablokované",
+                "unit_of_measurement": "domény"
             },
             "dns_queries_cached": {
-                "name": "Kešované DNS dotazy",
-                "unit_of_measurement": "dotazů"
+                "name": "DNS dotazy uložené ve vyrovnávací paměti",
+                "unit_of_measurement": "dotazy"
             },
             "dns_queries_forwarded": {
-                "name": "Přeposlané DNS dotazy",
-                "unit_of_measurement": "dotazů"
+                "name": "DNS dotazy přesměrované",
+                "unit_of_measurement": "dotazy"
             },
             "dns_unique_clients": {
-                "name": "Unikátní DNS klienti",
-                "unit_of_measurement": "klientů"
+                "name": "DNS jedineční klienti",
+                "unit_of_measurement": "klienti"
             },
             "dns_unique_domains": {
-                "name": "Unikátní DNS domény",
-                "unit_of_measurement": "domén"
+                "name": "DNS jedinečné domény",
+                "unit_of_measurement": "domény"
             },
             "remaining_until_blocking_mode": {
-                "name": "Zbývající čas do blokování",
-                "unit_of_measurement": "sekund"
+                "name": "Zbývá do režimu blokování",
+                "unit_of_measurement": "sekundy"
             }
         },
         "switch": {
@@ -79,30 +79,30 @@
         },
         "update": {
             "core_update_available": {
-                "name": "Aktualizace Core"
+                "name": "Aktualizace Core dostupná"
             },
             "ftl_update_available": {
-                "name": "Aktualizace FTP"
+                "name": "Aktualizace FTL dostupná"
             },
             "web_update_available": {
-                "name": "Aktualizace Web"
+                "name": "Aktualizace Web dostupná"
             }
         }
     },
     "services": {
         "disable": {
-            "name": "Zakázat",
-            "description": "Zakáze Pi-hole na určitou dobu.",
+            "name": "Deaktivovat",
+            "description": "Deaktivuje nakonfigurovaný Pi-hole na určitý čas.",
             "fields": {
                 "duration": {
-                    "description": "Doba, po kterou má být Pi-hole zakázán.",
-                    "name": "Doba"
+                    "description": "Čas na který má být Pi-hole deaktivován.",
+                    "name": "Trvání"
                 }
             }
         },
         "enable": {
-            "name": "Povolit",
-            "description": "Povolí Pi-hole."
+            "name": "Aktivovat",
+            "description": "Aktivuje nakonfigurovaný Pi-hole."
         }
     }
 }
