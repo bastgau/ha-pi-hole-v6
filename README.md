@@ -54,7 +54,8 @@ The integration is currently translated in few langages :
 
 2. Use HACS to install the integration.
 3. Restart Home Assistant.
-4. Set up the integration using the UI: [![Add Integration](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=pi_hole_v6)
+4. Set up the integration using the UI:
+[![Add Integration](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=pi_hole_v6)
 
 
 ### Manual Installation
@@ -62,7 +63,8 @@ The integration is currently translated in few langages :
 1. Download the integration files from the GitHub repository.
 2. Place the integration folder in the custom_components directory of Home Assistant.
 3. Restart Home Assistant.
-4. Set up the integration using the UI: [![Add Integration](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=pi_hole_v6)
+4. Set up the integration using the UI:
+[![Add Integration](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=pi_hole_v6)
 
 ## Debugging
 
