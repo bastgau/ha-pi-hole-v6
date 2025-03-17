@@ -53,21 +53,39 @@ The integration is currently translated in few langages :
 
 ### Installation via HACS
 
-1. Open Home Assistant and go to HACS.
-2. Navigate to "Integrations" and click on "Add a custom repository".
-3. Add the GitHub repository URL of the integration.
-4. Search for "Pi-hole V6 Integration" and install it.
-5. Restart Home Assistant.
+1. Add this repository as a custom repository to HACS:
 
-### One-click intallation
+[![Add Repository](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=bastgau&repository=ha-pi-hole-v6&category=Integration)
 
-[![Open your Home Assistant instance and start setting up a new integration.](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=bastgau&repository=ha-pi-hole-v6&category=Integration)
+2. Use HACS to install the integration.
+3. Restart Home Assistant.
+4. Set up the integration using the UI:
+
+[![Add Integration](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=pi_hole_v6)
+
 
 ### Manual Installation
 
 1. Download the integration files from the GitHub repository.
 2. Place the integration folder in the custom_components directory of Home Assistant.
 3. Restart Home Assistant.
+4. Set up the integration using the UI:
+
+[![Add Integration](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=pi_hole_v6)
+
+## Debugging
+
+It is possible to show the info and debug logs for the Pi-hole V6 integration, to do this you need to enable logging in the configuration.yaml, example below:
+
+```
+logger:
+  default: warning
+  logs:
+    # Log for Pi-hole V6 integation
+    custom_components.pi_hole_v6: debug
+```
+
+Logs do not remove sensitive information so careful what you share, check what you are about to share and blank identifying information.
 
 
 ## Support & Contributions
