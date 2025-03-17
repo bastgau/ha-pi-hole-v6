@@ -89,17 +89,17 @@ class PiHoleV6dFlowHandler(ConfigFlow, domain=DOMAIN):
         try:
             await api_client.call_authentification_status()
         except ClientConnectorException as err:
-            _LOGGER.debug("Connection failed: %s", err)
+            _LOGGER.error("Connection failed: %s", err)
             return {CONF_URL: "cannot_connect"}
         except (
             NotFoundException,
             ContentTypeException,
             MethodNotAllowedException,
         ) as err:
-            _LOGGER.debug("Connection failed: %s", err)
+            _LOGGER.error("Connection failed: %s", err)
             return {CONF_URL: "invalid_path"}
         except (UnauthorizedException, ForbiddenException) as err:
-            _LOGGER.debug("Connection failed: %s", err)
+            _LOGGER.error("Connection failed: %s", err)
             return {CONF_PASSWORD: "invalid_auth"}
 
         if not isinstance(await api_client.call_summary(), dict):

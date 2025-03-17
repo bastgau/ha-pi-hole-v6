@@ -118,6 +118,9 @@ class API:
                 elif method.lower() == "get":
                     request = await self._session.get(url, headers=headers)
                 else:
+                    self._get_logger().error(
+                        "Method (%s) is not supported/implemented.", method.lower()
+                    )
                     raise RuntimeError("Method is not supported/implemented.")
 
         except (TimeoutError, ClientError, GaiError) as err:
@@ -126,7 +129,15 @@ class API:
         result_data: dict[str, Any] = {}
 
         self._get_logger().debug("Status Code: %d", request.status)
-        handle_status(request.status)
+
+        try:
+            handle_status(request.status)
+        except RuntimeError as err1:
+            self._get_logger().error("Status Code: %d", request.status)
+            raise err1
+        except Exception as err2:
+            self._get_logger().error("Status Code: %d", request.status)
+            raise err2
 
         if request.status < 400 and request.text != "":
             try:
@@ -137,7 +148,7 @@ class API:
                 if action == "login":
                     result_data_debug["session"]["sid"] = "[redacted]"
 
-                # self._get_logger().debug("Data: %s", result_data_debug)
+                self._get_logger().debug("Data: %s", result_data_debug)
 
             except ContentTypeError as err:
                 raise ContentTypeException from err
@@ -351,6 +362,7 @@ class API:
             method="POST",
             data={"blocking": True, "timer": None},
         )
+
         self.cache_blocking = result["data"]
 
         return {
