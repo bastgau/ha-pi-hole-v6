@@ -1,0 +1,108 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "Tjänsten är redan konfigurerad."
+    },
+    "error": {
+      "incorrect_data_expected": "Misslyckades hämta data i korrekt struktur.",
+      "cannot_connect": "Misslycakdes med att ansluta till servern. Säkerställ att serveradressen och porten stämmer.",
+      "invalid_auth": "Ogiltigt lösenord. Säkerställ att lösenordet är korrekt.",
+      "invalid_path": "Ogiltig API sökväg. Vänligen verifiera att adressen är korrekt."
+    },
+    "step": {
+      "user": {
+        "data": {
+          "name": "Namn",
+          "password": "Lösenord",
+          "url": "Adress"
+        },
+        "data_description": {
+          "password": "Lösenord för inloggning på Pi-hole",
+          "url": "URL eller adress till din Pi-hole (tex: https://pi.hole:443/api)"
+        },
+        "description": "Denna integrationen låter dig ta emot statistik samt interagera med ett Pi-hole V6 systen.",
+        "title": "Pi-hole V6 Integration"
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "status": {
+        "name": "Status"
+      }
+    },
+    "sensor": {
+      "ads_blocked_today": {
+        "name": "Annonser blockerade idag",
+        "unit_of_measurement": "ads"
+      },
+      "ads_percentage_blocked_today": {
+        "name": "Procent annonser blockerade idag"
+      },
+      "seen_clients": {
+        "name": "Klienter",
+        "unit_of_measurement": "clients"
+      },
+      "dns_queries_today": {
+        "name": "DNS frågor idag",
+        "unit_of_measurement": "queries"
+      },
+      "domains_blocked": {
+        "name": "Domäner blockerade",
+        "unit_of_measurement": "domains"
+      },
+      "dns_queries_cached": {
+        "name": "DNS frågor cachade",
+        "unit_of_measurement": "queries"
+      },
+      "dns_queries_forwarded": {
+        "name": "DNS frågor vidarebefordrade",
+        "unit_of_measurement": "queries"
+      },
+      "dns_unique_clients": {
+        "name": "Unika klienter",
+        "unit_of_measurement": "clients"
+      },
+      "dns_unique_domains": {
+        "name": "Unika domäner",
+        "unit_of_measurement": "domains"
+      },
+      "remaining_until_blocking_mode": {
+        "name": "Återstående tid tills blockering",
+        "unit_of_measurement": "seconds"
+      }
+    },
+    "switch": {
+      "group": {
+        "name": "Grupp {group_name}"
+      }
+    },
+    "update": {
+      "core_update_available": {
+        "name": "Core uppdatering tillgänglig"
+      },
+      "ftl_update_available": {
+        "name": "FTL uppdatering tillgänglig"
+      },
+      "web_update_available": {
+        "name": "Webb uppdatering tillgänglig"
+      }
+    }
+  },
+  "services": {
+    "disable": {
+      "name": "Inaktivera",
+      "description": "Inaktiverar Pi-hole för en given tid.",
+      "fields": {
+        "duration": {
+          "description": "Tid i sekunder att inaktivera Pi-hole.",
+          "name": "Varaktighet"
+        }
+      }
+    },
+    "enable": {
+      "name": "Aktiv",
+      "description": "Aktiverar Pi-hole."
+    }
+  }
+}
