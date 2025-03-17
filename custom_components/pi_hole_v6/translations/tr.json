@@ -21,7 +21,7 @@
                     "url": "Pi-hole'unuzun URL veya adresi (örneğin: https://pi.hole:443/api)"
                 },
                 "description": "Bu entegrasyon, Pi-hole V6 sisteminden istatistikler almanızı ve sistemle etkileşim kurmanızı sağlar.",
-                "title": "Pi-hole V6 Entegrasyonu"
+                "title": "Pi-hole V6"
             }
         }
     },
@@ -79,13 +79,13 @@
         },
         "update": {
             "core_update_available": {
-                "name": "Çekirdek güncellemesi mevcut"
+                "name": "Çekirdek güncellemesi"
             },
             "ftl_update_available": {
-                "name": "FTL güncellemesi mevcut"
+                "name": "FTL güncellemesi"
             },
             "web_update_available": {
-                "name": "Web güncellemesi mevcut"
+                "name": "Web güncellemesi"
             }
         }
     },

@@ -21,7 +21,7 @@
           "url": "URL eller adress till din Pi-hole (tex: https://pi.hole:443/api)"
         },
         "description": "Denna integrationen låter dig ta emot statistik samt interagera med ett Pi-hole V6 systen.",
-        "title": "Pi-hole V6 Integration"
+        "title": "Pi-hole V6"
       }
     }
   },
@@ -79,13 +79,13 @@
     },
     "update": {
       "core_update_available": {
-        "name": "Core uppdatering tillgänglig"
+        "name": "Core uppdatering"
       },
       "ftl_update_available": {
-        "name": "FTL uppdatering tillgänglig"
+        "name": "FTL uppdatering"
       },
       "web_update_available": {
-        "name": "Webb uppdatering tillgänglig"
+        "name": "Webb uppdatering"
       }
     }
   },
