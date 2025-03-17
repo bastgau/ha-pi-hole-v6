@@ -21,7 +21,7 @@
                     "url": "Посилання на ваш екземпляр Pi-hole (приклад: https://pi.hole:443/api)"
                 },
                 "description": "Ця інтеграція дозволяє вам отримати статистику та взаємодіяти з Pi-hole V6.",
-                "title": "Інтеграція з Pi-hole V6"
+                "title": "Pi-hole V6"
             }
         }
     },
@@ -79,13 +79,13 @@
         },
         "update": {
             "core_update_available": {
-                "name": "Доступне оновлення ядра"
+                "name": "Oновлення ядра"
             },
             "ftl_update_available": {
-                "name": "Доступне оновлення FTL"
+                "name": "Oновлення FTL"
             },
             "web_update_available": {
-                "name": "Доступне веб-оновлення"
+                "name": "Веб-оновлення"
             }
         }
     },

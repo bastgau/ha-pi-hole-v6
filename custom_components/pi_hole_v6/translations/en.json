@@ -21,7 +21,7 @@
                     "url": "URL or address of your Pi-hole (ie: https://pi.hole:443/api)"
                 },
                 "description": "This integration allows you to retrieve statistics and interact with a Pi-hole V6 system.",
-                "title": "Pi-hole V6 Integration"
+                "title": "Pi-hole V6"
             }
         }
     },
@@ -79,13 +79,13 @@
         },
         "update": {
             "core_update_available": {
-                "name": "Core update available"
+                "name": "Core update"
             },
             "ftl_update_available": {
-                "name": "FTL update available"
+                "name": "FTL update"
             },
             "web_update_available": {
-                "name": "Web update available"
+                "name": "Web update"
             }
         }
     },

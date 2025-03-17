@@ -21,7 +21,7 @@
                     "url": "URL adresa vašeho Pi-hole (např.: https://pi.hole:443/api)"
                 },
                 "description": "Tato integrace vám umožňuje získat statistiky a interagovat se systémem Pi-hole V6.",
-                "title": "Pi-hole V6 integrace"
+                "title": "Pi-hole V6"
             }
         }
     },
