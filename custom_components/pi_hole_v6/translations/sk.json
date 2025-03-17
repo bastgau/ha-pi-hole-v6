@@ -85,7 +85,7 @@
         "name": "Aktualizácia FTL"
       },
       "web_update_available": {
-        "name": "Aktualizácia Web"
+        "name": "Aktualizácia Web interface"
       }
     }
   },

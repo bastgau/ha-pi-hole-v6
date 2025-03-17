@@ -85,7 +85,7 @@
                 "name": "Actualización FTL"
             },
             "web_update_available": {
-                "name": "Actualización Web"
+                "name": "Actualización Web interface"
             }
         }
     },

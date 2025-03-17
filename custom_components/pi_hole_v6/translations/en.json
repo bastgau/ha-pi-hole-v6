@@ -85,7 +85,7 @@
                 "name": "FTL update"
             },
             "web_update_available": {
-                "name": "Web update"
+                "name": "Web interface update"
             }
         }
     },

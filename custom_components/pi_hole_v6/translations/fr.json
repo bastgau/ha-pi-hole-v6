@@ -79,13 +79,13 @@
         },
         "update": {
             "core_update_available": {
-                "name": "Mise à jour du cœur"
+                "name": "Mise à jour du Core"
             },
             "ftl_update_available": {
                 "name": "Mise à jour FTL"
             },
             "web_update_available": {
-                "name": "Mise à jour web"
+                "name": "Mise à jour Web interface"
             }
         }
     },
@@ -102,7 +102,7 @@
         },
         "enable": {
             "name": "Activer",
-            "description": "Active le  service Pi-hole configuré."
+            "description": "Active le service Pi-hole configuré."
         }
     }
 }

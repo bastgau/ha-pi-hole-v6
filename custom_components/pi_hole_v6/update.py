@@ -57,7 +57,7 @@ UPDATE_ENTITY_TYPES: tuple[PiHoleV6UpdateEntityDescription, ...] = (
     PiHoleV6UpdateEntityDescription(
         key="ftl_update_available",
         translation_key="ftl_update_available",
-        title="Pi-hole FTL DNS",
+        title="Pi-hole FTL",
         entity_category=EntityCategory.DIAGNOSTIC,
         installed_version=lambda versions: versions.get("ftl")
         .get("local", {})
