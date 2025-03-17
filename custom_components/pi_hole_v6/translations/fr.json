@@ -79,7 +79,7 @@
         },
         "update": {
             "core_update_available": {
-                "name": "Mise à jour du Core"
+                "name": "Mise à jour Core"
             },
             "ftl_update_available": {
                 "name": "Mise à jour FTL"
