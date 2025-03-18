@@ -235,6 +235,9 @@ class API:
             data={"password": self._password},
         )
 
+        if result["data"]["session"]["message"] == "password incorrect":
+            raise UnauthorizedException()
+
         self._sid = result["data"]["session"]["sid"]
 
         return {
@@ -419,6 +422,8 @@ class API:
             action="groups",
             method="GET",
         )
+
+        self.cache_groups = {}
 
         for group in result["data"]["groups"]:
             self.cache_groups[group["name"]] = {
