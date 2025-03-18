@@ -57,7 +57,7 @@ UPDATE_ENTITY_TYPES: tuple[PiHoleV6UpdateEntityDescription, ...] = (
     PiHoleV6UpdateEntityDescription(
         key="ftl_update_available",
         translation_key="ftl_update_available",
-        title="Pi-hole FTL DNS",
+        title="Pi-hole FTL",
         entity_category=EntityCategory.DIAGNOSTIC,
         installed_version=lambda versions: versions.get("ftl")
         .get("local", {})
@@ -66,6 +66,15 @@ UPDATE_ENTITY_TYPES: tuple[PiHoleV6UpdateEntityDescription, ...] = (
         .get("remote", {})
         .get("version", None),
         release_base_url="https://github.com/pi-hole/FTL/releases/tag",
+    ),
+    PiHoleV6UpdateEntityDescription(
+        key="docker_update_available",
+        translation_key="docker_update_available",
+        title="Pi-hole Docker",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        installed_version=lambda versions: versions.get("docker").get("local", None),
+        latest_version=lambda versions: versions.get("docker").get("remote", None),
+        release_base_url="https://github.com/pi-hole/docker-pi-hole/releases/tag",
     ),
 )
 

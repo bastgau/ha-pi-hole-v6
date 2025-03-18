@@ -1,0 +1,111 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Servis zaten yapılandırılmış."
+        },
+        "error": {
+            "incorrect_data_expected": "Verileri doğru yapıda almada başarısız olundu.",
+            "cannot_connect": "Sunucuya bağlantı kurulamadı. Sunucu adresi ve port numarasının doğru olduğundan emin olun.",
+            "invalid_auth": "Geçersiz şifre girildi. Şifrenizin doğru olduğundan emin olun.",
+            "invalid_path": "Geçersiz API yolu belirtildi. Lütfen bitiş noktası URL'sini doğrulayın."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "name": "İsim",
+                    "password": "Şifre",
+                    "url": "Adres"
+                },
+                "data_description": {
+                    "password": "Giriş için kullanılacak şifre",
+                    "url": "Pi-hole'unuzun URL veya adresi (örneğin: https://pi.hole:443/api)"
+                },
+                "description": "Bu entegrasyon, Pi-hole V6 sisteminden istatistikler almanızı ve sistemle etkileşim kurmanızı sağlar.",
+                "title": "Pi-hole V6"
+            }
+        }
+    },
+    "entity": {
+        "binary_sensor": {
+            "status": {
+                "name": "Durum"
+            }
+        },
+        "sensor": {
+            "ads_blocked_today": {
+                "name": "Bugün engellenen reklamlar",
+                "unit_of_measurement": "reklam"
+            },
+            "ads_percentage_blocked_today": {
+                "name": "Bugün engellenen reklamların yüzdesi"
+            },
+            "seen_clients": {
+                "name": "Görülen istemciler",
+                "unit_of_measurement": "istemci"
+            },
+            "dns_queries_today": {
+                "name": "Bugünkü DNS sorguları",
+                "unit_of_measurement": "sorgu"
+            },
+            "domains_blocked": {
+                "name": "Engellenen alan adları",
+                "unit_of_measurement": "alan adı"
+            },
+            "dns_queries_cached": {
+                "name": "Önbelleğe alınan DNS sorguları",
+                "unit_of_measurement": "sorgu"
+            },
+            "dns_queries_forwarded": {
+                "name": "Yönlendirilen DNS sorguları",
+                "unit_of_measurement": "sorgu"
+            },
+            "dns_unique_clients": {
+                "name": "Benzersiz DNS istemcileri",
+                "unit_of_measurement": "istemci"
+            },
+            "dns_unique_domains": {
+                "name": "Benzersiz DNS alan adları",
+                "unit_of_measurement": "alan adı"
+            },
+            "remaining_until_blocking_mode": {
+                "name": "Engelleme moduna kalan süre",
+                "unit_of_measurement": "saniye"
+            }
+        },
+        "switch": {
+            "group": {
+                "name": "Grup {group_name}"
+            }
+        },
+        "update": {
+            "core_update_available": {
+                "name": "Çekirdek güncellemesi"
+            },
+            "docker_update_available": {
+                "name": "Docker güncellemesi"
+            },
+            "ftl_update_available": {
+                "name": "FTL güncellemesi"
+            },
+            "web_update_available": {
+                "name": "Web interface güncellemesi"
+            }
+        }
+    },
+    "services": {
+        "disable": {
+            "name": "Devre Dışı Bırak",
+            "description": "Yapılandırılmış Pi-hole'u belirli bir süre için devre dışı bırakır.",
+            "fields": {
+                "duration": {
+                    "description": "Pi-hole'un devre dışı kalması gereken süre.",
+                    "name": "Süre"
+                }
+            }
+        },
+        "enable": {
+            "name": "Etkinleştir",
+            "description": "Yapılandırılmış Pi-hole'u etkinleştirir."
+        }
+    }
+}

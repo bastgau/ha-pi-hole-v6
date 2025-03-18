@@ -42,7 +42,12 @@ The integration is currently translated in few langages :
 - English
 - French
 - German (thanks Christian)
+- Russian (thanks [@ProFiLeR4100](https://github.com/ProFiLeR4100))
+- Slovak (thanks [@milandzuris](https://github.com/milandzuris))
 - Spanish (thanks [@dmbuil](https://github.com/dmbuil))
+- Swedish (thanks [@aleexolsson](https://github.com/aleexolsson))
+- Turkish (thanks [@habil](https://github.com/habil))
+- Ukrainian (thanks [@ProFiLeR4100](https://github.com/ProFiLeR4100))
 
 ## Installation
 
@@ -83,7 +88,7 @@ logger:
 Logs do not remove sensitive information so careful what you share, check what you are about to share and blank identifying information.
 
 
-### Support & Contributions
+## Support & Contributions
 
 If you encounter any issues or wish to contribute to improving this integration, feel free to open an issue or a pull request on the GitHub repository.
 
