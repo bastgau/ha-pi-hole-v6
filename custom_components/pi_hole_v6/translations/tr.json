@@ -81,6 +81,9 @@
             "core_update_available": {
                 "name": "Çekirdek güncellemesi"
             },
+            "docker_update_available": {
+                "name": "Docker güncellemesi"
+            },
             "ftl_update_available": {
                 "name": "FTL güncellemesi"
             },

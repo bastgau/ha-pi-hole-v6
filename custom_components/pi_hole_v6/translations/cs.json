@@ -81,6 +81,9 @@
             "core_update_available": {
                 "name": "Aktualizace Core"
             },
+            "docker_update_available": {
+                "name": "Aktualizace Docker"
+            },
             "ftl_update_available": {
                 "name": "Aktualizace FTL"
             },

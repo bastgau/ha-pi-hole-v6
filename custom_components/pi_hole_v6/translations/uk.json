@@ -81,6 +81,9 @@
             "core_update_available": {
                 "name": "Oновлення ядра"
             },
+            "docker_update_available": {
+                "name": "Oновлення Docker"
+            },
             "ftl_update_available": {
                 "name": "Oновлення FTL"
             },
