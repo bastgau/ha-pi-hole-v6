@@ -16,7 +16,7 @@ Uncheck the option `Enable polling for changes` to deactivate the automatic poll
 
 <img src="../img/manual-refresh-02.png" width="300">
 
-### Create an Automations
+### Create an Automation
 
 #### 1. Access Settings
 
