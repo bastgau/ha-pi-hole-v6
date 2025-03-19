@@ -87,6 +87,11 @@ logger:
 
 Logs do not remove sensitive information so careful what you share, check what you are about to share and blank identifying information.
 
+## Frequently Asked Questions
+
+### How do I configure the refresh frequency?
+
+By default, the data is updated every 5 minutes. You can configure a different frequency as explained on the following [page](docs/guide-configuring-refresh.md).
 
 ## Support & Contributions
 
