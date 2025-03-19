@@ -1,0 +1,111 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Service is already configured."
+        },
+        "error": {
+            "incorrect_data_expected": "Nie udało się pobrać danych w poprawnej strukturze.",
+            "cannot_connect": "Nie udało się połączyć z serwerem. Upewnij się, że adres serwera i port są poprawne.",
+            "invalid_auth": "Podano nieprawidłowe hasło. Upewnij się, że Twoje hasło jest poprawne.",
+            "invalid_path": "Podano nieprawidłową ścieżkę API. Zweryfikuj adres URL punktu końcowego."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "name": "Nazwa",
+                    "password": "Hasło",
+                    "url": "Adres URL"
+                },
+                "data_description": {
+                    "password": "Hasło używane do logowania",
+                    "url": "URL lub adres Twojego Pi-hole (np.: https://pi.hole:443/api)"
+                },
+                "description": "Ta integracja pozwala na pobieranie statystyk i interakcję z systemem Pi-hole V6.",
+                "title": "Pi-hole V6"
+            }
+        }
+    },
+    "entity": {
+        "binary_sensor": {
+            "status": {
+                "name": "Status"
+            }
+        },
+        "sensor": {
+            "ads_blocked_today": {
+                "name": "Reklamy zablokowane dzisiaj",
+                "unit_of_measurement": "reklamy"
+            },
+            "ads_percentage_blocked_today": {
+                "name": "Procent zablokowanych reklam dzisiaj"
+            },
+            "seen_clients": {
+                "name": "Widoczni klienci",
+                "unit_of_measurement": "klienci"
+            },
+            "dns_queries_today": {
+                "name": "Zapytania DNS dzisiaj",
+                "unit_of_measurement": "zapytania"
+            },
+            "domains_blocked": {
+                "name": "Zablokowane domeny",
+                "unit_of_measurement": "domeny"
+            },
+            "dns_queries_cached": {
+                "name": "Zapytania DNS w cache",
+                "unit_of_measurement": "zapytania"
+            },
+            "dns_queries_forwarded": {
+                "name": "Przekazane zapytania DNS",
+                "unit_of_measurement": "zapytania"
+            },
+            "dns_unique_clients": {
+                "name": "Unikalni klienci DNS",
+                "unit_of_measurement": "klienci"
+            },
+            "dns_unique_domains": {
+                "name": "Unikalne domeny DNS",
+                "unit_of_measurement": "domeny"
+            },
+            "remaining_until_blocking_mode": {
+                "name": "Pozostały czas do trybu blokowania",
+                "unit_of_measurement": "sekundy"
+            }
+        },
+        "switch": {
+            "group": {
+                "name": "Grupa {group_name}"
+            }
+        },
+        "update": {
+            "core_update_available": {
+                "name": "Aktualizacja Rdzenia"
+            },
+            "docker_update_available": {
+                "name": "Aktualizacja Dockera"
+            },
+            "ftl_update_available": {
+                "name": "Aktualizacja FTL"
+            },
+            "web_update_available": {
+                "name": "Aktualizacja interfejsu webowego"
+            }
+        }
+    },
+    "services": {
+        "disable": {
+            "name": "Wyłącz",
+            "description": "Wyłącza skonfigurowany Pi-hole na określony czas.",
+            "fields": {
+                "duration": {
+                    "description": "Czas, na jaki Pi-hole powinien być wyłączony.",
+                    "name": "Czas trwania"
+                }
+            }
+        },
+        "enable": {
+            "name": "Aktywuj",
+            "description": "Włącza skonfigurowany Pi-hole."
+        }
+    }
+}
