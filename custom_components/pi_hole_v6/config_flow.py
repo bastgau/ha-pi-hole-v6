@@ -6,12 +6,26 @@ import logging
 from typing import Any
 
 import voluptuous as vol
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_URL
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
+from homeassistant.const import (
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_URL,
+)
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import selector
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .api import API as ClientAPI
-from .const import DEFAULT_NAME, DEFAULT_PASSWORD, DEFAULT_URL, DOMAIN
+from .const import (
+    CONF_UPDATE_INTERVAL,
+    CONFIG_ENTRY_VERSION,
+    DEFAULT_NAME,
+    DEFAULT_PASSWORD,
+    DEFAULT_URL,
+    DOMAIN,
+    MIN_TIME_BETWEEN_UPDATES,
+)
 from .exceptions import (
     ClientConnectorException,
     ContentTypeException,
@@ -24,10 +38,29 @@ from .exceptions import (
 _LOGGER = logging.getLogger(__name__)
 
 
-class PiHoleV6dFlowHandler(ConfigFlow, domain=DOMAIN):
+def _get_data_config_schema(user_input) -> vol.Schema:
+    return vol.Schema(
+        {
+            vol.Required(
+                CONF_NAME,
+                default=user_input.get(CONF_NAME, DEFAULT_NAME),
+            ): str,
+            vol.Required(
+                CONF_URL,
+                default=user_input.get(CONF_URL, DEFAULT_URL),
+            ): str,
+            vol.Required(
+                CONF_PASSWORD,
+                default=user_input.get(CONF_PASSWORD, DEFAULT_PASSWORD),
+            ): str,
+        }
+    )
+
+
+class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a Pi-hole V6 config flow."""
 
-    VERSION = 1
+    VERSION = CONFIG_ENTRY_VERSION
 
     def __init__(self) -> None:
         """Initialize the config flow."""
@@ -57,24 +90,15 @@ class PiHoleV6dFlowHandler(ConfigFlow, domain=DOMAIN):
         user_input = user_input or {}
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(
-                        CONF_NAME,
-                        default=user_input.get(CONF_NAME, DEFAULT_NAME),
-                    ): str,
-                    vol.Required(
-                        CONF_URL,
-                        default=user_input.get(CONF_URL, DEFAULT_URL),
-                    ): str,
-                    vol.Required(
-                        CONF_PASSWORD,
-                        default=user_input.get(CONF_PASSWORD, DEFAULT_PASSWORD),
-                    ): str,
-                }
-            ),
+            data_schema=_get_data_config_schema(user_input),
             errors=errors,
         )
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry):
+        """Get the options flow for this handler."""
+        return OptionsFlowHandler()
 
     async def _async_try_connect(self) -> dict[str, str]:
         session = async_get_clientsession(self.hass, False)
@@ -113,3 +137,76 @@ class PiHoleV6dFlowHandler(ConfigFlow, domain=DOMAIN):
 
         if not isinstance(await api_client.call_get_groups(), dict):
             return {"base": "incorrect_data_expected"}
+
+
+def _get_data_option_schema(user_input) -> vol.Schema:
+    return vol.Schema(
+        {
+            vol.Required(
+                CONF_UPDATE_INTERVAL,
+            ): vol.All(
+                selector.NumberSelector(
+                    selector.NumberSelectorConfig(
+                        min=1,
+                        max=3600,
+                        step=1,
+                        mode=selector.NumberSelectorMode.BOX,
+                    )
+                ),
+                vol.Coerce(int),
+            ),
+        }
+    )
+
+
+async def _async_validate_input(
+    hass: HomeAssistant,
+    user_input: dict[str, Any],
+) -> Any:
+    if user_input[CONF_UPDATE_INTERVAL] == 1:
+        return {CONF_UPDATE_INTERVAL: "invalid_update_interval"}
+
+    return {}
+
+
+class OptionsFlowHandler(OptionsFlow):
+    """Options flow used to change configuration (options) of existing instance of integration."""
+
+    async def async_step_init(self, user_input=None) -> ConfigFlowResult:
+        if user_input is not None:  # we asked to validate values entered by user
+            errors = await _async_validate_input(self.hass, user_input)
+
+            if not errors:
+                self.hass.config_entries.async_update_entry(
+                    self.config_entry, data={**self.config_entry.data, **user_input}
+                )
+                return self.async_create_entry(title="", data={})
+            else:
+                return self.async_show_form(
+                    step_id="init",
+                    data_schema=self.add_suggested_values_to_schema(
+                        _get_data_option_schema(user_input),
+                        user_input,
+                    ),
+                    errors=dict(errors),
+                )
+
+        update_interval = self.config_entry.data.get(CONF_UPDATE_INTERVAL, None)
+
+        if update_interval is None:
+            self.hass.config_entries.async_update_entry(
+                self.config_entry,
+                data={
+                    **self.config_entry.data,
+                    **{CONF_UPDATE_INTERVAL: MIN_TIME_BETWEEN_UPDATES.seconds},
+                },
+            )
+
+        # we asked to provide default values for the form
+        return self.async_show_form(
+            step_id="init",
+            data_schema=self.add_suggested_values_to_schema(
+                _get_data_option_schema(user_input),
+                self.config_entry.data,
+            ),
+        )

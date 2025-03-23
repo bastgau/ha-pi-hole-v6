@@ -25,6 +25,20 @@
             }
         }
     },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "update_interval": "Fréquence de rafraîchissement des données (secondes)"
+                },
+                "description": "Après avoir modifié une de ces options, il est nécessaire de recharger le service ou de redémarrer Home Assistant.",
+                "title": "Pi-hole V6"
+            }
+        },
+        "error": {
+            "invalid_update_interval": "Fréquence de rafraîchissement des données invalide. Doit être supérieure à 1 seconde et inférieure à 3600 secondes."
+        }
+    },
     "entity": {
         "binary_sensor": {
             "status": {

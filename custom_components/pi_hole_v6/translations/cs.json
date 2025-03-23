@@ -25,6 +25,20 @@
             }
         }
     },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "update_interval": "Frekvence obnovování dat (sekundy)"
+                },
+                "description": "Po změně jedné z těchto možností je nutné znovu načíst službu nebo restartovat Home Assistant.",
+                "title": "Pi-hole V6"
+            }
+        },
+        "error": {
+            "invalid_update_interval": "Neplatná frekvence obnovování dat. Musí být vyšší než 1 sekunda a nižší než 3600 sekund."
+        }
+    },
     "entity": {
         "binary_sensor": {
             "status": {
