@@ -141,14 +141,17 @@ class API:
 
         if request.status < 400 and request.text != "":
             try:
+                result_data_debug: dict[str, Any] | None = None
+
                 if request.status != 204:
                     result_data = await request.json()
-                    result_data_debug: dict[str, Any] = copy.deepcopy(result_data)
+                    result_data_debug = copy.deepcopy(result_data)
 
                 if action == "login":
                     result_data_debug["session"]["sid"] = "[redacted]"
 
-                self._get_logger().debug("Data: %s", result_data_debug)
+                if result_data_debug is not None:
+                    self._get_logger().debug("Data: %s", result_data_debug)
 
             except ContentTypeError as err:
                 raise ContentTypeException from err
