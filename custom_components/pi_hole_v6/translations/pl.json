@@ -25,6 +25,20 @@
             }
         }
     },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "update_interval": "Częstotliwość odświeżania danych (sekundy)"
+                },
+                "description": "Po zmianie jednej z tych opcji konieczne jest ponowne załadowanie usługi lub ponowne uruchomienie Home Assistant.",
+                "title": "Pi-hole V6"
+            }
+        },
+        "error": {
+            "invalid_update_interval": "Nieprawidłowa częstotliwość odświeżania danych. Musi być większa niż 1 sekunda i mniejsza niż 3600 sekund."
+        }
+    },
     "entity": {
         "binary_sensor": {
             "status": {

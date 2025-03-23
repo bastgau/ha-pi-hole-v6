@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
+from datetime import timedelta
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -13,14 +14,13 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .api import API as PiholeAPI
-from .const import DOMAIN, MIN_TIME_BETWEEN_UPDATES
+from .const import CONF_UPDATE_INTERVAL, DOMAIN, MIN_TIME_BETWEEN_UPDATES
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -52,38 +52,38 @@ async def async_setup_entry(hass: HomeAssistant, entry: PiHoleV6ConfigEntry) -> 
 
     _LOGGER.debug("Setting up %s integration with host %s", DOMAIN, url)
 
-    name_to_key = {
-        "Core Update Available": "core_update_available",
-        "Web Update Available": "web_update_available",
-        "FTL Update Available": "ftl_update_available",
-        "Status": "status",
-        "Ads Blocked Today": "ads_blocked_today",
-        "Ads Percentage Blocked Today": "ads_percentage_blocked_today",
-        "Seen Clients": "seen_clients",
-        "DNS Queries Today": "dns_queries_today",
-        "Domains Blocked": "domains_blocked",
-        "DNS Queries Cached": "dns_queries_cached",
-        "DNS Queries Forwarded": "dns_queries_forwarded",
-        "DNS Unique Clients": "dns_unique_clients",
-        "DNS Unique Domains": "dns_unique_domains",
-        "Remaining until blocking mode": "remaining_until_blocking_mode",
-    }
+    # name_to_key = {
+    #     "Core Update Available": "core_update_available",
+    #     "Web Update Available": "web_update_available",
+    #     "FTL Update Available": "ftl_update_available",
+    #     "Status": "status",
+    #     "Ads Blocked Today": "ads_blocked_today",
+    #     "Ads Percentage Blocked Today": "ads_percentage_blocked_today",
+    #     "Seen Clients": "seen_clients",
+    #     "DNS Queries Today": "dns_queries_today",
+    #     "Domains Blocked": "domains_blocked",
+    #     "DNS Queries Cached": "dns_queries_cached",
+    #     "DNS Queries Forwarded": "dns_queries_forwarded",
+    #     "DNS Unique Clients": "dns_unique_clients",
+    #     "DNS Unique Domains": "dns_unique_domains",
+    #     "Remaining until blocking mode": "remaining_until_blocking_mode",
+    # }
 
-    @callback
-    def update_unique_id(
-        entity_entry: er.RegistryEntry,
-    ) -> dict[str, str] | None:
-        """Update unique ID of entity entry."""
-        unique_id_parts = entity_entry.unique_id.split("/")
-        if len(unique_id_parts) == 2 and unique_id_parts[1] in name_to_key:
-            name = unique_id_parts[1]
-            new_unique_id = entity_entry.unique_id.replace(name, name_to_key[name])
-            _LOGGER.debug("Migrate %s to %s", entity_entry.unique_id, new_unique_id)
-            return {"new_unique_id": new_unique_id}
-
-        return None
-
-    await er.async_migrate_entries(hass, entry.entry_id, update_unique_id)
+    # @callback
+    # def update_unique_id(
+    #     entity_entry: er.RegistryEntry,
+    # ) -> dict[str, str] | None:
+    #     """Update unique ID of entity entry."""
+    #     unique_id_parts = entity_entry.unique_id.split("/")
+    #     if len(unique_id_parts) == 2 and unique_id_parts[1] in name_to_key:
+    #         name = unique_id_parts[1]
+    #         new_unique_id = entity_entry.unique_id.replace(name, name_to_key[name])
+    #         _LOGGER.debug("Migrate %s to %s", entity_entry.unique_id, new_unique_id)
+    #         return {"new_unique_id": new_unique_id}
+    #
+    #     return None
+    #
+    # await er.async_migrate_entries(hass, entry.entry_id, update_unique_id)
 
     session = async_get_clientsession(hass, False)
     api_client = PiholeAPI(
@@ -115,13 +115,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: PiHoleV6ConfigEntry) -> 
         if not isinstance(await api_client.call_get_groups(), dict):
             raise ConfigEntryAuthFailed
 
+    conf_update_interval: int | None = entry.data.get(CONF_UPDATE_INTERVAL)
+
+    if conf_update_interval is None:
+        update_interval = MIN_TIME_BETWEEN_UPDATES
+    else:
+        update_interval = timedelta(seconds=conf_update_interval)
+
     coordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
         config_entry=entry,
         name=name,
         update_method=async_update_data,
-        update_interval=MIN_TIME_BETWEEN_UPDATES,
+        update_interval=update_interval,
     )
 
     await coordinator.async_config_entry_first_refresh()
