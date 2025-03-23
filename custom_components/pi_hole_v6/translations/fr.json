@@ -30,7 +30,9 @@
             "init": {
                 "data": {
                     "update_interval": "Fréquence de rafraîchissement des données (secondes)"
-                }
+                },
+                "description": "Après avoir modifié une de ces options, il est nécessaire de recharger le service ou de redémarrer Home Assistant.",
+                "title": "Pi-hole V6"
             }
         },
         "error": {

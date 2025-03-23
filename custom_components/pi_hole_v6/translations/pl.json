@@ -30,7 +30,9 @@
             "init": {
                 "data": {
                     "update_interval": "Częstotliwość odświeżania danych (sekundy)"
-                }
+                },
+                "description": "Po zmianie jednej z tych opcji konieczne jest ponowne załadowanie usługi lub ponowne uruchomienie Home Assistant.",
+                "title": "Pi-hole V6"
             }
         },
         "error": {

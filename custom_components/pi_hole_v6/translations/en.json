@@ -30,7 +30,9 @@
             "init": {
                 "data": {
                     "update_interval": "Data refresh frequency (seconds)"
-                }
+                },
+                "description": "After modifying one of these options, it is necessary to reload the service or restart Home Assistant.",
+                "title": "Pi-hole V6"
             }
         },
         "error": {

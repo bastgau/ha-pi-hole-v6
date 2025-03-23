@@ -30,7 +30,9 @@
             "init": {
                 "data": {
                     "update_interval": "Frekvencia obnovovania dát (sekundy)"
-                }
+                },
+                "description": "Po zmenení jednej z týchto možností je potrebné znova načítať službu alebo reštartovať Home Assistant.",
+                "title": "Pi-hole V6"
             }
         },
         "error": {

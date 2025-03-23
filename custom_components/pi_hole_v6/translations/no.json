@@ -30,7 +30,9 @@
             "init": {
                 "data": {
                     "update_interval": "Dataoppdateringsfrekvens (sekunder)"
-                }
+                },
+                "description": "Etter å ha endret en av disse innstillingene, er det nødvendig å laste inn tjenesten på nytt eller starte Home Assistant på nytt.",
+                "title": "Pi-hole V6"
             }
         },
         "error": {

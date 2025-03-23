@@ -30,7 +30,9 @@
             "init": {
                 "data": {
                     "update_interval": "Veri yenileme sıklığı (saniye)"
-                }
+                },
+                "description": "Bu seçeneklerden birini değiştirdikten sonra hizmeti yeniden yüklemeniz veya Home Assistant'ı yeniden başlatmanız gerekir.",
+                "title": "Pi-hole V6"
             }
         },
         "error": {
