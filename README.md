@@ -42,6 +42,7 @@ The integration is currently translated in few langages :
 - English
 - French
 - German (thanks Christian)
+- Norwegian (thanks [@emigrating](https://github.com/emigrating))
 - Polish (thanks [@jacksonafide](https://github.com/jacksonafide))
 - Russian (thanks [@ProFiLeR4100](https://github.com/ProFiLeR4100))
 - Slovak (thanks [@milandzuris](https://github.com/milandzuris))
