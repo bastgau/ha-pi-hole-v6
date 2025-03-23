@@ -1,0 +1,111 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Tjenesten er allerede konfigurert."
+        },
+        "error": {
+            "incorrect_data_expected": "Kunne ikke hente data i riktig struktur.",
+            "cannot_connect": "Kunne ikke koble til serveren. Sørg for at serveradressen og porten er korrekte.",
+            "invalid_auth": "Ugyldig passord oppgitt. Sørg for at passordet er riktig.",
+            "invalid_path": "Ugyldig API-sti spesifisert. Vennligst verifiser URL-endepunktet."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "name": "Navn",
+                    "password": "Passord",
+                    "url": "Adresse"
+                },
+                "data_description": {
+                    "password": "Passord som skal brukes for innlogging",
+                    "url": "URL eller adresse til din Pi-hole (f.eks.: https://pi.hole:443/api)"
+                },
+                "description": "Denne integrasjonen lar deg hente statistikk og samhandle med et Pi-hole V6-system.",
+                "title": "Pi-hole V6"
+            }
+        }
+    },
+    "entity": {
+        "binary_sensor": {
+            "status": {
+                "name": "Status"
+            }
+        },
+        "sensor": {
+            "ads_blocked_today": {
+                "name": "Annonser blokkert i dag",
+                "unit_of_measurement": "annonser"
+            },
+            "ads_percentage_blocked_today": {
+                "name": "Prosentandel annonser blokkert i dag"
+            },
+            "seen_clients": {
+                "name": "Antall klienter",
+                "unit_of_measurement": "klienter"
+            },
+            "dns_queries_today": {
+                "name": "DNS-forespørsler i dag",
+                "unit_of_measurement": "forespørsler"
+            },
+            "domains_blocked": {
+                "name": "Domener blokkert",
+                "unit_of_measurement": "domener"
+            },
+            "dns_queries_cached": {
+                "name": "DNS-forespørsler bufret",
+                "unit_of_measurement": "forespørsler"
+            },
+            "dns_queries_forwarded": {
+                "name": "DNS-forespørsler videresendt",
+                "unit_of_measurement": "forespørsler"
+            },
+            "dns_unique_clients": {
+                "name": "Unike DNS-klienter",
+                "unit_of_measurement": "klienter"
+            },
+            "dns_unique_domains": {
+                "name": "Unike DNS-domener",
+                "unit_of_measurement": "domener"
+            },
+            "remaining_until_blocking_mode": {
+                "name": "Gjenstående tid til blokkeringsmodus",
+                "unit_of_measurement": "sekunder"
+            }
+        },
+        "switch": {
+            "group": {
+                "name": "Gruppe {group_name}"
+            }
+        },
+        "update": {
+            "core_update_available": {
+                "name": "Kjerneoppdatering"
+            },
+            "docker_update_available": {
+                "name": "Docker-oppdatering"
+            },
+            "ftl_update_available": {
+                "name": "FTL-oppdatering"
+            },
+            "web_update_available": {
+                "name": "Oppdatering for webgrensesnitt"
+            }
+        }
+    },
+    "services": {
+        "disable": {
+            "name": "Deaktiver",
+            "description": "Deaktiverer konfigurert Pi-hole i en viss tidsperiode.",
+            "fields": {
+                "duration": {
+                    "description": "Tiden Pi-hole skal være deaktivert.",
+                    "name": "Varighet"
+                }
+            }
+        },
+        "enable": {
+            "name": "Aktiver",
+            "description": "Aktiverer konfigurert Pi-hole."
+        }
+    }
+}
