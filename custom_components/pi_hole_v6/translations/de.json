@@ -25,6 +25,18 @@
             }
         }
     },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "update_interval": "Datenaktualisierungsfrequenz (Sekunden)"
+                }
+            }
+        },
+        "error": {
+            "invalid_update_interval": "Ungültige Datenaktualisierungsfrequenz. Muss höher als 1 Sekunde und niedriger als 3600 Sekunden sein."
+        }
+    },
     "entity": {
         "binary_sensor": {
             "status": {

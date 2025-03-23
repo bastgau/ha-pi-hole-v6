@@ -25,6 +25,18 @@
             }
         }
     },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "update_interval": "Dataoppdateringsfrekvens (sekunder)"
+                }
+            }
+        },
+        "error": {
+            "invalid_update_interval": "Ugyldig dataoppdateringsfrekvens. Må være høyere enn 1 sekund og lavere enn 3600 sekunder."
+        }
+    },
     "entity": {
         "binary_sensor": {
             "status": {

@@ -25,6 +25,18 @@
             }
         }
     },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "update_interval": "Частота оновлення даних (секунди)"
+                }
+            }
+        },
+        "error": {
+            "invalid_update_interval": "Недійсна частота оновлення даних. Має бути вище 1 секунди і нижче 3600 секунд."
+        }
+    },
     "entity": {
         "binary_sensor": {
             "status": {

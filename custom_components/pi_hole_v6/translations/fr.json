@@ -25,6 +25,18 @@
             }
         }
     },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "update_interval": "Fréquence de rafraîchissement des données (secondes)"
+                }
+            }
+        },
+        "error": {
+            "invalid_update_interval": "Fréquence de rafraîchissement des données invalide. Doit être supérieure à 1 seconde et inférieure à 3600 secondes."
+        }
+    },
     "entity": {
         "binary_sensor": {
             "status": {

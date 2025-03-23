@@ -25,6 +25,18 @@
             }
         }
     },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "update_interval": "Частота обновления данных (секунды)"
+                }
+            }
+        },
+        "error": {
+            "invalid_update_interval": "Недопустимая частота обновления данных. Должна быть выше 1 секунды и ниже 3600 секунд."
+        }
+    },
     "entity": {
         "binary_sensor": {
             "status": {

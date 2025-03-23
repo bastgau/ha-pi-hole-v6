@@ -25,6 +25,18 @@
             }
         }
     },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "update_interval": "Veri yenileme sıklığı (saniye)"
+                }
+            }
+        },
+        "error": {
+            "invalid_update_interval": "Geçersiz veri yenileme sıklığı. 1 saniyeden büyük ve 3600 saniyeden küçük olmalıdır."
+        }
+    },
     "entity": {
         "binary_sensor": {
             "status": {

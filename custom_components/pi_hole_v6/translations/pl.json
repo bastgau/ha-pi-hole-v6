@@ -25,6 +25,18 @@
             }
         }
     },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "update_interval": "Częstotliwość odświeżania danych (sekundy)"
+                }
+            }
+        },
+        "error": {
+            "invalid_update_interval": "Nieprawidłowa częstotliwość odświeżania danych. Musi być większa niż 1 sekunda i mniejsza niż 3600 sekund."
+        }
+    },
     "entity": {
         "binary_sensor": {
             "status": {

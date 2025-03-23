@@ -25,6 +25,18 @@
             }
         }
     },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "update_interval": "Data refresh frequency (seconds)"
+                }
+            }
+        },
+        "error": {
+            "invalid_update_interval": "Invalid data refresh frequency. Must be higher than 1 second and lower than 3600 seconds."
+        }
+    },
     "entity": {
         "binary_sensor": {
             "status": {
