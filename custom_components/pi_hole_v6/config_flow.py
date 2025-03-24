@@ -49,7 +49,7 @@ def _get_data_config_schema(user_input) -> vol.Schema:
                 CONF_URL,
                 default=user_input.get(CONF_URL, DEFAULT_URL),
             ): str,
-            vol.Required(
+            vol.Optional(
                 CONF_PASSWORD,
                 default=user_input.get(CONF_PASSWORD, DEFAULT_PASSWORD),
             ): str,
