@@ -39,6 +39,7 @@ The following sensors are currently implemented :
 The integration is currently translated in few langages :
 
 - Czech (thanks [@kukulich](https://github.com/kukulich))
+- Dutch (thanks [@jverlaan](https://github.com/jverlaan))
 - English
 - French
 - German (thanks Christian)
