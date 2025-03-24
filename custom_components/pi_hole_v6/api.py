@@ -8,7 +8,7 @@ from socket import gaierror as GaiError
 from typing import Any
 
 import requests
-from aiohttp import ClientError, ContentTypeError
+from aiohttp import ClientError, ContentTypeError, client
 
 from .exceptions import (
     AbortLogoutException,
@@ -23,8 +23,8 @@ class API:
     """Pi-hole API Client."""
 
     _logger: logging.Logger | None
-    _password: Any = ""
-    _session: Any = None
+    _password: str = ""
+    _session: client.ClientSession = None
     _sid: str | None = None
 
     cache_blocking: dict[str, Any] = {}
@@ -36,7 +36,7 @@ class API:
 
     def __init__(  # noqa: D417
         self,
-        session,
+        session: client.ClientSession,
         url: str = "http://pi.hole",
         password: str = "",
         logger: logging.Logger | None = None,
@@ -193,10 +193,10 @@ class API:
         if action == "logout" and self._sid is None:
             raise AbortLogoutException()
 
-    def _get_sid_hash(self, sid: str) -> str | None:
+    def _get_sid_hash(self, sid: str | None) -> str | None:
         """..."""
 
-        if self._sid is not None:
+        if sid is not None:
             return str(hashlib.sha256(self._sid.encode("utf-8")).hexdigest())
 
         return None
