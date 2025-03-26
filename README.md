@@ -31,7 +31,7 @@ The "Pi-hole V6 Integration" adds compatibility with the new API in Home Assista
 The following sensors are currently implemented :
 
 <p align="center" width="100%">
-    <img src="https://raw.githubusercontent.com/bastgau/ha-pi-hole-v6/main/img/release-v1.9.0.png" width="800">
+    <img src="https://raw.githubusercontent.com/bastgau/ha-pi-hole-v6/main/img/release-v2.0.0.png" width="800">
 </p>
 
 ## Translation
@@ -46,6 +46,7 @@ The integration is currently translated in few langages :
 - Norwegian (thanks [@emigrating](https://github.com/emigrating))
 - Polish (thanks [@jacksonafide](https://github.com/jacksonafide))
 - Russian (thanks [@ProFiLeR4100](https://github.com/ProFiLeR4100))
+- Portuguese (Brazil) (thanks [@tangobones](https://github.com/tangobones))
 - Slovak (thanks [@milandzuris](https://github.com/milandzuris))
 - Spanish (thanks [@dmbuil](https://github.com/dmbuil))
 - Swedish (thanks [@aleexolsson](https://github.com/aleexolsson))
