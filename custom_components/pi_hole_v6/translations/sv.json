@@ -141,7 +141,7 @@
     },
     "exceptions": {
         "unable_to_launch_action": {
-            "message": "Det går inte att starta åtgärden '{action}': {exception}."
+            "message": "Det går inte att starta åtgärden *{action}*: {exception}."
         }
     }
 }

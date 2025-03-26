@@ -141,7 +141,7 @@
     },
     "exceptions": {
         "unable_to_launch_action": {
-            "message": "Nie je možné spustiť akciu '{action}': {exception}."
+            "message": "Nie je možné spustiť akciu *{action}*: {exception}."
         }
     }
 }

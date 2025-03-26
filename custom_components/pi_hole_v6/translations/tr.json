@@ -141,7 +141,7 @@
     },
     "exceptions": {
         "unable_to_launch_action": {
-            "message": "'{action}' eylemi başlatılamıyor: {exception}."
+            "message": "*{action}* eylemi başlatılamıyor: {exception}."
         }
     }
 }

@@ -141,7 +141,7 @@
     },
     "exceptions": {
         "unable_to_launch_action": {
-            "message": "Unable to launch '{action}' action: {exception}"
+            "message": "Unable to launch *{action}* action: {exception}"
         }
     }
 }

@@ -141,7 +141,7 @@
     },
     "exceptions": {
         "unable_to_launch_action": {
-            "message": "Actie '{action}' kan niet worden gestart: {exception}."
+            "message": "Actie *{action}* kan niet worden gestart: {exception}."
         }
     }
 }

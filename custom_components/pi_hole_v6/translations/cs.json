@@ -141,7 +141,7 @@
     },
     "exceptions": {
         "unable_to_launch_action": {
-            "message": "Nelze spustit akci '{action}': {exception}."
+            "message": "Nelze spustit akci *{action}*: {exception}."
         }
     }
 }

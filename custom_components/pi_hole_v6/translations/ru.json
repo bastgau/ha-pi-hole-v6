@@ -141,7 +141,7 @@
     },
     "exceptions": {
         "unable_to_launch_action": {
-            "message": "Не удается запустить действие '{action}': {exception}."
+            "message": "Не удается запустить действие *{action}*: {exception}."
         }
     }
 }

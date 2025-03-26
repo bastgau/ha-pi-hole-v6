@@ -141,7 +141,7 @@
     },
     "exceptions": {
         "unable_to_launch_action": {
-            "message": "Aktion '{action}' kann nicht gestartet werden: {exception}."
+            "message": "Aktion *{action}* kann nicht gestartet werden: {exception}."
         }
     }
 }
