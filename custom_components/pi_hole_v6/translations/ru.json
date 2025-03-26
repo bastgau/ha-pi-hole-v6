@@ -45,6 +45,23 @@
                 "name": "Состояние"
             }
         },
+        "button": {
+            "action_flush_arp": {
+                "name": "Очистить сетевую таблицу"
+            },
+            "action_flush_logs": {
+                "name": "Очистить журналы DNS"
+            },
+            "action_gravity": {
+                "name": "Запустить gravity"
+            },
+            "action_restartdns": {
+                "name": "Перезапустить pihole-FTL"
+            },
+            "action_refresh_data": {
+                "name": "Обновить данные"
+            }
+        },
         "sensor": {
             "ads_blocked_today": {
                 "name": "Заблокировано сегодня реклам",
@@ -120,6 +137,11 @@
         "enable": {
             "name": "Включить",
             "description": "Выключает сконфигурированный Pi-hole."
+        }
+    },
+    "exceptions": {
+        "unable_to_launch_action": {
+            "message": "Не удается запустить действие '{action}': {exception}."
         }
     }
 }

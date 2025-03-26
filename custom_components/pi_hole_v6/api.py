@@ -143,7 +143,7 @@ class API:
             try:
                 result_data_debug: dict[str, Any] | None = None
 
-                if request.status != 204:
+                if action != "action_gravity" and request.status != 204:
                     result_data = await request.json()
                     result_data_debug = copy.deepcopy(result_data)
 
@@ -487,6 +487,77 @@ class API:
                 "comment": self.cache_groups[group]["comment"],
                 "enabled": True,
             },
+        )
+
+        return {
+            "code": result["code"],
+            "reason": result["reason"],
+            "data": result["data"],
+        }
+
+    async def call_action_flush_arp(self) -> dict[str, Any]:
+        """Flush the network table.
+
+        This includes emptying the ARP table and removing both all known devices and their associated addresses.
+
+        Returns:
+          result (dict[str, Any]): A dictionary with the keys "code", "reason", and "data".
+
+        """
+
+        return await self._call_action("flush_arp")
+
+    async def call_action_flush_logs(self) -> dict[str, Any]:
+        """Flush the DNS logs.
+
+        This includes emptying the DNS log file and purging the most recent 24 hours from both the database and FTL's internal memory.'
+
+        Returns:
+          result (dict[str, Any]): A dictionary with the keys "code", "reason", and "data".
+
+        """
+
+        return await self._call_action("flush_logs")
+
+    async def call_action_gravity(self) -> dict[str, Any]:
+        """Run gravity.
+
+        Update Pi-hole's adlists by running pihole -g.
+
+        Returns:
+          result (dict[str, Any]): A dictionary with the keys "code", "reason", and "data".
+
+        """
+
+        return await self._call_action("gravity")
+
+    async def call_action_restartdns(self) -> dict[str, Any]:
+        """Restart the pihole-FTL service.
+
+        Returns:
+          result (dict[str, Any]): A dictionary with the keys "code", "reason", and "data".
+
+        """
+
+        return await self._call_action("restartdns")
+
+    async def _call_action(self, action_name: str) -> dict[str, Any]:
+        """Execute an Pi-hole action.
+
+        Args:
+          action_name (str): Represents the action to execute
+
+        Returns:
+          result (dict[str, Any]): A dictionary with the keys "code", "reason", and "data".
+
+        """
+
+        url: str = f"/action/{action_name.replace('_', '/')}"
+
+        result: dict[str, Any] = await self._call(
+            url,
+            action=f"action_{action_name}",
+            method="POST",
         )
 
         return {

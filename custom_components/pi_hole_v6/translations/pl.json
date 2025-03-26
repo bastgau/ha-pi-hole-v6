@@ -45,6 +45,23 @@
                 "name": "Status"
             }
         },
+        "button": {
+            "action_flush_arp": {
+                "name": "Wyczyść tablicę sieciową"
+            },
+            "action_flush_logs": {
+                "name": "Wyczyść logi DNS"
+            },
+            "action_gravity": {
+                "name": "Uruchom gravity"
+            },
+            "action_restartdns": {
+                "name": "Restartuj pihole-FTL"
+            },
+            "action_refresh_data": {
+                "name": "Odśwież dane"
+            }
+        },
         "sensor": {
             "ads_blocked_today": {
                 "name": "Reklamy zablokowane dzisiaj",
@@ -120,6 +137,11 @@
         "enable": {
             "name": "Aktywuj",
             "description": "Włącza skonfigurowany Pi-hole."
+        }
+    },
+    "exceptions": {
+        "unable_to_launch_action": {
+            "message": "Nie można uruchomić akcji '{action}': {exception}."
         }
     }
 }

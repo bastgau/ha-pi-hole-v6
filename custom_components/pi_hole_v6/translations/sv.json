@@ -45,6 +45,23 @@
                 "name": "Status"
             }
         },
+        "button": {
+            "action_flush_arp": {
+                "name": "Rensa nätverkstabellen"
+            },
+            "action_flush_logs": {
+                "name": "Rensa DNS-loggarna"
+            },
+            "action_gravity": {
+                "name": "Kör gravity"
+            },
+            "action_restartdns": {
+                "name": "Starta om pihole-FTL"
+            },
+            "action_refresh_data": {
+                "name": "Uppdatera data"
+            }
+        },
         "sensor": {
             "ads_blocked_today": {
                 "name": "Annonser blockerade idag",
@@ -120,6 +137,11 @@
         "enable": {
             "name": "Aktiv",
             "description": "Aktiverar Pi-hole."
+        }
+    },
+    "exceptions": {
+        "unable_to_launch_action": {
+            "message": "Det går inte att starta åtgärden '{action}': {exception}."
         }
     }
 }

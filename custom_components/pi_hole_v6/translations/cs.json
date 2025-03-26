@@ -45,6 +45,23 @@
                 "name": "Stav"
             }
         },
+        "button": {
+            "action_flush_arp": {
+                "name": "Vyprázdnit síťovou tabulku"
+            },
+            "action_flush_logs": {
+                "name": "Vyprázdnit DNS logy"
+            },
+            "action_gravity": {
+                "name": "Spustit gravity"
+            },
+            "action_restartdns": {
+                "name": "Restartovat pihole-FTL"
+            },
+            "action_refresh_data": {
+                "name": "Obnovit data"
+            }
+        },
         "sensor": {
             "ads_blocked_today": {
                 "name": "Dnes zablokované reklamy",
@@ -120,6 +137,11 @@
         "enable": {
             "name": "Povolit",
             "description": "Povolí Pi-hole."
+        }
+    },
+    "exceptions": {
+        "unable_to_launch_action": {
+            "message": "Nelze spustit akci '{action}': {exception}."
         }
     }
 }

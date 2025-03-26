@@ -1,6 +1,17 @@
 """The above classes represent the specific exceptions raised during the Pi-hole API calls."""
 
 
+class ActionExecutionException(Exception):
+    """The class `ActionExecutionException` is used to raise an exception when an action cannot be executed."""
+
+    def __init__(  # noqa: D107
+        self,
+        message: str = "The action requested has failed. Please HA logs or Pi-hole logs.",
+    ) -> None:
+        self.message = message
+        super().__init__(self.message)
+
+
 class AbortLogoutException(Exception):
     """The class `AbortLogoutException` represents an exception when a logout is not relevant and can be avoided."""
 

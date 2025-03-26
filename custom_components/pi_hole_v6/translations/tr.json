@@ -45,6 +45,23 @@
                 "name": "Durum"
             }
         },
+        "button": {
+            "action_flush_arp": {
+                "name": "Ağ tablosunu boşalt"
+            },
+            "action_flush_logs": {
+                "name": "DNS günlüklerini boşalt"
+            },
+            "action_gravity": {
+                "name": "Gravity'yi çalıştır"
+            },
+            "action_restartdns": {
+                "name": "Pihole-FTL'yi yeniden başlat"
+            },
+            "action_refresh_data": {
+                "name": "Verileri yenile"
+            }
+        },
         "sensor": {
             "ads_blocked_today": {
                 "name": "Bugün engellenen reklamlar",
@@ -120,6 +137,11 @@
         "enable": {
             "name": "Etkinleştir",
             "description": "Yapılandırılmış Pi-hole'u etkinleştirir."
+        }
+    },
+    "exceptions": {
+        "unable_to_launch_action": {
+            "message": "'{action}' eylemi başlatılamıyor: {exception}."
         }
     }
 }

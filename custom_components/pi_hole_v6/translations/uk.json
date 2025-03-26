@@ -45,6 +45,23 @@
                 "name": "Стан"
             }
         },
+        "button": {
+            "action_flush_arp": {
+                "name": "Очистити мережеву таблицю"
+            },
+            "action_flush_logs": {
+                "name": "Очистити журнали DNS"
+            },
+            "action_gravity": {
+                "name": "Запустити gravity"
+            },
+            "action_restartdns": {
+                "name": "Перезапустити pihole-FTL"
+            },
+            "action_refresh_data": {
+                "name": "Оновити дані"
+            }
+        },
         "sensor": {
             "ads_blocked_today": {
                 "name": "Заблоковано сьогодні реклам",
@@ -120,6 +137,11 @@
         "enable": {
             "name": "Увімкнути",
             "description": "Вимикає конфігурований Pi-hole."
+        }
+    },
+    "exceptions": {
+        "unable_to_launch_action": {
+            "message": "Не вдається запустити дію '{action}': {exception}."
         }
     }
 }
