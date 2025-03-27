@@ -1,11 +1,6 @@
----
-name: Bug report
-about: Create a report to help us improve
-title: ''
-labels: ''
-assignees: ''
-
----
+<!--
+Note: The Pi-hole V6 integration is not compatible with versions of Home Assistant prior to 2025.03.
+-->
 
 **Describe the bug**
 A clear and concise description of what the bug is.
