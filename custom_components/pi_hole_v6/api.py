@@ -153,15 +153,19 @@ class API:
 
         text: str | None = None
 
-        if request.status != 204:
-            text = await request.json()
-            if (
-                privacy is True
-                and "session" in text
-                and "sid" in text["session"]
-                and text["session"]["sid"] is not None
-            ):
-                text["session"]["sid"] = "[redacted]"
+        try:
+            if request.status != 204:
+                text = await request.json()
+                if (
+                    privacy is True
+                    and "session" in text
+                    and "sid" in text["session"]
+                    and text["session"]["sid"] is not None
+                ):
+                    text["session"]["sid"] = "[redacted]"
+
+        except ContentTypeError:
+            pass
 
         return text
 
