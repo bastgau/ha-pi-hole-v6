@@ -66,9 +66,7 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self._config: dict = {}
 
-    async def async_step_user(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
+    async def async_step_user(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
         errors = {}
 
@@ -83,9 +81,9 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             self._abort_if_unique_id_configured()
 
             if not (errors := await self._async_try_connect()):
-                return self.async_create_entry(
-                    title=user_input[CONF_NAME], data=self._config
-                )
+                return self.async_create_entry(title=user_input[CONF_NAME], data=self._config)
+            else:
+                user_input["password"] = ""
 
         user_input = user_input or {}
         return self.async_show_form(
