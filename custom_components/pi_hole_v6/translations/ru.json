@@ -101,6 +101,9 @@
             "remaining_until_blocking_mode": {
                 "name": "Осталось до режима блокировки",
                 "unit_of_measurement": "секунд"
+            },
+            "latest_data_refresh": {
+                "name": "Последнее обновление данных"
             }
         },
         "switch": {

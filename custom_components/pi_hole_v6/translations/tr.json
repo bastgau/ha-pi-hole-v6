@@ -101,6 +101,9 @@
             "remaining_until_blocking_mode": {
                 "name": "Engelleme moduna kalan süre",
                 "unit_of_measurement": "saniye"
+            },
+            "latest_data_refresh": {
+                "name": "Son veri yenileme"
             }
         },
         "switch": {

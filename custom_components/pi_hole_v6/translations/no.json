@@ -101,6 +101,9 @@
             "remaining_until_blocking_mode": {
                 "name": "Gjenstående tid til blokkeringsmodus",
                 "unit_of_measurement": "sekunder"
+            },
+            "latest_data_refresh": {
+                "name": "Siste datarefreshing"
             }
         },
         "switch": {

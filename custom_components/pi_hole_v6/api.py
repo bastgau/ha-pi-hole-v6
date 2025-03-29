@@ -1,8 +1,8 @@
 """The above class represents Pi-hole API Client with methods for authentication, retrieving summary data, managing blocking status, and logging requests."""
 
 import asyncio
-import hashlib
 import logging
+from datetime import datetime
 from socket import gaierror as GaiError
 from typing import Any
 
@@ -31,6 +31,8 @@ class API:
     cache_padd: dict[str, Any] = {}
     cache_summary: dict[str, Any] = {}
     cache_groups: dict[str, dict[str, Any]] = {}
+    last_refresh: datetime | None = None
+    just_initialized: bool = False
 
     url: str = ""
 
@@ -91,8 +93,6 @@ class API:
         await self._abort_logout(action)
         await self._request_login(action)
 
-        self._get_logger().debug("Session ID Hash: %s", self._get_sid_hash(self._sid))
-
         url: str = f"{self.url}{route}"
 
         headers: dict[str, str] = {
@@ -100,10 +100,8 @@ class API:
             "content-type": "application/json",
         }
 
-        if self._sid is not None:
+        if self._sid is not None and self._sid != "no password set":
             headers = headers | {"sid": self._sid}
-
-        self._get_logger().debug("Request: %s %s", method.upper(), url)
 
         request: requests.Response
 
@@ -127,7 +125,7 @@ class API:
         try:
             handle_status(request.status)
         except APIException as api_error:
-            log_message: str = await self._create_log_message_on_api_exception(api_error, request)
+            log_message: str = await self._create_log_message_on_api_exception(api_error, request, method, url)
             self._get_logger().error(log_message)
             raise api_error
         except Exception as err:
@@ -138,8 +136,7 @@ class API:
         if request.status < 400 and request.text != "":
             try:
                 result_data: str = await self._try_to_retrieve_json_result(request, privacy=False)
-
-                message: str = await self._create_log_message_on_api_result(request)
+                message: str = await self._create_log_message_on_api_result(request, method, url)
 
                 if "password incorrect" not in message:
                     self._get_logger().debug(message)
@@ -176,19 +173,21 @@ class API:
 
         return text
 
-    async def _create_log_message_on_api_result(self, request: requests.Response) -> str:
+    async def _create_log_message_on_api_result(self, request: requests.Response, method: str, url: str) -> str:
         """..."""
 
         text: str | None = await self._try_to_retrieve_json_result(request)
         status: str = str(request.status)
         reason: str = str(request.reason)
 
-        return f"{status} {reason} : {text}"
+        return f"{status} {reason} # {method.upper()} {url} : {text}"
 
-    async def _create_log_message_on_api_exception(self, api_error: APIException, request: requests.Response) -> str:
+    async def _create_log_message_on_api_exception(
+        self, api_error: APIException, request: requests.Response, method: str, url: str
+    ) -> str:
         """..."""
 
-        log: str = await self._create_log_message_on_api_result(request)
+        log: str = await self._create_log_message_on_api_result(request, method, url)
         exception_name: str = str(type(api_error))
 
         return f"{exception_name} - {log}"
@@ -197,7 +196,11 @@ class API:
         """..."""
 
         try:
-            if action not in ("login", "authentification_status") and self._sid is not None:
+            if (
+                action not in ("login", "authentification_status")
+                and self._sid is not None
+                and self._sid != "no password set"
+            ):
                 response: dict[str, Any] = await self.call_authentification_status()
 
                 if response["code"] != 200 or response["data"]["session"]["valid"] is False:
@@ -217,14 +220,6 @@ class API:
 
         if action == "logout" and self._sid is None:
             raise AbortLogoutException()
-
-    def _get_sid_hash(self, sid: str | None) -> str | None:
-        """..."""
-
-        if sid is not None:
-            return str(hashlib.sha256(self._sid.encode("utf-8")).hexdigest())
-
-        return None
 
     async def call_authentification_status(self) -> dict[str, Any]:
         """..."""
@@ -263,10 +258,13 @@ class API:
             data={"password": self._password},
         )
 
-        if result["data"]["session"]["message"] == "password incorrect":
+        if result["data"]["session"]["valid"] is False:
             raise UnauthorizedException()
 
-        self._sid = result["data"]["session"]["sid"]
+        if result["data"]["session"]["sid"] is not None:
+            self._sid = result["data"]["session"]["sid"]
+        else:
+            self._sid = "no password set"
 
         return {
             "code": result["code"],
