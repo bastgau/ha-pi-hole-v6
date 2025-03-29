@@ -101,6 +101,9 @@
             "remaining_until_blocking_mode": {
                 "name": "Zostáva do režimu blokovania",
                 "unit_of_measurement": "sekundy"
+            },
+            "latest_data_refresh": {
+                "name": "Posledná aktualizácia údajov"
             }
         },
         "switch": {

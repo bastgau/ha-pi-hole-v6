@@ -84,7 +84,7 @@ class MethodNotAllowedException(APIException):
 class NotFoundException(APIException):
     """The class `NotFoundException` represents a situation where a requested resource does not exist."""
 
-    message: str = ("The requested resource doesn't exist.",)
+    message: str = "The requested resource doesn't exist."
 
 
 class RequestFailedException(APIException):
@@ -115,6 +115,12 @@ class UnauthorizedException(APIException):
     """The class `UnauthorizedException` is used to raise an exception when no session identity is provided for an endpoint requiring authorization."""
 
     message: str = "No session identity provided for endpoint requiring authorization."
+
+
+class DataStructureException(APIException):
+    """The class `DataStructureException` is used to raise an exception when the data structure returned by the API is incorrect."""
+
+    message: str = "Data structure returned by the API is incorrect."
 
 
 def handle_status(status_code: int) -> None:

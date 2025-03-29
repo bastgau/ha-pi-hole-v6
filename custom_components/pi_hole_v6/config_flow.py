@@ -124,18 +124,6 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             _LOGGER.error("Connection failed (%s): %s", api_client.url, err)
             return {CONF_PASSWORD: "invalid_auth"}
 
-        if not isinstance(await api_client.call_summary(), dict):
-            return {"base": "incorrect_data_expected"}
-
-        if not isinstance(await api_client.call_blocking_status(), dict):
-            return {"base": "incorrect_data_expected"}
-
-        if not isinstance(await api_client.call_padd(), dict):
-            return {"base": "incorrect_data_expected"}
-
-        if not isinstance(await api_client.call_get_groups(), dict):
-            return {"base": "incorrect_data_expected"}
-
 
 def _get_data_option_schema(user_input) -> vol.Schema:
     return vol.Schema(

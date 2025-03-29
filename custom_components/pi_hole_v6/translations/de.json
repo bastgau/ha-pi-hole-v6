@@ -101,6 +101,9 @@
             "remaining_until_blocking_mode": {
                 "name": "Verbleibend bis Blocking mode",
                 "unit_of_measurement": "seconds"
+            },
+            "latest_data_refresh": {
+                "name": "Letzte Datenaktualisierung"
             }
         },
         "switch": {

@@ -101,6 +101,9 @@
             "remaining_until_blocking_mode": {
                 "name": "Tiempo restante hasta el modo de bloqueo",
                 "unit_of_measurement": "segundos"
+            },
+            "latest_data_refresh": {
+                "name": "Última actualización de datos"
             }
         },
         "switch": {
