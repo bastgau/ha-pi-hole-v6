@@ -1,15 +1,22 @@
 """The above classes represent the specific exceptions raised during the Pi-hole API calls."""
 
+from abc import abstractmethod
+
+
+@abstractmethod
+class APIException(Exception):
+    """The class `APIException` is a parent exception related to Pi-hole API."""
+
+    message: str = ""
+
+    def __init__(self) -> None:
+        super().__init__(self.message)
+
 
 class ActionExecutionException(Exception):
     """The class `ActionExecutionException` is used to raise an exception when an action cannot be executed."""
 
-    def __init__(  # noqa: D107
-        self,
-        message: str = "The action requested has failed. Please HA logs or Pi-hole logs.",
-    ) -> None:
-        self.message = message
-        super().__init__(self.message)
+    message: str = "The action requested has failed. Please HA logs or Pi-hole logs."
 
 
 class AbortLogoutException(Exception):
@@ -17,156 +24,85 @@ class AbortLogoutException(Exception):
 
     code: int = 499
     reason: str = "No logout needed."
-
-    def __init__(  # noqa: D107
-        self,
-        message: str = "Logout call is not relevant. Maybe no session is active.",
-    ) -> None:
-        self.message = message
-        super().__init__(self.message)
+    message: str = "Logout call is not relevant. Maybe no session is active."
 
 
-class BadGatewayException(Exception):
+class BadGatewayException(APIException):
     """The class `BadGatewayException` represents an exception for receiving an invalid response from an upstream server."""
 
-    def __init__(  # noqa: D107
-        self,
-        message: str = "Received an invalid response from an upstream server.",
-    ) -> None:
-        self.message = message
-        super().__init__(self.message)
+    message: str = "Received an invalid response from an upstream server."
 
 
-class BadRequestException(Exception):
+class BadRequestException(APIException):
     """The class `BadRequestException` is defined for requests that are unacceptable."""
 
-    def __init__(  # noqa: D107
-        self,
-        message: str = "The request was unacceptable, often due to a missing required parameter",
-    ) -> None:
-        self.message = message
-        super().__init__(self.message)
+    message: str = "The request was unacceptable, often due to a missing required parameter"
 
 
 class ClientConnectorException(Exception):
     """The class `ClientConnectorException` is used to raise an exception when the Pi-hole V6 server is unreachable."""
 
-    def __init__(  # noqa: D107
-        self,
-        message: str = "The Pi-hole V6 server seems to be unreachable.",
-    ) -> None:
-        self.message = message
-        super().__init__(self.message)
+    message: str = "The Pi-hole V6 server seems to be unreachable."
 
 
 class ContentTypeException(Exception):
     """The class `ContentTypeException` is used to raise an exception when the content type provided by the API is incorrect."""
 
-    def __init__(  # noqa: D107
-        self,
-        message: str = "Invalid content type returned by the API.",
-    ) -> None:
-        self.message = message
-        super().__init__(self.message)
+    message: str = "Invalid content type returned by the API."
 
 
-class ForbiddenException(Exception):
+class ForbiddenException(APIException):
     """The class `ForbiddenException` represents an exception for when an API key lacks the necessary permissions for a request."""
 
-    def __init__(  # noqa: D107
-        self,
-        message: str = "The API key doesn't have permissions to perform the request.",
-    ) -> None:
-        self.message = message
-        super().__init__(self.message)
+    message: str = "The API key doesn't have permissions to perform the request."
 
 
-class GatewayTimeoutException(Exception):
+class GatewayTimeoutException(APIException):
     """The class `GatewayTimeoutException` represents an exception that occurs when a server acting as a gateway times out waiting for another server."""
 
-    def __init__(  # noqa: D107
-        self,
-        message: str = "The server, while acting as a gateway, timed out waiting for another server.",
-    ) -> None:
-        self.message = message
-        super().__init__(self.message)
+    message: str = "The server, while acting as a gateway, timed out waiting for another server."
 
 
-class MethodNotAllowedException(Exception):
+class MethodNotAllowedException(APIException):
     """The class `MethodNotAllowedException` represents an exception that occurs when a request's HTTP method is not supported on the server."""
 
-    def __init__(  # noqa: D107
-        self,
-        message: str = "The HTTP method is not supported on the server.",
-    ) -> None:
-        self.message = message
-        super().__init__(self.message)
+    message: str = "The HTTP method is not supported on the server."
 
 
-class NotFoundException(Exception):
+class NotFoundException(APIException):
     """The class `NotFoundException` represents a situation where a requested resource does not exist."""
 
-    def __init__(  # noqa: D107
-        self,
-        message: str = "The requested resource doesn't exist.",
-    ) -> None:
-        self.message = message
-        super().__init__(self.message)
+    message: str = ("The requested resource doesn't exist.",)
 
 
-class RequestFailedException(Exception):
+class RequestFailedException(APIException):
     """The class `RequestFailedException` defines an exception for when a request fails."""
 
-    def __init__(  # noqa: D107
-        self,
-        message: str = "The parameters were valid but the request failed.",
-    ) -> None:
-        self.message = message
-        super().__init__(self.message)
+    message: str = "The parameters were valid but the request failed."
 
 
-class ServerErrorException(Exception):
+class ServerErrorException(APIException):
     """The class `ServerErrorException` defines an exception for internal server errors."""
 
-    def __init__(  # noqa: D107
-        self,
-        message: str = "An internal server error occurred.",
-    ) -> None:
-        self.message = message
-        super().__init__(self.message)
+    message: str = "An internal server error occurred."
 
 
-class ServiceUnavailableException(Exception):
+class ServiceUnavailableException(APIException):
     """The class `ServiceUnavailableException` defines an exception for when the server is temporarily unavailable."""
 
-    def __init__(  # noqa: D107
-        self,
-        message: str = "The server is temporarily unavailable, usually due to maintenance or overload.",
-    ) -> None:
-        self.message = message
-        super().__init__(self.message)
+    message: str = "The server is temporarily unavailable, usually due to maintenance or overload."
 
 
-class TooManyRequestsException(Exception):
+class TooManyRequestsException(APIException):
     """The class `TooManyRequestsException` represents hitting the API with too many requests too quickly."""
 
-    def __init__(  # noqa: D107
-        self,
-        message: str = "Too many requests hit the API too quickly.",
-    ) -> None:
-        self.message = message
-        super().__init__(self.message)
+    message: str = "Too many requests hit the API too quickly."
 
 
-class UnauthorizedException(Exception):
+class UnauthorizedException(APIException):
     """The class `UnauthorizedException` is used to raise an exception when no session identity is provided for an endpoint requiring authorization."""
 
-    def __init__(  # noqa: D107
-        self,
-        message: str = "No session identity provided for endpoint requiring authorization.",
-    ) -> None:
-        self.message = message
-        super().__init__(self.message)
+    message: str = "No session identity provided for endpoint requiring authorization."
 
 
 def handle_status(status_code: int) -> None:

@@ -1,7 +1,6 @@
 """The above class represents Pi-hole API Client with methods for authentication, retrieving summary data, managing blocking status, and logging requests."""
 
 import asyncio
-import copy
 import hashlib
 import logging
 from socket import gaierror as GaiError
@@ -12,6 +11,7 @@ from aiohttp import ClientError, ContentTypeError, client
 
 from .exceptions import (
     AbortLogoutException,
+    APIException,
     ClientConnectorException,
     ContentTypeException,
     UnauthorizedException,
@@ -118,41 +118,27 @@ class API:
                 elif method.lower() == "get":
                     request = await self._session.get(url, headers=headers)
                 else:
-                    self._get_logger().error(
-                        "Method (%s) is not supported/implemented.", method.lower()
-                    )
+                    self._get_logger().critical("Method (%s) is not supported/implemented.", method.lower())
                     raise RuntimeError("Method is not supported/implemented.")
 
         except (TimeoutError, ClientError, GaiError) as err:
             raise ClientConnectorException from err
 
-        result_data: dict[str, Any] = {}
-
-        self._get_logger().debug("Status Code: %d", request.status)
-
         try:
             handle_status(request.status)
-        except RuntimeError as err1:
-            self._get_logger().error("Status Code: %d", request.status)
-            raise err1
-        except Exception as err2:
-            self._get_logger().error("Status Code: %d", request.status)
-            raise err2
+        except APIException as api_error:
+            log_message: str = await self._create_log_message_on_api_exception(api_error, request)
+            self._get_logger().error(log_message)
+            raise api_error
+        except Exception as err:
+            raise err
+
+        result_data: dict[str, Any] = {}
 
         if request.status < 400 and request.text != "":
             try:
-                result_data_debug: dict[str, Any] | None = None
-
-                if action != "action_gravity" and request.status != 204:
-                    result_data = await request.json()
-                    result_data_debug = copy.deepcopy(result_data)
-
-                if action == "login":
-                    result_data_debug["session"]["sid"] = "[redacted]"
-
-                if result_data_debug is not None:
-                    self._get_logger().debug("Data: %s", result_data_debug)
-
+                result_data: str = await self._try_to_retrieve_json_result(request, privacy=False)
+                self._get_logger().debug(await self._create_log_message_on_api_result(request))
             except ContentTypeError as err:
                 raise ContentTypeException from err
 
@@ -162,20 +148,52 @@ class API:
             "data": result_data,
         }
 
+    async def _try_to_retrieve_json_result(self, request: requests.Response, privacy: bool = True) -> str | None:
+        """..."""
+
+        text: str | None = None
+
+        try:
+            if request.status != 204:
+                text = await request.json()
+                if (
+                    privacy is True
+                    and "session" in text
+                    and "sid" in text["session"]
+                    and text["session"]["sid"] is not None
+                ):
+                    text["session"]["sid"] = "[redacted]"
+
+        except ContentTypeError:
+            pass
+
+        return text
+
+    async def _create_log_message_on_api_result(self, request: requests.Response) -> str:
+        """..."""
+
+        text: str | None = await self._try_to_retrieve_json_result(request)
+        status: str = str(request.status)
+        reason: str = str(request.reason)
+
+        return f"{status} {reason} : {text}"
+
+    async def _create_log_message_on_api_exception(self, api_error: APIException, request: requests.Response) -> str:
+        """..."""
+
+        log: str = await self._create_log_message_on_api_result(request)
+        exception_name: str = str(type(api_error))
+
+        return f"{exception_name} - {log}"
+
     async def _check_authentification(self, action: str) -> None:
         """..."""
 
         try:
-            if (
-                action not in ("login", "authentification_status")
-                and self._sid is not None
-            ):
+            if action not in ("login", "authentification_status") and self._sid is not None:
                 response: dict[str, Any] = await self.call_authentification_status()
 
-                if (
-                    response["code"] != 200
-                    or response["data"]["session"]["valid"] is False
-                ):
+                if response["code"] != 200 or response["data"]["session"]["valid"] is False:
                     self._sid = None
 
         except UnauthorizedException:
