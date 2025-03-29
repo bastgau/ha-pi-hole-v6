@@ -18,6 +18,9 @@ class ActionExecutionException(Exception):
 
     message: str = "The action requested has failed. Please HA logs or Pi-hole logs."
 
+    def __init__(self) -> None:
+        super().__init__(self.message)
+
 
 class AbortLogoutException(Exception):
     """The class `AbortLogoutException` represents an exception when a logout is not relevant and can be avoided."""
@@ -25,6 +28,9 @@ class AbortLogoutException(Exception):
     code: int = 499
     reason: str = "No logout needed."
     message: str = "Logout call is not relevant. Maybe no session is active."
+
+    def __init__(self) -> None:
+        super().__init__(self.message)
 
 
 class BadGatewayException(APIException):
@@ -44,11 +50,17 @@ class ClientConnectorException(Exception):
 
     message: str = "The Pi-hole V6 server seems to be unreachable."
 
+    def __init__(self) -> None:
+        super().__init__(self.message)
+
 
 class ContentTypeException(Exception):
     """The class `ContentTypeException` is used to raise an exception when the content type provided by the API is incorrect."""
 
     message: str = "Invalid content type returned by the API."
+
+    def __init__(self) -> None:
+        super().__init__(self.message)
 
 
 class ForbiddenException(APIException):
