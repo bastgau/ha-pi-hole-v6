@@ -138,7 +138,14 @@ class API:
         if request.status < 400 and request.text != "":
             try:
                 result_data: str = await self._try_to_retrieve_json_result(request, privacy=False)
-                self._get_logger().debug(await self._create_log_message_on_api_result(request))
+
+                message: str = await self._create_log_message_on_api_result(request)
+
+                if "password incorrect" not in message:
+                    self._get_logger().debug(message)
+                else:
+                    self._get_logger().error(message)
+
             except ContentTypeError as err:
                 raise ContentTypeException from err
 
