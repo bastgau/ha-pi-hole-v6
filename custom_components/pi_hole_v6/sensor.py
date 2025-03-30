@@ -23,6 +23,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="remaining_until_blocking_mode",
         translation_key="remaining_until_blocking_mode",
         native_unit_of_measurement=UnitOfTime.SECONDS,
+        device_class=SensorDeviceClass.DURATION,
         suggested_display_precision=0,
     ),
     SensorEntityDescription(
