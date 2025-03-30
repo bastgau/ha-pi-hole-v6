@@ -87,11 +87,12 @@ class PiHoleV6Button(PiHoleV6Entity, ButtonEntity):
         server_unique_id: str,
         description: PiholeV6ButtonEntityDescription,
     ) -> None:
-        """Initialize Pi-hole V6 vehicle sensor."""
+        """Initialize Pi-hole V6 button."""
         super().__init__(api, coordinator, name, server_unique_id)
         self.entity_description = description
         self._attr_unique_id = f"{self._server_unique_id}/{description.key}"
         self.entity_id = f"button.{name}_{description.key}"
+        self._is_enabled = True  # Initial state is enabled
 
     async def async_press(self) -> None:
         """Press the button."""
@@ -127,3 +128,8 @@ class PiHoleV6Button(PiHoleV6Entity, ButtonEntity):
             )
 
         self.coordinator.async_update_listeners()
+
+    @property
+    def is_enabled(self):
+        """Return whether the button is enabled."""
+        return self._is_enabled
