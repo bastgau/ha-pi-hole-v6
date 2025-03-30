@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "El servicio ya está configurado."
+            "already_configured": "El servicio ya está configurado.",
+            "reauth_successful": "La reautenticación fue exitosa."
         },
         "error": {
             "incorrect_data_expected": "Error al recuperar los datos en la estructura correcta.",
@@ -21,6 +22,16 @@
                     "url": "URL o dirección de tu Pi-hole (es decir: https://pi.hole:443/api)"
                 },
                 "description": "Esta integración permite recuperar estadísticas e interactuar con un sistema Pi-hole V6.",
+                "title": "Pi-hole V6"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Contraseña"
+                },
+                "data_description": {
+                    "password": "Contraseña a utilizar para la conexión"
+                },
+                "description": "Desde esta pantalla, puede cambiar la contraseña para acceder a la instancia de Pi-hole.",
                 "title": "Pi-hole V6"
             }
         }

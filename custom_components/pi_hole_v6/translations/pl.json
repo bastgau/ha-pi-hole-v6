@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Usługa jest już skonfigurowana."
+            "already_configured": "Usługa jest już skonfigurowana.",
+            "reauth_successful": "Ponowne uwierzytelnienie się powiodło."
         },
         "error": {
             "incorrect_data_expected": "Nie udało się pobrać danych w poprawnej strukturze.",
@@ -21,6 +22,16 @@
                     "url": "URL lub adres Twojego Pi-hole (np.: https://pi.hole:443/api)"
                 },
                 "description": "Ta integracja pozwala na pobieranie statystyk i interakcję z systemem Pi-hole V6.",
+                "title": "Pi-hole V6"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Hasło"
+                },
+                "data_description": {
+                    "password": "Hasło używane do logowania"
+                },
+                "description": "Z tego ekranu można zmienić hasło dostępu do instancji Pi-hole.",
                 "title": "Pi-hole V6"
             }
         }

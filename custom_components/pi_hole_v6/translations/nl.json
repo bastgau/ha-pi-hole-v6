@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Service is al geconfigureerd."
+            "already_configured": "Service is al geconfigureerd.",
+            "reauth_successful": "Herauthenticatie is gelukt."
         },
         "error": {
             "incorrect_data_expected": "Het is niet gelukt om de gegevens in de juiste structuur op te halen.",
@@ -21,6 +22,16 @@
                     "url": "URL of adres van uw Pi-hole (bv: https://pi.hole:443/api)"
                 },
                 "description": "Met deze integratie kunt u statistieken ophalen en communiceren met een Pi-hole V6-systeem.",
+                "title": "Pi-hole V6"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Wachtwoord"
+                },
+                "data_description": {
+                    "password": "Wachtwoord dat gebruikt moet worden om in te loggen"
+                },
+                "description": "Vanaf dit scherm kunt u het wachtwoord wijzigen om toegang te krijgen tot de Pi-hole-instantie.",
                 "title": "Pi-hole V6"
             }
         }

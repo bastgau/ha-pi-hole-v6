@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Servis zaten yapılandırılmış."
+            "already_configured": "Servis zaten yapılandırılmış.",
+            "reauth_successful": "Yeniden kimlik doğrulama başarılı oldu."
         },
         "error": {
             "incorrect_data_expected": "Verileri doğru yapıda almada başarısız olundu.",
@@ -21,6 +22,16 @@
                     "url": "Pi-hole'unuzun URL veya adresi (örneğin: https://pi.hole:443/api)"
                 },
                 "description": "Bu entegrasyon, Pi-hole V6 sisteminden istatistikler almanızı ve sistemle etkileşim kurmanızı sağlar.",
+                "title": "Pi-hole V6"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Şifre"
+                },
+                "data_description": {
+                    "password": "Giriş için kullanılacak şifre"
+                },
+                "description": "Bu ekrandan Pi-hole örneğine erişmek için şifreyi değiştirebilirsiniz.",
                 "title": "Pi-hole V6"
             }
         }

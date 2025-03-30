@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Služba je už nakonfigurovaná."
+            "already_configured": "Služba je už nakonfigurovaná.",
+            "reauth_successful": "Opätovné overenie sa podarilo."
         },
         "error": {
             "incorrect_data_expected": "Nepodarilo sa načítať dáta v správnej štruktúre.",
@@ -21,6 +22,16 @@
                     "url": "URL alebo adresa vášho Pi-hole (napr.: https://pi.hole:443/api)"
                 },
                 "description": "Táto integrácia vám umožňuje získať štatistiky a interagovať so systémom Pi-hole V6.",
+                "title": "Pi-hole V6"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Heslo"
+                },
+                "data_description": {
+                    "password": "Heslo ktoré sa použije na prihlásenie"
+                },
+                "description": "Z tejto obrazovky môžete zmeniť heslo na prístup k inštancii Pi-hole.",
                 "title": "Pi-hole V6"
             }
         }
