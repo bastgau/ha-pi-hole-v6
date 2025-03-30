@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Služba je již nakonfigurována."
+            "already_configured": "Služba je již nakonfigurována.",
+            "reauth_successful": "Re-autentizace byla úspěšná."
         },
         "error": {
             "incorrect_data_expected": "Nepodařilo se načíst data ve správné struktuře.",
@@ -21,6 +22,16 @@
                     "url": "URL adresa vašeho Pi-hole (např.: https://pi.hole:443/api)"
                 },
                 "description": "Tato integrace vám umožňuje získat statistiky a interagovat se systémem Pi-hole V6.",
+                "title": "Pi-hole V6"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Heslo"
+                },
+                "data_description": {
+                    "password": "Heslo pro přihlášení"
+                },
+                "description": "Z této obrazovky můžete změnit heslo pro přístup k instanci Pi-hole.",
                 "title": "Pi-hole V6"
             }
         }

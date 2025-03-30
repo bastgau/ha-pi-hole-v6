@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Сервіс вже налаштований."
+            "already_configured": "Сервіс вже налаштований.",
+            "reauth_successful": "Повторна автентифікація пройшла успішно."
         },
         "error": {
             "incorrect_data_expected": "Не вдалося отримати дані в коректному форматі.",
@@ -21,6 +22,16 @@
                     "url": "Посилання на ваш екземпляр Pi-hole (приклад: https://pi.hole:443/api)"
                 },
                 "description": "Ця інтеграція дозволяє вам отримати статистику та взаємодіяти з Pi-hole V6.",
+                "title": "Pi-hole V6"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Пароль, який використовується для входу"
+                },
+                "data_description": {
+                    "password": "Пароль для входу"
+                },
+                "description": "З цього екрану ви можете змінити пароль для доступу до екземпляра Pi-hole.",
                 "title": "Pi-hole V6"
             }
         }

@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Tjenesten er allerede konfigurert."
+            "already_configured": "Tjenesten er allerede konfigurert.",
+            "reauth_successful": "Påloggingen på nytt var vellykket."
         },
         "error": {
             "incorrect_data_expected": "Kunne ikke hente data i riktig struktur.",
@@ -21,6 +22,16 @@
                     "url": "URL eller adresse til din Pi-hole (f.eks.: https://pi.hole:443/api)"
                 },
                 "description": "Denne integrasjonen lar deg hente statistikk og samhandle med et Pi-hole V6-system.",
+                "title": "Pi-hole V6"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Passord"
+                },
+                "data_description": {
+                    "password": "Passord som skal brukes for innlogging"
+                },
+                "description": "Fra denne skjermen kan du endre passordet for å få tilgang til Pi-hole-instansen.",
                 "title": "Pi-hole V6"
             }
         }

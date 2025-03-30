@@ -258,7 +258,7 @@ class API:
             data={"password": self._password},
         )
 
-        if result["data"]["session"]["valid"] is False:
+        if result["data"]["session"]["valid"] is False or result["data"]["session"]["message"] == "password incorrect":
             raise UnauthorizedException()
 
         if result["data"]["session"]["sid"] is not None:
