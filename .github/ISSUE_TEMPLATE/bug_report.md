@@ -1,6 +1,7 @@
 ---
 name: 🐞 Bug report
 description: Report an issue
+about: Use this template for tracking new bugs.
 labels: [pending triage]
 title: ''
 labels: ''
