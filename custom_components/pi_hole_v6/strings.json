@@ -90,8 +90,7 @@
                 "unit_of_measurement": "[%key:component::pi_hole_v6::entity::sensor::seen_clients::unit_of_measurement%]"
             },
             "remaining_until_blocking_mode": {
-                "name": "Remaining until blocking mode",
-                "unit_of_measurement": "seconds"
+                "name": "Remaining until blocking mode"
             },
             "latest_data_refresh": {
                 "name": "Latest data refresh"

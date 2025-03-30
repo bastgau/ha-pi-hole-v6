@@ -110,8 +110,7 @@
                 "unit_of_measurement": "доменів"
             },
             "remaining_until_blocking_mode": {
-                "name": "Залишилось до режиму блокування",
-                "unit_of_measurement": "секунд"
+                "name": "Залишилось до режиму блокування"
             },
             "latest_data_refresh": {
                 "name": "Останнє оновлення даних"

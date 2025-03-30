@@ -110,8 +110,7 @@
                 "unit_of_measurement": "domains"
             },
             "remaining_until_blocking_mode": {
-                "name": "Återstående tid tills blockering",
-                "unit_of_measurement": "seconds"
+                "name": "Återstående tid tills blockering"
             },
             "latest_data_refresh": {
                 "name": "Senaste datauppdateringen"

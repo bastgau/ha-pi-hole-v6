@@ -110,8 +110,7 @@
                 "unit_of_measurement": "domínios"
             },
             "remaining_until_blocking_mode": {
-                "name": "Restante até o modo de bloqueio",
-                "unit_of_measurement": "segundos"
+                "name": "Restante até o modo de bloqueio"
             },
             "latest_data_refresh": {
                 "name": "Última atualização de dados"

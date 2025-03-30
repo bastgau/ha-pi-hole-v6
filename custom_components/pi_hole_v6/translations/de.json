@@ -110,8 +110,7 @@
                 "unit_of_measurement": "domains"
             },
             "remaining_until_blocking_mode": {
-                "name": "Verbleibend bis Blocking mode",
-                "unit_of_measurement": "seconds"
+                "name": "Verbleibend bis Blocking mode"
             },
             "latest_data_refresh": {
                 "name": "Letzte Datenaktualisierung"

@@ -110,8 +110,7 @@
                 "unit_of_measurement": "domains"
             },
             "remaining_until_blocking_mode": {
-                "name": "Resterend tot blokkeringsmodus",
-                "unit_of_measurement": "seconds"
+                "name": "Resterend tot blokkeringsmodus"
             },
             "latest_data_refresh": {
                 "name": "Meest recente gegevensvernieuwing"

@@ -8,7 +8,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import CONF_NAME, PERCENTAGE, EntityCategory
+from homeassistant.const import CONF_NAME, PERCENTAGE, EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -22,6 +22,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="remaining_until_blocking_mode",
         translation_key="remaining_until_blocking_mode",
+        native_unit_of_measurement=UnitOfTime.SECONDS,
         suggested_display_precision=0,
     ),
     SensorEntityDescription(

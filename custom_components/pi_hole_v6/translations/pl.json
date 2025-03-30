@@ -110,8 +110,7 @@
                 "unit_of_measurement": "domeny"
             },
             "remaining_until_blocking_mode": {
-                "name": "Pozostały czas do trybu blokowania",
-                "unit_of_measurement": "sekundy"
+                "name": "Pozostały czas do trybu blokowania"
             },
             "latest_data_refresh": {
                 "name": "Ostatnia aktualizacja danych"

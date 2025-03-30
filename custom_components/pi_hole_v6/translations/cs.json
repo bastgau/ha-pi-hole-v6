@@ -110,8 +110,7 @@
                 "unit_of_measurement": "domén"
             },
             "remaining_until_blocking_mode": {
-                "name": "Zbývající čas do blokování",
-                "unit_of_measurement": "sekund"
+                "name": "Zbývající čas do blokování"
             },
             "latest_data_refresh": {
                 "name": "Poslední aktualizace dat"

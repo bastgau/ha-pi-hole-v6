@@ -110,8 +110,7 @@
                 "unit_of_measurement": "alan adı"
             },
             "remaining_until_blocking_mode": {
-                "name": "Engelleme moduna kalan süre",
-                "unit_of_measurement": "saniye"
+                "name": "Engelleme moduna kalan süre"
             },
             "latest_data_refresh": {
                 "name": "Son veri yenileme"
