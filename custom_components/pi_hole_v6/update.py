@@ -27,18 +27,16 @@ class PiHoleV6UpdateEntityDescription(UpdateEntityDescription):
     title: str | None = None
 
 
+# entity_registry_enabled_default=False,
+
 UPDATE_ENTITY_TYPES: tuple[PiHoleV6UpdateEntityDescription, ...] = (
     PiHoleV6UpdateEntityDescription(
         key="core_update_available",
         translation_key="core_update_available",
         title="Pi-hole Core",
         entity_category=EntityCategory.DIAGNOSTIC,
-        installed_version=lambda versions: versions.get("core")
-        .get("local", {})
-        .get("version", None),
-        latest_version=lambda versions: versions.get("core")
-        .get("remote", {})
-        .get("version", None),
+        installed_version=lambda versions: versions.get("core").get("local", {}).get("version", None),
+        latest_version=lambda versions: versions.get("core").get("remote", {}).get("version", None),
         release_base_url="https://github.com/pi-hole/pi-hole/releases/tag",
     ),
     PiHoleV6UpdateEntityDescription(
@@ -46,12 +44,8 @@ UPDATE_ENTITY_TYPES: tuple[PiHoleV6UpdateEntityDescription, ...] = (
         translation_key="web_update_available",
         title="Pi-hole Web interface",
         entity_category=EntityCategory.DIAGNOSTIC,
-        installed_version=lambda versions: versions.get("web")
-        .get("local", {})
-        .get("version", None),
-        latest_version=lambda versions: versions.get("web")
-        .get("remote", {})
-        .get("version", None),
+        installed_version=lambda versions: versions.get("web").get("local", {}).get("version", None),
+        latest_version=lambda versions: versions.get("web").get("remote", {}).get("version", None),
         release_base_url="https://github.com/pi-hole/AdminLTE/releases/tag",
     ),
     PiHoleV6UpdateEntityDescription(
@@ -59,12 +53,8 @@ UPDATE_ENTITY_TYPES: tuple[PiHoleV6UpdateEntityDescription, ...] = (
         translation_key="ftl_update_available",
         title="Pi-hole FTL",
         entity_category=EntityCategory.DIAGNOSTIC,
-        installed_version=lambda versions: versions.get("ftl")
-        .get("local", {})
-        .get("version", None),
-        latest_version=lambda versions: versions.get("ftl")
-        .get("remote", {})
-        .get("version", None),
+        installed_version=lambda versions: versions.get("ftl").get("local", {}).get("version", None),
+        latest_version=lambda versions: versions.get("ftl").get("remote", {}).get("version", None),
         release_base_url="https://github.com/pi-hole/FTL/releases/tag",
     ),
     PiHoleV6UpdateEntityDescription(

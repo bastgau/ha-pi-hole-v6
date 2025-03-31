@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Služba je již nakonfigurována."
+            "already_configured": "Služba je již nakonfigurována.",
+            "reauth_successful": "Re-autentizace byla úspěšná."
         },
         "error": {
             "incorrect_data_expected": "Nepodařilo se načíst data ve správné struktuře.",
@@ -21,6 +22,16 @@
                     "url": "URL adresa vašeho Pi-hole (např.: https://pi.hole:443/api)"
                 },
                 "description": "Tato integrace vám umožňuje získat statistiky a interagovat se systémem Pi-hole V6.",
+                "title": "Pi-hole V6"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Heslo"
+                },
+                "data_description": {
+                    "password": "Heslo pro přihlášení"
+                },
+                "description": "Z této obrazovky můžete změnit heslo pro přístup k instanci Pi-hole.",
                 "title": "Pi-hole V6"
             }
         }
@@ -43,6 +54,23 @@
         "binary_sensor": {
             "status": {
                 "name": "Stav"
+            }
+        },
+        "button": {
+            "action_flush_arp": {
+                "name": "Vyprázdnit síťovou tabulku"
+            },
+            "action_flush_logs": {
+                "name": "Vyprázdnit DNS logy"
+            },
+            "action_gravity": {
+                "name": "Spustit gravity"
+            },
+            "action_restartdns": {
+                "name": "Restartovat pihole-FTL"
+            },
+            "action_refresh_data": {
+                "name": "Obnovit data"
             }
         },
         "sensor": {
@@ -82,8 +110,10 @@
                 "unit_of_measurement": "domén"
             },
             "remaining_until_blocking_mode": {
-                "name": "Zbývající čas do blokování",
-                "unit_of_measurement": "sekund"
+                "name": "Zbývající čas do blokování"
+            },
+            "latest_data_refresh": {
+                "name": "Poslední aktualizace dat"
             }
         },
         "switch": {
@@ -120,6 +150,11 @@
         "enable": {
             "name": "Povolit",
             "description": "Povolí Pi-hole."
+        }
+    },
+    "exceptions": {
+        "unable_to_launch_action": {
+            "message": "Nelze spustit akci *{action}*: {exception}."
         }
     }
 }

@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 from homeassistant.components.sensor import (
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import CONF_NAME, PERCENTAGE
+from homeassistant.const import CONF_NAME, PERCENTAGE, EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -18,6 +19,13 @@ from .api import API as ClientAPI
 from .entity import PiHoleV6Entity
 
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key="remaining_until_blocking_mode",
+        translation_key="remaining_until_blocking_mode",
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        device_class=SensorDeviceClass.DURATION,
+        suggested_display_precision=0,
+    ),
     SensorEntityDescription(
         key="ads_blocked_today",
         translation_key="ads_blocked_today",
@@ -66,9 +74,11 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
-        key="remaining_until_blocking_mode",
-        translation_key="remaining_until_blocking_mode",
-        suggested_display_precision=0,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        key="latest_data_refresh",
+        translation_key="latest_data_refresh",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_registry_enabled_default=False,
     ),
 )
 
@@ -118,6 +128,8 @@ class PiHoleV6Sensor(PiHoleV6Entity, SensorEntity):
         """Return the state of the device."""
 
         match self.entity_description.key:
+            case "latest_data_refresh":
+                return self.api.last_refresh
             case "ads_blocked_today":
                 return self.api.cache_summary["queries"]["blocked"]
             case "ads_percentage_blocked_today":

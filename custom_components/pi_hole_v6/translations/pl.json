@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Usługa jest już skonfigurowana."
+            "already_configured": "Usługa jest już skonfigurowana.",
+            "reauth_successful": "Ponowne uwierzytelnienie się powiodło."
         },
         "error": {
             "incorrect_data_expected": "Nie udało się pobrać danych w poprawnej strukturze.",
@@ -21,6 +22,16 @@
                     "url": "URL lub adres Twojego Pi-hole (np.: https://pi.hole:443/api)"
                 },
                 "description": "Ta integracja pozwala na pobieranie statystyk i interakcję z systemem Pi-hole V6.",
+                "title": "Pi-hole V6"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Hasło"
+                },
+                "data_description": {
+                    "password": "Hasło używane do logowania"
+                },
+                "description": "Z tego ekranu można zmienić hasło dostępu do instancji Pi-hole.",
                 "title": "Pi-hole V6"
             }
         }
@@ -43,6 +54,23 @@
         "binary_sensor": {
             "status": {
                 "name": "Status"
+            }
+        },
+        "button": {
+            "action_flush_arp": {
+                "name": "Wyczyść tablicę sieciową"
+            },
+            "action_flush_logs": {
+                "name": "Wyczyść logi DNS"
+            },
+            "action_gravity": {
+                "name": "Uruchom gravity"
+            },
+            "action_restartdns": {
+                "name": "Restartuj pihole-FTL"
+            },
+            "action_refresh_data": {
+                "name": "Odśwież dane"
             }
         },
         "sensor": {
@@ -82,8 +110,10 @@
                 "unit_of_measurement": "domeny"
             },
             "remaining_until_blocking_mode": {
-                "name": "Pozostały czas do trybu blokowania",
-                "unit_of_measurement": "sekundy"
+                "name": "Pozostały czas do trybu blokowania"
+            },
+            "latest_data_refresh": {
+                "name": "Ostatnia aktualizacja danych"
             }
         },
         "switch": {
@@ -120,6 +150,11 @@
         "enable": {
             "name": "Aktywuj",
             "description": "Włącza skonfigurowany Pi-hole."
+        }
+    },
+    "exceptions": {
+        "unable_to_launch_action": {
+            "message": "Nie można uruchomić akcji *{action}*: {exception}."
         }
     }
 }

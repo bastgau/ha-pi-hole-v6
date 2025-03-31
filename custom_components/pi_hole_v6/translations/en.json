@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Service is already configured."
+            "already_configured": "Service is already configured.",
+            "reauth_successful": "Re-authentication was successful."
         },
         "error": {
             "incorrect_data_expected": "Failed to retrieve the data in the correct structure.",
@@ -21,6 +22,16 @@
                     "url": "URL or address of your Pi-hole (ie: https://pi.hole:443/api)"
                 },
                 "description": "This integration allows you to retrieve statistics and interact with a Pi-hole V6 system.",
+                "title": "Pi-hole V6"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Password"
+                },
+                "data_description": {
+                    "password": "Password to be used for login"
+                },
+                "description": "From this screen, you can change the password to access the Pi-hole instance.",
                 "title": "Pi-hole V6"
             }
         }
@@ -43,6 +54,23 @@
         "binary_sensor": {
             "status": {
                 "name": "Status"
+            }
+        },
+        "button": {
+            "action_flush_arp": {
+                "name": "Flush the network table"
+            },
+            "action_flush_logs": {
+                "name": "Flush the DNS logs"
+            },
+            "action_gravity": {
+                "name": "Run gravity"
+            },
+            "action_restartdns": {
+                "name": "Restart pihole-FTL"
+            },
+            "action_refresh_data": {
+                "name": "Refresh data"
             }
         },
         "sensor": {
@@ -82,8 +110,10 @@
                 "unit_of_measurement": "domains"
             },
             "remaining_until_blocking_mode": {
-                "name": "Remaining until blocking mode",
-                "unit_of_measurement": "seconds"
+                "name": "Remaining until blocking mode"
+            },
+            "latest_data_refresh": {
+                "name": "Latest data refresh"
             }
         },
         "switch": {
@@ -120,6 +150,11 @@
         "enable": {
             "name": "Active",
             "description": "Enables configured Pi-hole."
+        }
+    },
+    "exceptions": {
+        "unable_to_launch_action": {
+            "message": "Unable to launch *{action}* action: {exception}"
         }
     }
 }

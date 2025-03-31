@@ -8,8 +8,8 @@ CONF_UPDATE_INTERVAL = "update_interval"
 
 DOMAIN = "pi_hole_v6"
 DEFAULT_NAME = "Pi-hole"
-DEFAULT_URL = "https://pi.hole:443/api"
-DEFAULT_PASSWORD = "xxxxx"
+DEFAULT_URL = "https://pihole.local:443/api"
+DEFAULT_PASSWORD = ""
 
 SERVICE_DISABLE = "disable"
 SERVICE_DISABLE_ATTR_DURATION = "duration"

@@ -1,17 +1,17 @@
 """The above class represents Pi-hole API Client with methods for authentication, retrieving summary data, managing blocking status, and logging requests."""
 
 import asyncio
-import copy
-import hashlib
 import logging
+from datetime import datetime
 from socket import gaierror as GaiError
 from typing import Any
 
 import requests
-from aiohttp import ClientError, ContentTypeError
+from aiohttp import ClientError, ContentTypeError, client
 
 from .exceptions import (
     AbortLogoutException,
+    APIException,
     ClientConnectorException,
     ContentTypeException,
     UnauthorizedException,
@@ -23,20 +23,22 @@ class API:
     """Pi-hole API Client."""
 
     _logger: logging.Logger | None
-    _password: Any = ""
-    _session: Any = None
+    _password: str = ""
+    _session: client.ClientSession = None
     _sid: str | None = None
 
     cache_blocking: dict[str, Any] = {}
     cache_padd: dict[str, Any] = {}
     cache_summary: dict[str, Any] = {}
     cache_groups: dict[str, dict[str, Any]] = {}
+    last_refresh: datetime | None = None
+    just_initialized: bool = False
 
     url: str = ""
 
     def __init__(  # noqa: D417
         self,
-        session,
+        session: client.ClientSession,
         url: str = "http://pi.hole",
         password: str = "",
         logger: logging.Logger | None = None,
@@ -91,8 +93,6 @@ class API:
         await self._abort_logout(action)
         await self._request_login(action)
 
-        self._get_logger().debug("Session ID Hash: %s", self._get_sid_hash(self._sid))
-
         url: str = f"{self.url}{route}"
 
         headers: dict[str, str] = {
@@ -100,10 +100,8 @@ class API:
             "content-type": "application/json",
         }
 
-        if self._sid is not None:
+        if self._sid is not None and self._sid != "no password set":
             headers = headers | {"sid": self._sid}
-
-        self._get_logger().debug("Request: %s %s", method.upper(), url)
 
         request: requests.Response
 
@@ -118,40 +116,32 @@ class API:
                 elif method.lower() == "get":
                     request = await self._session.get(url, headers=headers)
                 else:
-                    self._get_logger().error(
-                        "Method (%s) is not supported/implemented.", method.lower()
-                    )
+                    self._get_logger().critical("Method (%s) is not supported/implemented.", method.lower())
                     raise RuntimeError("Method is not supported/implemented.")
 
         except (TimeoutError, ClientError, GaiError) as err:
-            raise ClientConnectorException from err
-
-        result_data: dict[str, Any] = {}
-
-        self._get_logger().debug("Status Code: %d", request.status)
+            raise ClientConnectorException(str(err)) from err
 
         try:
             handle_status(request.status)
-        except RuntimeError as err1:
-            self._get_logger().error("Status Code: %d", request.status)
-            raise err1
-        except Exception as err2:
-            self._get_logger().error("Status Code: %d", request.status)
-            raise err2
+        except APIException as api_error:
+            log_message: str = await self._create_log_message_on_api_exception(api_error, request, method, url)
+            self._get_logger().error(log_message)
+            raise api_error
+        except Exception as err:
+            raise err
+
+        result_data: dict[str, Any] = {}
 
         if request.status < 400 and request.text != "":
             try:
-                result_data_debug: dict[str, Any] | None = None
+                result_data: str = await self._try_to_retrieve_json_result(request, privacy=False)
+                message: str = await self._create_log_message_on_api_result(request, method, url)
 
-                if request.status != 204:
-                    result_data = await request.json()
-                    result_data_debug = copy.deepcopy(result_data)
-
-                if action == "login":
-                    result_data_debug["session"]["sid"] = "[redacted]"
-
-                if result_data_debug is not None:
-                    self._get_logger().debug("Data: %s", result_data_debug)
+                if "password incorrect" not in message:
+                    self._get_logger().debug(message)
+                else:
+                    self._get_logger().error(message)
 
             except ContentTypeError as err:
                 raise ContentTypeException from err
@@ -162,6 +152,46 @@ class API:
             "data": result_data,
         }
 
+    async def _try_to_retrieve_json_result(self, request: requests.Response, privacy: bool = True) -> str | None:
+        """..."""
+
+        text: str | None = None
+
+        try:
+            if request.status != 204:
+                text = await request.json()
+                if (
+                    privacy is True
+                    and "session" in text
+                    and "sid" in text["session"]
+                    and text["session"]["sid"] is not None
+                ):
+                    text["session"]["sid"] = "[redacted]"
+
+        except ContentTypeError:
+            pass
+
+        return text
+
+    async def _create_log_message_on_api_result(self, request: requests.Response, method: str, url: str) -> str:
+        """..."""
+
+        text: str | None = await self._try_to_retrieve_json_result(request)
+        status: str = str(request.status)
+        reason: str = str(request.reason)
+
+        return f"{status} {reason} # {method.upper()} {url} : {text}"
+
+    async def _create_log_message_on_api_exception(
+        self, api_error: APIException, request: requests.Response, method: str, url: str
+    ) -> str:
+        """..."""
+
+        log: str = await self._create_log_message_on_api_result(request, method, url)
+        exception_name: str = str(type(api_error))
+
+        return f"{exception_name} - {log}"
+
     async def _check_authentification(self, action: str) -> None:
         """..."""
 
@@ -169,13 +199,11 @@ class API:
             if (
                 action not in ("login", "authentification_status")
                 and self._sid is not None
+                and self._sid != "no password set"
             ):
                 response: dict[str, Any] = await self.call_authentification_status()
 
-                if (
-                    response["code"] != 200
-                    or response["data"]["session"]["valid"] is False
-                ):
+                if response["code"] != 200 or response["data"]["session"]["valid"] is False:
                     self._sid = None
 
         except UnauthorizedException:
@@ -192,14 +220,6 @@ class API:
 
         if action == "logout" and self._sid is None:
             raise AbortLogoutException()
-
-    def _get_sid_hash(self, sid: str) -> str | None:
-        """..."""
-
-        if self._sid is not None:
-            return str(hashlib.sha256(self._sid.encode("utf-8")).hexdigest())
-
-        return None
 
     async def call_authentification_status(self) -> dict[str, Any]:
         """..."""
@@ -238,10 +258,13 @@ class API:
             data={"password": self._password},
         )
 
-        if result["data"]["session"]["message"] == "password incorrect":
+        if result["data"]["session"]["valid"] is False or result["data"]["session"]["message"] == "password incorrect":
             raise UnauthorizedException()
 
-        self._sid = result["data"]["session"]["sid"]
+        if result["data"]["session"]["sid"] is not None:
+            self._sid = result["data"]["session"]["sid"]
+        else:
+            self._sid = "no password set"
 
         return {
             "code": result["code"],
@@ -487,6 +510,77 @@ class API:
                 "comment": self.cache_groups[group]["comment"],
                 "enabled": True,
             },
+        )
+
+        return {
+            "code": result["code"],
+            "reason": result["reason"],
+            "data": result["data"],
+        }
+
+    async def call_action_flush_arp(self) -> dict[str, Any]:
+        """Flush the network table.
+
+        This includes emptying the ARP table and removing both all known devices and their associated addresses.
+
+        Returns:
+          result (dict[str, Any]): A dictionary with the keys "code", "reason", and "data".
+
+        """
+
+        return await self._call_action("flush_arp")
+
+    async def call_action_flush_logs(self) -> dict[str, Any]:
+        """Flush the DNS logs.
+
+        This includes emptying the DNS log file and purging the most recent 24 hours from both the database and FTL's internal memory.'
+
+        Returns:
+          result (dict[str, Any]): A dictionary with the keys "code", "reason", and "data".
+
+        """
+
+        return await self._call_action("flush_logs")
+
+    async def call_action_gravity(self) -> dict[str, Any]:
+        """Run gravity.
+
+        Update Pi-hole's adlists by running pihole -g.
+
+        Returns:
+          result (dict[str, Any]): A dictionary with the keys "code", "reason", and "data".
+
+        """
+
+        return await self._call_action("gravity")
+
+    async def call_action_restartdns(self) -> dict[str, Any]:
+        """Restart the pihole-FTL service.
+
+        Returns:
+          result (dict[str, Any]): A dictionary with the keys "code", "reason", and "data".
+
+        """
+
+        return await self._call_action("restartdns")
+
+    async def _call_action(self, action_name: str) -> dict[str, Any]:
+        """Execute an Pi-hole action.
+
+        Args:
+          action_name (str): Represents the action to execute
+
+        Returns:
+          result (dict[str, Any]): A dictionary with the keys "code", "reason", and "data".
+
+        """
+
+        url: str = f"/action/{action_name.replace('_', '/')}"
+
+        result: dict[str, Any] = await self._call(
+            url,
+            action=f"action_{action_name}",
+            method="POST",
         )
 
         return {

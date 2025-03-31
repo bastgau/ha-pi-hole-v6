@@ -1,11 +1,22 @@
 ---
-name: Bug report
-about: Create a report to help us improve
+name: 🐞 Bug report
+description: Report an issue
+about: Use this template for tracking a bug.
+labels: [pending triage]
 title: ''
 labels: ''
 assignees: ''
-
 ---
+
+<!--
+Note: The Pi-hole V6 integration is not compatible with versions of Home Assistant prior to 2025.03.
+-->
+
+**Home Assistant version:**
+Please specify your Home Assistant version.
+
+**Pi-hole V6 Integration version:**
+Please specify your Home Assistant version.
 
 **Describe the bug**
 A clear and concise description of what the bug is.
@@ -15,9 +26,6 @@ A clear and concise description of what you expected to happen.
 
 **Screenshots**
 If applicable, add screenshots to help explain your problem.
-
-**Home Assistant version:**
-Please specify your Home Assistant version.
 
 **Additional context**
 Add any other context about the problem here.

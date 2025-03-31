@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Servis zaten yapılandırılmış."
+            "already_configured": "Servis zaten yapılandırılmış.",
+            "reauth_successful": "Yeniden kimlik doğrulama başarılı oldu."
         },
         "error": {
             "incorrect_data_expected": "Verileri doğru yapıda almada başarısız olundu.",
@@ -21,6 +22,16 @@
                     "url": "Pi-hole'unuzun URL veya adresi (örneğin: https://pi.hole:443/api)"
                 },
                 "description": "Bu entegrasyon, Pi-hole V6 sisteminden istatistikler almanızı ve sistemle etkileşim kurmanızı sağlar.",
+                "title": "Pi-hole V6"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Şifre"
+                },
+                "data_description": {
+                    "password": "Giriş için kullanılacak şifre"
+                },
+                "description": "Bu ekrandan Pi-hole örneğine erişmek için şifreyi değiştirebilirsiniz.",
                 "title": "Pi-hole V6"
             }
         }
@@ -43,6 +54,23 @@
         "binary_sensor": {
             "status": {
                 "name": "Durum"
+            }
+        },
+        "button": {
+            "action_flush_arp": {
+                "name": "Ağ tablosunu boşalt"
+            },
+            "action_flush_logs": {
+                "name": "DNS günlüklerini boşalt"
+            },
+            "action_gravity": {
+                "name": "Gravity'yi çalıştır"
+            },
+            "action_restartdns": {
+                "name": "Pihole-FTL'yi yeniden başlat"
+            },
+            "action_refresh_data": {
+                "name": "Verileri yenile"
             }
         },
         "sensor": {
@@ -82,8 +110,10 @@
                 "unit_of_measurement": "alan adı"
             },
             "remaining_until_blocking_mode": {
-                "name": "Engelleme moduna kalan süre",
-                "unit_of_measurement": "saniye"
+                "name": "Engelleme moduna kalan süre"
+            },
+            "latest_data_refresh": {
+                "name": "Son veri yenileme"
             }
         },
         "switch": {
@@ -120,6 +150,11 @@
         "enable": {
             "name": "Etkinleştir",
             "description": "Yapılandırılmış Pi-hole'u etkinleştirir."
+        }
+    },
+    "exceptions": {
+        "unable_to_launch_action": {
+            "message": "*{action}* eylemi başlatılamıyor: {exception}."
         }
     }
 }

@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "El servicio ya está configurado."
+            "already_configured": "El servicio ya está configurado.",
+            "reauth_successful": "La reautenticación fue exitosa."
         },
         "error": {
             "incorrect_data_expected": "Error al recuperar los datos en la estructura correcta.",
@@ -21,6 +22,16 @@
                     "url": "URL o dirección de tu Pi-hole (es decir: https://pi.hole:443/api)"
                 },
                 "description": "Esta integración permite recuperar estadísticas e interactuar con un sistema Pi-hole V6.",
+                "title": "Pi-hole V6"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Contraseña"
+                },
+                "data_description": {
+                    "password": "Contraseña a utilizar para la conexión"
+                },
+                "description": "Desde esta pantalla, puede cambiar la contraseña para acceder a la instancia de Pi-hole.",
                 "title": "Pi-hole V6"
             }
         }
@@ -43,6 +54,23 @@
         "binary_sensor": {
             "status": {
                 "name": "Estado"
+            }
+        },
+        "button": {
+            "action_flush_arp": {
+                "name": "Vaciar la tabla de red"
+            },
+            "action_flush_logs": {
+                "name": "Vaciar los registros de DNS"
+            },
+            "action_gravity": {
+                "name": "Ejecutar gravity"
+            },
+            "action_restartdns": {
+                "name": "Reiniciar pihole-FTL"
+            },
+            "action_refresh_data": {
+                "name": "Actualizar datos"
             }
         },
         "sensor": {
@@ -82,8 +110,10 @@
                 "unit_of_measurement": "dominios"
             },
             "remaining_until_blocking_mode": {
-                "name": "Tiempo restante hasta el modo de bloqueo",
-                "unit_of_measurement": "segundos"
+                "name": "Tiempo restante hasta el modo de bloqueo"
+            },
+            "latest_data_refresh": {
+                "name": "Última actualización de datos"
             }
         },
         "switch": {
@@ -120,6 +150,11 @@
         "enable": {
             "name": "Activar",
             "description": "Activa el Pi-hole configurado."
+        }
+    },
+    "exceptions": {
+        "unable_to_launch_action": {
+            "message": "No se puede iniciar la acción *{action}*: {exception}."
         }
     }
 }

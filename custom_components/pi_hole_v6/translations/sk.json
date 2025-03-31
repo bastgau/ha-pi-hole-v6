@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Služba je už nakonfigurovaná."
+            "already_configured": "Služba je už nakonfigurovaná.",
+            "reauth_successful": "Opätovné overenie sa podarilo."
         },
         "error": {
             "incorrect_data_expected": "Nepodarilo sa načítať dáta v správnej štruktúre.",
@@ -21,6 +22,16 @@
                     "url": "URL alebo adresa vášho Pi-hole (napr.: https://pi.hole:443/api)"
                 },
                 "description": "Táto integrácia vám umožňuje získať štatistiky a interagovať so systémom Pi-hole V6.",
+                "title": "Pi-hole V6"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Heslo"
+                },
+                "data_description": {
+                    "password": "Heslo ktoré sa použije na prihlásenie"
+                },
+                "description": "Z tejto obrazovky môžete zmeniť heslo na prístup k inštancii Pi-hole.",
                 "title": "Pi-hole V6"
             }
         }
@@ -43,6 +54,23 @@
         "binary_sensor": {
             "status": {
                 "name": "Stav"
+            }
+        },
+        "button": {
+            "action_flush_arp": {
+                "name": "Vyprázdniť sieťovú tabuľku"
+            },
+            "action_flush_logs": {
+                "name": "Vyprázdniť DNS logy"
+            },
+            "action_gravity": {
+                "name": "Spustiť gravity"
+            },
+            "action_restartdns": {
+                "name": "Reštartovať pihole-FTL"
+            },
+            "action_refresh_data": {
+                "name": "Obnoviť údaje"
             }
         },
         "sensor": {
@@ -82,8 +110,10 @@
                 "unit_of_measurement": "domény"
             },
             "remaining_until_blocking_mode": {
-                "name": "Zostáva do režimu blokovania",
-                "unit_of_measurement": "sekundy"
+                "name": "Zostáva do režimu blokovania"
+            },
+            "latest_data_refresh": {
+                "name": "Posledná aktualizácia údajov"
             }
         },
         "switch": {
@@ -120,6 +150,11 @@
         "enable": {
             "name": "Aktivovať",
             "description": "Aktivuje nakonfigurovaný Pi-hole."
+        }
+    },
+    "exceptions": {
+        "unable_to_launch_action": {
+            "message": "Nie je možné spustiť akciu *{action}*: {exception}."
         }
     }
 }

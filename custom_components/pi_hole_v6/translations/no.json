@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Tjenesten er allerede konfigurert."
+            "already_configured": "Tjenesten er allerede konfigurert.",
+            "reauth_successful": "Påloggingen på nytt var vellykket."
         },
         "error": {
             "incorrect_data_expected": "Kunne ikke hente data i riktig struktur.",
@@ -21,6 +22,16 @@
                     "url": "URL eller adresse til din Pi-hole (f.eks.: https://pi.hole:443/api)"
                 },
                 "description": "Denne integrasjonen lar deg hente statistikk og samhandle med et Pi-hole V6-system.",
+                "title": "Pi-hole V6"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Passord"
+                },
+                "data_description": {
+                    "password": "Passord som skal brukes for innlogging"
+                },
+                "description": "Fra denne skjermen kan du endre passordet for å få tilgang til Pi-hole-instansen.",
                 "title": "Pi-hole V6"
             }
         }
@@ -43,6 +54,23 @@
         "binary_sensor": {
             "status": {
                 "name": "Status"
+            }
+        },
+        "button": {
+            "action_flush_arp": {
+                "name": "Tøm nettverkstabellen"
+            },
+            "action_flush_logs": {
+                "name": "Tøm DNS-loggene"
+            },
+            "action_gravity": {
+                "name": "Kjør gravity"
+            },
+            "action_restartdns": {
+                "name": "Start pihole-FTL på nytt"
+            },
+            "action_refresh_data": {
+                "name": "Oppdater data"
             }
         },
         "sensor": {
@@ -82,8 +110,10 @@
                 "unit_of_measurement": "domener"
             },
             "remaining_until_blocking_mode": {
-                "name": "Gjenstående tid til blokkeringsmodus",
-                "unit_of_measurement": "sekunder"
+                "name": "Gjenstående tid til blokkeringsmodus"
+            },
+            "latest_data_refresh": {
+                "name": "Siste datarefreshing"
             }
         },
         "switch": {
@@ -120,6 +150,11 @@
         "enable": {
             "name": "Aktiver",
             "description": "Aktiverer konfigurert Pi-hole."
+        }
+    },
+    "exceptions": {
+        "unable_to_launch_action": {
+            "message": "Kan ikke starte *{action}*-handlingen: {exception}."
         }
     }
 }

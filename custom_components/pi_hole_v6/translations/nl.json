@@ -1,0 +1,160 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Service is al geconfigureerd.",
+            "reauth_successful": "Herauthenticatie is gelukt."
+        },
+        "error": {
+            "incorrect_data_expected": "Het is niet gelukt om de gegevens in de juiste structuur op te halen.",
+            "cannot_connect": "Kan geen verbinding maken met de server. Controleer of het serveradres en de poort correct zijn.",
+            "invalid_auth": "Ongeldig wachtwoord opgegeven. Zorg ervoor dat uw wachtwoord correct is.",
+            "invalid_path": "Ongeldig API-pad opgegeven. Controleer de eindpunt-URL."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "name": "Naam",
+                    "password": "Wachtwoord",
+                    "url": "Adres"
+                },
+                "data_description": {
+                    "password": "Wachtwoord dat gebruikt moet worden om in te loggen",
+                    "url": "URL of adres van uw Pi-hole (bv: https://pi.hole:443/api)"
+                },
+                "description": "Met deze integratie kunt u statistieken ophalen en communiceren met een Pi-hole V6-systeem.",
+                "title": "Pi-hole V6"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Wachtwoord"
+                },
+                "data_description": {
+                    "password": "Wachtwoord dat gebruikt moet worden om in te loggen"
+                },
+                "description": "Vanaf dit scherm kunt u het wachtwoord wijzigen om toegang te krijgen tot de Pi-hole-instantie.",
+                "title": "Pi-hole V6"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "update_interval": "Gegevensverversingsfrequentie (seconden)"
+                },
+                "description": "Nadat u een van deze opties hebt gewijzigd, moet u de service opnieuw laden of Home Assistant opnieuw opstarten.",
+                "title": "Pi-hole V6"
+            }
+        },
+        "error": {
+            "invalid_update_interval": "Ongeldige data refresh frequentie. Deze moet hoger zijn dan 1 seconde en lager dan 3600 seconden."
+        }
+    },
+    "entity": {
+        "binary_sensor": {
+            "status": {
+                "name": "Status"
+            }
+        },
+        "button": {
+            "action_flush_arp": {
+                "name": "Netwerktabel legen"
+            },
+            "action_flush_logs": {
+                "name": "DNS-logboeken legen"
+            },
+            "action_gravity": {
+                "name": "Gravity uitvoeren"
+            },
+            "action_restartdns": {
+                "name": "Pihole-FTL herstarten"
+            },
+            "action_refresh_data": {
+                "name": "Gegevens vernieuwen"
+            }
+        },
+        "sensor": {
+            "ads_blocked_today": {
+                "name": "Ads vandaag geblokkeerd",
+                "unit_of_measurement": "ads"
+            },
+            "ads_percentage_blocked_today": {
+                "name": "Ads percentage vandaag geblokkeerd"
+            },
+            "seen_clients": {
+                "name": "Clients gezien",
+                "unit_of_measurement": "clients"
+            },
+            "dns_queries_today": {
+                "name": "DNS-query's vandaag",
+                "unit_of_measurement": "queries"
+            },
+            "domains_blocked": {
+                "name": "Domeinen geblokkeerd",
+                "unit_of_measurement": "domains"
+            },
+            "dns_queries_cached": {
+                "name": "DNS-query's cached",
+                "unit_of_measurement": "queries"
+            },
+            "dns_queries_forwarded": {
+                "name": "DNS-query's doorgestuurd",
+                "unit_of_measurement": "queries"
+            },
+            "dns_unique_clients": {
+                "name": "Unieke DNS-clients",
+                "unit_of_measurement": "clients"
+            },
+            "dns_unique_domains": {
+                "name": "Unieke DNS-domeinen",
+                "unit_of_measurement": "domains"
+            },
+            "remaining_until_blocking_mode": {
+                "name": "Resterend tot blokkeringsmodus"
+            },
+            "latest_data_refresh": {
+                "name": "Meest recente gegevensvernieuwing"
+            }
+        },
+        "switch": {
+            "group": {
+                "name": "Groep {group_name}"
+            }
+        },
+        "update": {
+            "core_update_available": {
+                "name": "Core update"
+            },
+            "docker_update_available": {
+                "name": "Docker update"
+            },
+            "ftl_update_available": {
+                "name": "FTL update"
+            },
+            "web_update_available": {
+                "name": "Web interface update"
+            }
+        }
+    },
+    "services": {
+        "disable": {
+            "name": "Uitzetten",
+            "description": "Schakel geconfigureerde Pi-hole voor een bepaalde tijd uit.",
+            "fields": {
+                "duration": {
+                    "description": "Tijd dat de Pi-hole uitgeschakeld moet worden.",
+                    "name": "Duur"
+                }
+            }
+        },
+        "enable": {
+            "name": "Actief",
+            "description": "Schakelt geconfigureerde Pi-hole in."
+        }
+    },
+    "exceptions": {
+        "unable_to_launch_action": {
+            "message": "Não foi possível iniciar a ação *{action}*: {exception}."
+        }
+    }
+}

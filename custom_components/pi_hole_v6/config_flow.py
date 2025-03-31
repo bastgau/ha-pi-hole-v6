@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from collections.abc import Mapping
 from typing import Any
 
 import voluptuous as vol
@@ -49,7 +50,7 @@ def _get_data_config_schema(user_input) -> vol.Schema:
                 CONF_URL,
                 default=user_input.get(CONF_URL, DEFAULT_URL),
             ): str,
-            vol.Required(
+            vol.Optional(
                 CONF_PASSWORD,
                 default=user_input.get(CONF_PASSWORD, DEFAULT_PASSWORD),
             ): str,
@@ -66,9 +67,7 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self._config: dict = {}
 
-    async def async_step_user(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
+    async def async_step_user(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
         errors = {}
 
@@ -83,14 +82,50 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             self._abort_if_unique_id_configured()
 
             if not (errors := await self._async_try_connect()):
-                return self.async_create_entry(
-                    title=user_input[CONF_NAME], data=self._config
-                )
+                return self.async_create_entry(title=user_input[CONF_NAME], data=self._config)
+            else:
+                user_input["password"] = ""
 
         user_input = user_input or {}
         return self.async_show_form(
             step_id="user",
             data_schema=_get_data_config_schema(user_input),
+            errors=errors,
+        )
+
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> ConfigFlowResult:
+        """Perform reauth if the user credentials have changed."""
+        self._config = {
+            CONF_NAME: entry_data[CONF_NAME],
+            CONF_URL: entry_data[CONF_URL],
+        }
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
+        """Handle user's reauth credentials."""
+        errors: dict[str, str] = {}
+        if user_input:
+            self._config[CONF_PASSWORD] = user_input[CONF_PASSWORD]
+
+            if not (errors := await self._async_try_connect()):
+                return self.async_update_reload_and_abort(
+                    self._get_reauth_entry(),
+                    data_updates=user_input,
+                )
+            else:
+                del user_input[CONF_PASSWORD]
+
+        user_input = user_input or {}
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(
+                        CONF_PASSWORD,
+                        default=user_input.get(CONF_PASSWORD, DEFAULT_PASSWORD),
+                    ): str,
+                }
+            ),
             errors=errors,
         )
 
@@ -113,30 +148,18 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         try:
             await api_client.call_authentification_status()
         except ClientConnectorException as err:
-            _LOGGER.error("Connection failed: %s", err)
+            _LOGGER.error("Connection failed (%s): %s", api_client.url, err)
             return {CONF_URL: "cannot_connect"}
         except (
             NotFoundException,
             ContentTypeException,
             MethodNotAllowedException,
         ) as err:
-            _LOGGER.error("Connection failed: %s", err)
+            _LOGGER.error("Connection failed (%s): %s", api_client.url, err)
             return {CONF_URL: "invalid_path"}
         except (UnauthorizedException, ForbiddenException) as err:
-            _LOGGER.error("Connection failed: %s", err)
+            _LOGGER.error("Connection failed (%s): %s", api_client.url, err)
             return {CONF_PASSWORD: "invalid_auth"}
-
-        if not isinstance(await api_client.call_summary(), dict):
-            return {"base": "incorrect_data_expected"}
-
-        if not isinstance(await api_client.call_blocking_status(), dict):
-            return {"base": "incorrect_data_expected"}
-
-        if not isinstance(await api_client.call_padd(), dict):
-            return {"base": "incorrect_data_expected"}
-
-        if not isinstance(await api_client.call_get_groups(), dict):
-            return {"base": "incorrect_data_expected"}
 
 
 def _get_data_option_schema(user_input) -> vol.Schema:

@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Le service est déjà configuré."
+            "already_configured": "Le service est déjà configuré.",
+            "reauth_successful": "La réauthentification a réussi."
         },
         "error": {
             "incorrect_data_expected": "Échec de la récupération des données dans la structure attendue.",
@@ -21,6 +22,16 @@
                     "url": "URL ou adresse de votre Pi-hole (ex: https://pi.hole:443/api)"
                 },
                 "description": "Cette intégration permet de récupérer des statistiques et d'interagir avec un système Pi-hole V6.",
+                "title": "Pi-hole V6"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Mot de passe"
+                },
+                "data_description": {
+                    "password": "Mot de passe à utiliser pour la connexion"
+                },
+                "description": "A partir de cet écran, vous pouvez modifier le mot de passe pour accéder à l'instance  Pi-hole.",
                 "title": "Pi-hole V6"
             }
         }
@@ -43,6 +54,23 @@
         "binary_sensor": {
             "status": {
                 "name": "Statut"
+            }
+        },
+        "button": {
+            "action_flush_arp": {
+                "name": "Vider la table réseau"
+            },
+            "action_flush_logs": {
+                "name": "Vider les logs DNS"
+            },
+            "action_gravity": {
+                "name": "Exécuter gravity"
+            },
+            "action_restartdns": {
+                "name": "Redémarrer pihole-FTL"
+            },
+            "action_refresh_data": {
+                "name": "Rafraîchir les données"
             }
         },
         "sensor": {
@@ -82,8 +110,10 @@
                 "unit_of_measurement": "domaines"
             },
             "remaining_until_blocking_mode": {
-                "name": "Temps restant avant le mode de blocage",
-                "unit_of_measurement": "secondes"
+                "name": "Temps restant avant le mode de blocage"
+            },
+            "latest_data_refresh": {
+                "name": "Dernière actualisation des données"
             }
         },
         "switch": {
@@ -120,6 +150,11 @@
         "enable": {
             "name": "Activer",
             "description": "Active le service Pi-hole configuré."
+        }
+    },
+    "exceptions": {
+        "unable_to_launch_action": {
+            "message": "Impossible de lancer l'action *{action}* : {exception}."
         }
     }
 }

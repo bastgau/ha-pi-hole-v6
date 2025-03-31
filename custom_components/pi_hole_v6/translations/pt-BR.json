@@ -1,0 +1,160 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Serviço já está configurado.",
+            "reauth_successful": "A reautenticação foi bem-sucedida."
+        },
+        "error": {
+            "incorrect_data_expected": "Falha ao recuperar os dados na estrutura correta.",
+            "cannot_connect": "Falha ao conectar ao servidor. Certifique-se de que o endereço do servidor e a porta estão corretos.",
+            "invalid_auth": "Senha inválida fornecida. Certifique-se de que sua senha está correta.",
+            "invalid_path": "Caminho de API inválido especificado. Por favor, verifique o URL do endpoint."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "name": "Nome",
+                    "password": "Senha",
+                    "url": "Endereço"
+                },
+                "data_description": {
+                    "password": "Senha a ser usada para login",
+                    "url": "URL ou endereço do seu Pi-hole (ex: https://pi.hole:443/api)"
+                },
+                "description": "Esta integração permite recuperar estatísticas e interagir com um sistema Pi-hole V6.",
+                "title": "Pi-hole V6"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Senha"
+                },
+                "data_description": {
+                    "password": "Senha a ser usada para login"
+                },
+                "description": "A partir desta tela, você pode alterar a senha para acessar a instância do Pi-hole.",
+                "title": "Pi-hole V6"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "update_interval": "Frequência de atualização de dados (segundos)"
+                },
+                "description": "Após modificar uma dessas opções, é necessário recarregar o serviço ou reiniciar o Home Assistant.",
+                "title": "Pi-hole V6"
+            }
+        },
+        "error": {
+            "invalid_update_interval": "Frequência de atualização de dados inválida. Deve ser maior que 1 segundo e menor que 3600 segundos."
+        }
+    },
+    "entity": {
+        "binary_sensor": {
+            "status": {
+                "name": "Status"
+            }
+        },
+        "button": {
+            "action_flush_arp": {
+                "name": "Limpar a tabela de rede"
+            },
+            "action_flush_logs": {
+                "name": "Limpar os logs de DNS"
+            },
+            "action_gravity": {
+                "name": "Executar gravity"
+            },
+            "action_restartdns": {
+                "name": "Reiniciar pihole-FTL"
+            },
+            "action_refresh_data": {
+                "name": "Atualizar dados"
+            }
+        },
+        "sensor": {
+            "ads_blocked_today": {
+                "name": "Anúncios bloqueados hoje",
+                "unit_of_measurement": "anúncios"
+            },
+            "ads_percentage_blocked_today": {
+                "name": "Porcentagem de anúncios bloqueados hoje"
+            },
+            "seen_clients": {
+                "name": "Clientes visualizados",
+                "unit_of_measurement": "clientes"
+            },
+            "dns_queries_today": {
+                "name": "Consultas DNS hoje",
+                "unit_of_measurement": "consultas"
+            },
+            "domains_blocked": {
+                "name": "Domínios bloqueados",
+                "unit_of_measurement": "domínios"
+            },
+            "dns_queries_cached": {
+                "name": "Consultas DNS em cache",
+                "unit_of_measurement": "consultas"
+            },
+            "dns_queries_forwarded": {
+                "name": "Consultas DNS encaminhadas",
+                "unit_of_measurement": "consultas"
+            },
+            "dns_unique_clients": {
+                "name": "Clientes DNS únicos",
+                "unit_of_measurement": "clientes"
+            },
+            "dns_unique_domains": {
+                "name": "Domínios DNS únicos",
+                "unit_of_measurement": "domínios"
+            },
+            "remaining_until_blocking_mode": {
+                "name": "Restante até o modo de bloqueio"
+            },
+            "latest_data_refresh": {
+                "name": "Última atualização de dados"
+            }
+        },
+        "switch": {
+            "group": {
+                "name": "Grupo {group_name}"
+            }
+        },
+        "update": {
+            "core_update_available": {
+                "name": "Atualização do núcleo"
+            },
+            "docker_update_available": {
+                "name": "Atualização do Docker"
+            },
+            "ftl_update_available": {
+                "name": "Atualização do FTL"
+            },
+            "web_update_available": {
+                "name": "Atualização da interface web"
+            }
+        }
+    },
+    "services": {
+        "disable": {
+            "name": "Desativar",
+            "description": "Desativa o Pi-hole configurado por um período de tempo.",
+            "fields": {
+                "duration": {
+                    "description": "Tempo que o Pi-hole deve ficar desativado.",
+                    "name": "Duração"
+                }
+            }
+        },
+        "enable": {
+            "name": "Ativar",
+            "description": "Ativa o Pi-hole configurado."
+        }
+    },
+    "exceptions": {
+        "unable_to_launch_action": {
+            "message": "Actie *{action}* kan niet worden gestart: {exception}."
+        }
+    }
+}
