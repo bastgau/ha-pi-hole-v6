@@ -50,8 +50,13 @@ class ClientConnectorException(Exception):
 
     message: str = "The Pi-hole V6 server seems to be unreachable."
 
-    def __init__(self) -> None:
-        super().__init__(self.message)
+    def __init__(self, custom_message: str = "") -> None:
+        new_message: str = self.message
+
+        if custom_message != "":
+            new_message = f"{new_message} # {custom_message}"
+
+        super().__init__(new_message)
 
 
 class ContentTypeException(Exception):

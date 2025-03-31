@@ -120,7 +120,7 @@ class API:
                     raise RuntimeError("Method is not supported/implemented.")
 
         except (TimeoutError, ClientError, GaiError) as err:
-            raise ClientConnectorException from err
+            raise ClientConnectorException(str(err)) from err
 
         try:
             handle_status(request.status)
