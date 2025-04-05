@@ -106,3 +106,7 @@ If you encounter any issues or wish to contribute to improving this integration,
 [!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/bastgau)
 
 Enjoy!
+
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=bastgau/ha-pi-hole-v6&type=Date)](https://www.star-history.com/#bastgau/ha-pi-hole-v6&Date)
