@@ -1,0 +1,160 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Η υπηρεσία είναι ήδη ρυθμισμένη.",
+            "reauth_successful": "Η επαναπιστοποίηση ήταν επιτυχής."
+        },
+        "error": {
+            "incorrect_data_expected": "Αποτυχία ανάκτησης δεσομένων στη σωστή δομή.",
+            "cannot_connect": "Αποτυχία σύνδεσης με το διακομιστή. Βεβαιωθείτε ότι η διεύθυνση του διακομιστή και η θύρα είναι σωστά.",
+            "invalid_auth": "Εισάγατε λάθος κωδικό πρόσβασης. Βεβαιωθείτε ότι ο κωδικός πρόσβασης είναι σωστός.",
+            "invalid_path": "Καθορίστηκε μη έγκυρη διαδρομή για το API. Βεβαιωθείτε για το σωστό URL."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "name": "Όνομα",
+                    "password": "Κωδικός Πρόσβασης",
+                    "url": "Διεύθυνση"
+                },
+                "data_description": {
+                    "password": "Κωδικός που θα χρησιμοποιηθεί για τη σύνδεση",
+                    "url": "URL ή διεύθυνση του Pi-hole σας (π.χ.: https://pi.hole:443/api)"
+                },
+                "description": "Αυτή η ενσωμάτωση επιτρέπει τη λήψη στατιστικών και την αλληλεπίδραση με ένα σύστημα που έχει Pi-hole V6.",
+                "title": "Pi-hole V6"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Κωδικός πρόσβασης"
+                },
+                "data_description": {
+                    "password": "Κωδικός που θα χρησιμοποιηθεί για τη σύνδεση"
+                },
+                "description": "Από αυτή την οθόνη μπορείτε να αλλάξετε τον κωδικό για την πρόσβαση στο Pi-hole σύστημά σας.",
+                "title": "Pi-hole V6"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "update_interval": "Συχνότητα ανανέωσης δεδομένων (δευτερόλεπτα)"
+                },
+                "description": "Μετά την τροποποίηση αυτών των επιλογών, είναι απαραίτητο να κάνετε επαναφόρτωση της υπηρεσίας ή επανεκκίνηση του Home Assistant.",
+                "title": "Pi-hole V6"
+            }
+        },
+        "error": {
+            "invalid_update_interval": "Μη έγκυρη τιμή για συχνότητα ανανέωσης δεδομένων. Πρέπει να είναι υψηλότερη από 1 δευτερόλεπτο και χαμηλότερη από 3600 δευτερόλεπτα."
+        }
+    },
+    "entity": {
+        "binary_sensor": {
+            "status": {
+                "name": "Κατάσταση"
+            }
+        },
+        "button": {
+            "action_flush_arp": {
+                "name": "Εκκαθάριση του network table"
+            },
+            "action_flush_logs": {
+                "name": "Εκκαθάριση των αρχείων καταγραφής του DNS"
+            },
+            "action_gravity": {
+                "name": "Εκτέλεση του gravity"
+            },
+            "action_restartdns": {
+                "name": "Επανεκκίνηση του pihole-FTL"
+            },
+            "action_refresh_data": {
+                "name": "Ανανέωση δεδομένων"
+            }
+        },
+        "sensor": {
+            "ads_blocked_today": {
+                "name": "Διαφημίσεις που μπλοκαρίστηκαν σήμερα",
+                "unit_of_measurement": "Διαφημίσεις"
+            },
+            "ads_percentage_blocked_today": {
+                "name": "Ποσοστό διαφημίσεβν που μπλοκαρίστηκαν σήμερα"
+            },
+            "seen_clients": {
+                "name": "Εμφανιζόμενοι πελάτες",
+                "unit_of_measurement": "πελάτες"
+            },
+            "dns_queries_today": {
+                "name": "Ερωτήματα DNS σήμερα",
+                "unit_of_measurement": "ερωτήματα"
+            },
+            "domains_blocked": {
+                "name": "Τομείς που μπλοκαρίστηκαν",
+                "unit_of_measurement": "τομείς"
+            },
+            "dns_queries_cached": {
+                "name": "Ερωτήματα DNS στην κρυφή μνήμη",
+                "unit_of_measurement": "ερωτήματα"
+            },
+            "dns_queries_forwarded": {
+                "name": "Ερωτήματα DNS που προωθήθηκαν",
+                "unit_of_measurement": "ερωτήματα"
+            },
+            "dns_unique_clients": {
+                "name": "Μοναδικοί πελάτες DNS",
+                "unit_of_measurement": "πελάτες"
+            },
+            "dns_unique_domains": {
+                "name": "Μοναδικοί τομείς DNS",
+                "unit_of_measurement": "τομείς"
+            },
+            "remaining_until_blocking_mode": {
+                "name": "Απομένουν μέχρι να ενεργοποιηθεί η διαδικασία μπλοκαρίσματος"
+            },
+            "latest_data_refresh": {
+                "name": "Τελευταία ανανέωση δεδομένων"
+            }
+        },
+        "switch": {
+            "group": {
+                "name": "Ομάδα {όνομα_ομάδας}"
+            }
+        },
+        "update": {
+            "core_update_available": {
+                "name": "Ενημέρωση Core"
+            },
+            "docker_update_available": {
+                "name": "Ενημέρωση Docker"
+            },
+            "ftl_update_available": {
+                "name": "Ενημέρωση FTL"
+            },
+            "web_update_available": {
+                "name": "Ενημέρωση περιβάλλοντος Web"
+            }
+        }
+    },
+    "services": {
+        "disable": {
+            "name": "Απενεργοποίηση",
+            "description": "Απενεργοποιεί το ρυθμισμένο Pi-hole για κάποιο χρονικό διάστημα.",
+            "fields": {
+                "duration": {
+                    "description": "Χρονικό διάστημα για το οποίο θα είναι απενεργοποιημένο το Pi-hole.",
+                    "name": "Διάρκεια"
+                }
+            }
+        },
+        "enable": {
+            "name": "Ενεργοποίηση",
+            "description": "Ενεργοποιεί το ρυθμισμένο Pi-hole."
+        }
+    },
+    "exceptions": {
+        "unable_to_launch_action": {
+            "message": "Αδυναμία εκτέλεσης της εντολής *{action}*: {exception}"
+        }
+    }
+}
