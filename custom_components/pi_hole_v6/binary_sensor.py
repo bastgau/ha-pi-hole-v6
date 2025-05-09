@@ -34,9 +34,7 @@ BINARY_SENSOR_TYPES: tuple[PiHoleV6BinarySensorEntityDescription, ...] = (
         key="status",
         device_class=BinarySensorDeviceClass.RUNNING,
         translation_key="status",
-        state_value=lambda ClientAPI: bool(
-            ClientAPI.cache_blocking.get("blocking", None) == "enabled"
-        ),
+        state_value=lambda ClientAPI: bool(ClientAPI.cache_blocking.get("blocking", None) == "enabled"),
     ),
 )
 
@@ -89,4 +87,28 @@ class PiHoleV6BinarySensor(PiHoleV6Entity, BinarySensorEntity):
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes of the Pi-hole V6."""
-        return self.entity_description.extra_value(self.api)
+
+        if self.entity_description.key == "status":
+            url: str = self.api.url.split("/api")[0] + "/admin"
+
+            core_version: str = self.api.cache_padd["version"]["core"]["local"]["version"]
+            web_version: str = self.api.cache_padd["version"]["web"]["local"]["version"]
+            ftl_version: str = self.api.cache_padd["version"]["ftl"]["local"]["version"]
+
+            docker_info: dict[str, Any] = {}
+
+            if self.api.cache_padd["version"]["docker"]["local"] is not None:
+                docker_version: str = self.api.cache_padd["version"]["docker"]["local"]
+                docker_info = {
+                    "Docker version": docker_version,
+                }
+
+            info: dict[str, Any] = {
+                "Core version": core_version,
+                "Web interface version": web_version,
+                "FTL version": ftl_version,
+            } | docker_info
+
+            return {"URL instance": url} | {k: info[k] for k in sorted(info)}
+
+        return None
