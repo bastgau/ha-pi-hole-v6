@@ -16,7 +16,7 @@ class APIException(Exception):
 class ActionExecutionException(Exception):
     """The class `ActionExecutionException` is used to raise an exception when an action cannot be executed."""
 
-    message: str = "The action requested has failed. Please HA logs or Pi-hole logs."
+    message: str = "The action requested has failed. Please check HA logs or Pi-hole logs."
 
     def __init__(self) -> None:
         super().__init__(self.message)
