@@ -79,6 +79,21 @@ The integration is currently translated in few langages :
 
 [![Add Integration](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=pi_hole_v6)
 
+## Pi-hole Card
+
+After installing this integration, you can enhance your Home Assistant setup with the `Pi-hole Card`.  
+
+This lovelace card offers a comprehensive and user-friendly dashboard designed specifically for managing and monitoring your Pi-hole DNS ad blocker. It provides real-time statistics and intuitive controls, all presented in a visually appealing interface that aligns with Pi-hole's design aesthetics.
+
+The card is developped by [@warmfire540](https://github.com/warmfire540).  
+The installation instructions are available on the repository: [homeassistant-extras / pi-hole-card](https://github.com/homeassistant-extras/pi-hole-card/).
+
+<p align="center" width="100%">
+    <img src="https://github.com/homeassistant-extras/pi-hole-card/raw/main/assets/pihole-card.png" width="300">
+</p>
+
+
+
 ## Debugging
 
 It is possible to show the info and debug logs for the Pi-hole V6 integration, to do this you need to enable logging in the configuration.yaml, example below:
