@@ -75,18 +75,18 @@
         },
         "sensor": {
             "ads_blocked_today": {
-                "name": "Ads blocked today",
+                "name": "Ads blocked during the last 24 hours",
                 "unit_of_measurement": "ads"
             },
             "ads_percentage_blocked_today": {
-                "name": "Ads percentage blocked today"
+                "name": "Ads percentage blocked during the last 24 hours"
             },
             "seen_clients": {
                 "name": "Seen clients",
                 "unit_of_measurement": "clients"
             },
             "dns_queries_today": {
-                "name": "DNS queries today",
+                "name": "DNS queries during the last 24 hours",
                 "unit_of_measurement": "queries"
             },
             "domains_blocked": {
