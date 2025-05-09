@@ -85,7 +85,7 @@ After installing this integration, you can enhance your Home Assistant setup wit
 
 This lovelace card offers a comprehensive and user-friendly dashboard designed specifically for managing and monitoring your Pi-hole DNS ad blocker. It provides real-time statistics and intuitive controls, all presented in a visually appealing interface that aligns with Pi-hole's design aesthetics.
 
-The card is developped by [@warmfire540](https://github.com/warmfire540).  
+The card is developed by [@warmfire540](https://github.com/warmfire540).  
 The installation instructions are available on the repository: [homeassistant-extras / pi-hole-card](https://github.com/homeassistant-extras/pi-hole-card/).
 
 <p align="center" width="100%">
