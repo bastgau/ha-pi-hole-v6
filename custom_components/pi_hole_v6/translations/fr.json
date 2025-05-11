@@ -114,6 +114,12 @@
             },
             "latest_data_refresh": {
                 "name": "Dernière actualisation des données"
+            },
+            "cpu_use": {
+                "name": "Utilisation du processeur"
+            },
+            "memory_use": {
+                "name": "Utilisation de la mémoire"
             }
         },
         "switch": {

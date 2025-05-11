@@ -114,6 +114,12 @@
             },
             "latest_data_refresh": {
                 "name": "Latest data refresh"
+            },
+            "cpu_use": {
+                "name": "CPU usage"
+            },
+            "memory_use": {
+                "name": "Memory usage"
             }
         },
         "switch": {
