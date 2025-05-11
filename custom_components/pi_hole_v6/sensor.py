@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -80,6 +82,24 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_registry_enabled_default=False,
     ),
+    SensorEntityDescription(
+        entity_category=EntityCategory.DIAGNOSTIC,
+        key="memory_use",
+        translation_key="memory_use",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=PERCENTAGE,
+        suggested_display_precision=2,
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        entity_category=EntityCategory.DIAGNOSTIC,
+        key="cpu_use",
+        translation_key="cpu_use",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=PERCENTAGE,
+        suggested_display_precision=2,
+        entity_registry_enabled_default=False,
+    ),
 )
 
 
@@ -148,8 +168,24 @@ class PiHoleV6Sensor(PiHoleV6Entity, SensorEntity):
                 return self.api.cache_summary["clients"]["active"]
             case "dns_unique_domains":
                 return self.api.cache_summary["queries"]["unique_domains"]
+            case "memory_use":
+                return self.api.cache_padd["%mem"]
+            case "cpu_use":
+                return self.api.cache_padd["%cpu"]
             case "remaining_until_blocking_mode":
                 value: int | None = self.api.cache_blocking["timer"]
                 return value if value is not None else 0
 
         return ""
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any] | None:
+        """Return the state attributes of the Pi-hole V6."""
+
+        if self.entity_description.key == "memory_use":
+            return self.api.cache_padd["system"]["memory"]
+
+        if self.entity_description.key == "cpu_use":
+            return self.api.cache_padd["system"]["cpu"]
+
+        return None
