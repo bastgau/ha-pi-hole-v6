@@ -34,7 +34,8 @@ The following sensors are currently implemented :
     <img src="https://raw.githubusercontent.com/bastgau/ha-pi-hole-v6/develop/img/release-v1.10.0.png" width="800">
 </p>
 
-**Note :** To perform the `flush/arp`, `flush/logs` and `restartdns` actions, the *'Permit destructive actions via API'* option must be enabled in the Pi-hole options.
+> [!NOTE]
+> To perform the `flush/arp`, `flush/logs` and `restartdns` actions, the *'Permit destructive actions via API'* option must be enabled in the Pi-hole options.
 
 ## Translation
 
@@ -45,6 +46,7 @@ The integration is currently translated in few langages :
 - English
 - French
 - German (thanks Christian)
+- Greek (thanks [@ChriZathens](https://github.com/ChriZathens))
 - Norwegian (thanks [@emigrating](https://github.com/emigrating))
 - Polish (thanks [@jacksonafide](https://github.com/jacksonafide))
 - Russian (thanks [@ProFiLeR4100](https://github.com/ProFiLeR4100))

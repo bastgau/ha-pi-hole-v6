@@ -108,7 +108,34 @@ class PiHoleV6UpdateEntity(PiHoleV6Entity, UpdateEntity):
         self.entity_description = description
         self._attr_unique_id = f"{self._server_unique_id}/{description.key}"
         self.entity_id = f"update.{name}_{description.key}"
+
+        enabled_value: bool = self.get_entity_registry_enabled_value()
+        self.entity_registry_enabled_default = enabled_value
         self._attr_title = description.title
+
+        if enabled_value is False:
+            self._attr_title = description.title + " (only for information, please check other update entities)"
+
+    def get_entity_registry_enabled_value(self) -> bool:
+        """..."""
+
+        try:
+            if (
+                self.api.cache_padd["version"]["docker"]["local"] is None
+                and self.entity_description.key != "docker_update_available"
+            ):
+                return True
+
+            if (
+                self.api.cache_padd["version"]["docker"]["local"] is not None
+                and self.entity_description.key == "docker_update_available"
+            ):
+                return True
+
+        except Exception:
+            pass
+
+        return False
 
     @property
     def installed_version(self) -> str | None:

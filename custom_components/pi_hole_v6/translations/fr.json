@@ -75,18 +75,18 @@
         },
         "sensor": {
             "ads_blocked_today": {
-                "name": "Publicités bloquées aujourd'hui",
+                "name": "Publicités bloquées durant les 24 dernières heures",
                 "unit_of_measurement": "publicités"
             },
             "ads_percentage_blocked_today": {
-                "name": "Pourcentage de publicités bloquées aujourd'hui"
+                "name": "Pourcentage de publicités bloquées durant les 24 dernières heures"
             },
             "seen_clients": {
                 "name": "Clients vus",
                 "unit_of_measurement": "clients"
             },
             "dns_queries_today": {
-                "name": "Requêtes DNS aujourd'hui",
+                "name": "Requêtes DNS durant les 24 dernières heures",
                 "unit_of_measurement": "requêtes"
             },
             "domains_blocked": {
@@ -114,6 +114,12 @@
             },
             "latest_data_refresh": {
                 "name": "Dernière actualisation des données"
+            },
+            "cpu_use": {
+                "name": "Utilisation du processeur"
+            },
+            "memory_use": {
+                "name": "Utilisation de la mémoire"
             }
         },
         "switch": {

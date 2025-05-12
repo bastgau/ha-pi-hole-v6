@@ -36,6 +36,12 @@
             "remaining_until_blocking_mode": {
                 "default": "mdi:timer-outline"
             },
+            "cpu_use": {
+                "default": "mdi:cpu-64-bit"
+            },
+            "memory_use": {
+                "default": "mdi:memory"
+            },
             "last_refresh_date": {
                 "default": "mdi:refresh"
             }
