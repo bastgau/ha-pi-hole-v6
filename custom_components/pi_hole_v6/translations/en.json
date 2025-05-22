@@ -125,7 +125,8 @@
                 "name": "Memory usage"
             },
             "ftl_info_message_count": {
-                "name": "FTL diagnosis messages count"
+                "name": "FTL diagnosis messages count",
+                "unit_of_measurement": "messages"
             }
         },
         "switch": {

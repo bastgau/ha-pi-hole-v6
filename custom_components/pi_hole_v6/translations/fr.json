@@ -125,7 +125,8 @@
                 "name": "Utilisation de la mémoire"
             },
             "ftl_info_message_count": {
-                "name": "Nombre de messages de diagnostic FTL"
+                "name": "Nombre de messages de diagnostic FTL",
+                "unit_of_measurement": "messages"
             }
         },
         "switch": {
