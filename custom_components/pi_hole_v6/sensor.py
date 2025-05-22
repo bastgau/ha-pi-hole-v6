@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, List
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -100,6 +100,12 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         suggested_display_precision=2,
         entity_registry_enabled_default=False,
     ),
+    SensorEntityDescription(
+        key="ftl_info_message_count",
+        translation_key="ftl_info_message_count",
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+    ),
 )
 
 
@@ -172,6 +178,8 @@ class PiHoleV6Sensor(PiHoleV6Entity, SensorEntity):
                 return self.api.cache_padd["%mem"]
             case "cpu_use":
                 return self.api.cache_padd["%cpu"]
+            case "ftl_info_message_count":
+                return self.api.cache_ftl_info["message_count"]
             case "remaining_until_blocking_mode":
                 value: int | None = self.api.cache_blocking["timer"]
                 return value if value is not None else 0
@@ -187,5 +195,10 @@ class PiHoleV6Sensor(PiHoleV6Entity, SensorEntity):
 
         if self.entity_description.key == "cpu_use":
             return self.api.cache_padd["system"]["cpu"]
+
+        if self.entity_description.key == "ftl_info_message_count":
+            raw_messages: List[Any] = self.api.cache_ftl_info["message_list"]
+            messages: List[Any] = [{k: v for k, v in message.items() if k != "html"} for message in raw_messages]
+            return {"messages": messages}
 
         return None

@@ -71,6 +71,9 @@
             },
             "action_refresh_data": {
                 "name": "Rafraîchir les données"
+            },
+            "action_ftl_purge_diagnosis_messages": {
+                "name": "Purger les messages de diagnostic FTL"
             }
         },
         "sensor": {
@@ -120,6 +123,9 @@
             },
             "memory_use": {
                 "name": "Utilisation de la mémoire"
+            },
+            "ftl_info_message_count": {
+                "name": "Nombre de messages de diagnostic FTL"
             }
         },
         "switch": {

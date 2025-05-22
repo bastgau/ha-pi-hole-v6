@@ -71,6 +71,9 @@
             },
             "action_refresh_data": {
                 "name": "Refresh data"
+            },
+            "action_ftl_purge_diagnosis_messages": {
+                "name": "Purge FTL diagnosis messages"
             }
         },
         "sensor": {
@@ -120,6 +123,9 @@
             },
             "memory_use": {
                 "name": "Memory usage"
+            },
+            "ftl_info_message_count": {
+                "name": "FTL diagnosis messages count"
             }
         },
         "switch": {

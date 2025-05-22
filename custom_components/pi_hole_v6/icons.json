@@ -44,6 +44,9 @@
             },
             "last_refresh_date": {
                 "default": "mdi:refresh"
+            },
+            "ftl_info_message_count": {
+                "default": "mdi:message-cog-outline"
             }
         }
     },
