@@ -4,7 +4,7 @@ import asyncio
 import logging
 from datetime import datetime
 from socket import gaierror as GaiError
-from typing import Any
+from typing import Any, List
 
 import requests
 from aiohttp import ClientError, ContentTypeError, client
@@ -31,6 +31,7 @@ class API:
     cache_padd: dict[str, Any] = {}
     cache_summary: dict[str, Any] = {}
     cache_groups: dict[str, dict[str, Any]] = {}
+    cache_ftl_info: dict[str, dict[str, Any]] = {}
     last_refresh: datetime | None = None
     just_initialized: bool = False
 
@@ -433,6 +434,31 @@ class API:
             "data": result["data"],
         }
 
+    async def call_get_ftl_info_messages(self) -> dict[str, Any]:
+        """Get FTL information messages
+
+        Returns:
+          result (dict[str, Any]): A dictionary with the keys "code", "reason", and "data".
+
+        """
+
+        url: str = "/info/messages"
+
+        result: dict[str, Any] = await self._call(
+            url,
+            action="ftl_info_messages",
+            method="GET",
+        )
+
+        self.cache_ftl_info["message_list"] = result["data"]["messages"]
+        self.cache_ftl_info["message_count"] = len(result["data"]["messages"])
+
+        return {
+            "code": result["code"],
+            "reason": result["reason"],
+            "data": result["data"],
+        }
+
     async def call_get_groups(self) -> dict[str, Any]:
         """Retrieve the list of Pi-hole groups.
 
@@ -563,6 +589,35 @@ class API:
         """
 
         return await self._call_action("restartdns")
+
+    async def call_action_ftl_purge_diagnosis_messages(self) -> dict[str, Any]:
+        """Purge FTP diagnosis messages
+
+        Returns:
+          result (dict[str, Any]): A dictionary with the keys "code", "reason", and "data".
+
+        """
+
+        messages: List[Any] = self.cache_ftl_info["message_list"]
+
+        result: dict[str, Any] = {"code": None, "reason": None, "data": {}}
+
+        for message in messages:
+            url: str = f"/info/messages/{message['id']}"
+
+            result = await self._call(
+                url,
+                action="action_ftl_purge_diagnosis_messages",
+                method="DELETE",
+            )
+
+        self.cache_ftl_info["message_list"] = []
+
+        return {
+            "code": result["code"],
+            "reason": result["reason"],
+            "data": result["data"],
+        }
 
     async def _call_action(self, action_name: str) -> dict[str, Any]:
         """Execute an Pi-hole action.

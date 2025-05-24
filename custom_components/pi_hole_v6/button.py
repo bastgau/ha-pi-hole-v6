@@ -47,6 +47,11 @@ BUTTON_TYPES: tuple[PiholeV6ButtonEntityDescription, ...] = (
         key="action_refresh_data",
         translation_key="action_refresh_data",
     ),
+    PiholeV6ButtonEntityDescription(
+        key="action_ftl_purge_diagnosis_messages",
+        translation_key="action_ftl_purge_diagnosis_messages",
+        entity_registry_enabled_default=False,
+    ),
 )
 
 
@@ -114,6 +119,8 @@ class PiHoleV6Button(PiHoleV6Entity, ButtonEntity):
                 case "action_refresh_data":
                     await self.async_update()
                     self.schedule_update_ha_state(force_refresh=True)
+                case "action_ftl_purge_diagnosis_messages":
+                    await self.api.call_action_ftl_purge_diagnosis_messages()
 
             if result["code"] != 200:
                 raise ActionExecutionException()
