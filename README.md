@@ -91,7 +91,7 @@ The card is developed by [@warmfire540](https://github.com/warmfire540).
 The installation instructions are available on the repository: [homeassistant-extras / pi-hole-card](https://github.com/homeassistant-extras/pi-hole-card/).
 
 <p align="center" width="100%">
-    <img src="https://github.com/homeassistant-extras/pi-hole-card/raw/main/assets/pihole-card.png" width="300">
+    <img src="https://raw.githubusercontent.com/bastgau/ha-pi-hole-v6/main/img/pihole-card.png" width="300">
 </p>
 
 
