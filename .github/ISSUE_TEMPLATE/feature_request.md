@@ -4,7 +4,7 @@ description: Propose a new feature
 about: Use this template to propose a new feature.
 labels: [enhancement]
 title: ''
-assignees: 'bastgau'
+assignees: [bastgau]
 ---
 
 **Describe the feature**
