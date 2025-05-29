@@ -451,7 +451,31 @@ class API:
         )
 
         self.cache_ftl_info["message_list"] = result["data"]["messages"]
-        self.cache_ftl_info["message_count"] = len(result["data"]["messages"])
+        self.cache_ftl_info["status"] = "OK: Messages fetched successfull"
+
+        return {
+            "code": result["code"],
+            "reason": result["reason"],
+            "data": result["data"],
+        }
+
+    async def call_get_ftl_info_messages_count(self) -> dict[str, Any]:
+        """Get FTL information messages
+
+        Returns:
+          result (dict[str, Any]): A dictionary with the keys "code", "reason", and "data".
+
+        """
+
+        url: str = "/info/messages/count"
+
+        result: dict[str, Any] = await self._call(
+            url,
+            action="ftl_info_messages_count",
+            method="GET",
+        )
+
+        self.cache_ftl_info["message_count"] = result["data"]["count"]
 
         return {
             "code": result["code"],
@@ -643,3 +667,11 @@ class API:
             "reason": result["reason"],
             "data": result["data"],
         }
+
+    def remove_cache(self, data_name: str) -> None:
+        """..."""
+
+        match data_name:
+            case "ftl_info_messages":
+                self.cache_ftl_info["message_list"] = {}
+                self.cache_ftl_info["status"] = "NOK: Messages fetched unsuccessfully"

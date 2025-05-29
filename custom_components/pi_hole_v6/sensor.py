@@ -199,6 +199,7 @@ class PiHoleV6Sensor(PiHoleV6Entity, SensorEntity):
         if self.entity_description.key == "ftl_info_message_count":
             raw_messages: List[Any] = self.api.cache_ftl_info["message_list"]
             messages: List[Any] = [{k: v for k, v in message.items() if k != "html"} for message in raw_messages]
-            return {"messages": messages}
+            status: str = self.api.cache_ftl_info["status"]
+            return {"messages": messages, "status": status}
 
         return None
