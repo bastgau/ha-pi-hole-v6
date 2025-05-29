@@ -4,8 +4,8 @@ description: Report an issue
 about: Use this template for tracking a bug.
 labels: [pending triage]
 title: ''
-labels: ''
-assignees: ''
+labels: 'bug'
+assignees: 'bastgau'
 ---
 
 <!--
