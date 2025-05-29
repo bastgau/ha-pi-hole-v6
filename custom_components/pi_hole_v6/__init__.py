@@ -93,8 +93,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: PiHoleV6ConfigEntry) -> 
             if not isinstance(result, dict):
                 raise DataStructureException()
 
-            result = await api_client.call_get_ftl_info_messages()
-
+            result = await api_client.call_get_ftl_info_messages_count()
             if not isinstance(result, dict):
                 raise DataStructureException()
 
@@ -105,6 +104,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: PiHoleV6ConfigEntry) -> 
         except DataStructureException as err:
             _LOGGER.error("DataStructureException Debug: " + str(result))
             raise err
+        finally:
+            await api_client.call_logout()
+
+        try:
+            result = await api_client.call_get_ftl_info_messages()
+            if not isinstance(result, dict):
+                api_client.remove_cache("ftl_info_messages")
+                raise DataStructureException()
+
+        except DataStructureException:
+            _LOGGER.error("DataStructureException Debug: " + str(result))
         finally:
             await api_client.call_logout()
 
