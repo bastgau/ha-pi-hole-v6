@@ -103,7 +103,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: PiHoleV6ConfigEntry) -> 
         except UnauthorizedException as err:
             raise ConfigEntryAuthFailed("Credentials must be updated.") from err
         except DataStructureException as err:
-            _LOGGER.error(result)
+            _LOGGER.error("DataStructureException Debug: " + str(result))
             raise err
         finally:
             await api_client.call_logout()
