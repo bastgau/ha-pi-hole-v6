@@ -18,6 +18,9 @@ Please specify your Home Assistant version.
 **Pi-hole V6 Integration version:**
 Please specify your Home Assistant version.
 
+**Pi-hole version:**
+Please specify your Pi-hole (Core, FTL, Web Interface) version.
+
 **Describe the bug**
 A clear and concise description of what the bug is.
 
