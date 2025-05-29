@@ -21,7 +21,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .api import API as PiholeAPI
 from .const import CONF_UPDATE_INTERVAL, DOMAIN, MIN_TIME_BETWEEN_UPDATES
-from .exceptions import DataStructureException, UnauthorizedException
+from .exceptions import APIException, DataStructureException, UnauthorizedException
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -115,6 +115,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: PiHoleV6ConfigEntry) -> 
 
         except DataStructureException:
             _LOGGER.error("DataStructureException Debug: " + str(result))
+        except APIException:
+            api_client.remove_cache("ftl_info_messages")
         finally:
             await api_client.call_logout()
 
