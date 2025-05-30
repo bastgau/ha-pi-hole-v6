@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
+from typing import Any, Dict
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryAuthFailed
 from homeassistant.const import (
@@ -20,7 +21,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .api import API as PiholeAPI
 from .const import CONF_UPDATE_INTERVAL, DOMAIN, MIN_TIME_BETWEEN_UPDATES
-from .exceptions import DataStructureException, UnauthorizedException
+from .exceptions import APIException, DataStructureException, UnauthorizedException
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -73,26 +74,51 @@ async def async_setup_entry(hass: HomeAssistant, entry: PiHoleV6ConfigEntry) -> 
             api_client.just_initialized = False
             return None
 
+        result: Dict[str, Any] = {}
+
         try:
-            if not isinstance(await api_client.call_summary(), dict):
+            result = await api_client.call_summary()
+            if not isinstance(result, dict):
                 raise DataStructureException()
 
-            if not isinstance(await api_client.call_blocking_status(), dict):
+            result = await api_client.call_blocking_status()
+            if not isinstance(result, dict):
                 raise DataStructureException()
 
-            if not isinstance(await api_client.call_padd(), dict):
+            result = await api_client.call_padd()
+            if not isinstance(result, dict):
                 raise DataStructureException()
 
-            if not isinstance(await api_client.call_get_groups(), dict):
+            result = await api_client.call_get_groups()
+            if not isinstance(result, dict):
                 raise DataStructureException()
 
-            if not isinstance(await api_client.call_get_ftl_info_messages(), dict):
+            result = await api_client.call_get_ftl_info_messages_count()
+            if not isinstance(result, dict):
                 raise DataStructureException()
 
             api_client.last_refresh = datetime.now(timezone.utc)
 
         except UnauthorizedException as err:
             raise ConfigEntryAuthFailed("Credentials must be updated.") from err
+        except DataStructureException as err:
+            _LOGGER.error("DataStructureException Debug: " + str(result))
+            raise err
+        finally:
+            await api_client.call_logout()
+
+        try:
+            result = await api_client.call_get_ftl_info_messages()
+            if not isinstance(result, dict):
+                api_client.remove_cache("ftl_info_messages")
+                raise DataStructureException()
+
+        except DataStructureException:
+            _LOGGER.error("DataStructureException Debug: " + str(result))
+        except APIException:
+            api_client.remove_cache("ftl_info_messages")
+        finally:
+            await api_client.call_logout()
 
     conf_update_interval: int | None = entry.data.get(CONF_UPDATE_INTERVAL)
 
