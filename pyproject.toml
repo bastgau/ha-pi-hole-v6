@@ -20,14 +20,14 @@ repository = "https://github.com/bastgau/ha-pi-hole-v6"
 version = "0.0.0"
 
 [tool.poetry.dependencies]
-homeassistant = "2025.3.0"
+homeassistant = "2025.5.3"
 python = ">=3.13,<3.14"
 
 [tool.poetry.group.dev.dependencies]
 pre-commit = "4.1.0"
 pre-commit-hooks = "5.0.0"
-pylint = "3.3.4"
-ruff = "0.9.7"
+pylint = "3.3.7"
+ruff = "0.11.12"
 
 [tool.poetry.urls]
 "Bug Tracker" = "https://github.com/bastgau/ha-pi-hole-v6/issues"
