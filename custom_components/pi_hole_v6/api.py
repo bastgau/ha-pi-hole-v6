@@ -219,7 +219,7 @@ class API:
     async def _abort_logout(self, action: str) -> None:
         """..."""
 
-        if action == "logout" and self._sid is None:
+        if action == "logout" and (self._sid is None or self._sid == "no password set"):
             raise AbortLogoutException()
 
     async def call_authentification_status(self) -> dict[str, Any]:
