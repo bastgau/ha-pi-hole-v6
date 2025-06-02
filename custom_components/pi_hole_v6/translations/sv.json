@@ -71,6 +71,9 @@
             },
             "action_refresh_data": {
                 "name": "Uppdatera data"
+            },
+            "action_ftl_purge_diagnosis_messages": {
+                "name": "Purge FTL diagnosis messages"
             }
         },
         "sensor": {
@@ -93,6 +96,10 @@
                 "name": "Domäner blockerade",
                 "unit_of_measurement": "domains"
             },
+            "dns_queries_frequency": {
+                "name": "Average number of DNS queries",
+                "unit_of_measurement": "queries/min"
+            },
             "dns_queries_cached": {
                 "name": "DNS frågor cachade",
                 "unit_of_measurement": "queries"
@@ -114,6 +121,16 @@
             },
             "latest_data_refresh": {
                 "name": "Senaste datauppdateringen"
+            },
+            "cpu_use": {
+                "name": "CPU usage"
+            },
+            "memory_use": {
+                "name": "Memory usage"
+            },
+            "ftl_info_message_count": {
+                "name": "FTL diagnosis messages count",
+                "unit_of_measurement": "messages"
             }
         },
         "switch": {

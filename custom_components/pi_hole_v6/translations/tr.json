@@ -71,6 +71,9 @@
             },
             "action_refresh_data": {
                 "name": "Verileri yenile"
+            },
+            "action_ftl_purge_diagnosis_messages": {
+                "name": "Purge FTL diagnosis messages"
             }
         },
         "sensor": {
@@ -93,6 +96,10 @@
                 "name": "Engellenen alan adları",
                 "unit_of_measurement": "alan adı"
             },
+            "dns_queries_frequency": {
+                "name": "Average number of DNS queries",
+                "unit_of_measurement": "queries/min"
+            },
             "dns_queries_cached": {
                 "name": "Önbelleğe alınan DNS sorguları",
                 "unit_of_measurement": "sorgu"
@@ -114,6 +121,16 @@
             },
             "latest_data_refresh": {
                 "name": "Son veri yenileme"
+            },
+            "cpu_use": {
+                "name": "CPU usage"
+            },
+            "memory_use": {
+                "name": "Memory usage"
+            },
+            "ftl_info_message_count": {
+                "name": "FTL diagnosis messages count",
+                "unit_of_measurement": "messages"
             }
         },
         "switch": {

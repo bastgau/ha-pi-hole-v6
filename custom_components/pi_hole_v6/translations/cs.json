@@ -71,6 +71,9 @@
             },
             "action_refresh_data": {
                 "name": "Obnovit data"
+            },
+            "action_ftl_purge_diagnosis_messages": {
+                "name": "Purge FTL diagnosis messages"
             }
         },
         "sensor": {
@@ -93,6 +96,10 @@
                 "name": "Zablokované domény",
                 "unit_of_measurement": "domén"
             },
+            "dns_queries_frequency": {
+                "name": "Average number of DNS queries",
+                "unit_of_measurement": "queries/min"
+            },
             "dns_queries_cached": {
                 "name": "DNS dotazy uložené ve vyrovnávací paměti",
                 "unit_of_measurement": "dotazů"
@@ -114,6 +121,16 @@
             },
             "latest_data_refresh": {
                 "name": "Poslední aktualizace dat"
+            },
+            "cpu_use": {
+                "name": "CPU usage"
+            },
+            "memory_use": {
+                "name": "Memory usage"
+            },
+            "ftl_info_message_count": {
+                "name": "FTL diagnosis messages count",
+                "unit_of_measurement": "messages"
             }
         },
         "switch": {
