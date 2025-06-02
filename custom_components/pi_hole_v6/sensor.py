@@ -66,6 +66,12 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
+        key="dns_queries_frequency",
+        translation_key="dns_queries_frequency",
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
+    ),
+    SensorEntityDescription(
         key="dns_unique_clients",
         translation_key="dns_unique_clients",
         state_class=SensorStateClass.MEASUREMENT,
@@ -174,6 +180,8 @@ class PiHoleV6Sensor(PiHoleV6Entity, SensorEntity):
                 return self.api.cache_summary["clients"]["active"]
             case "dns_unique_domains":
                 return self.api.cache_summary["queries"]["unique_domains"]
+            case "dns_queries_frequency":
+                return round(self.api.cache_summary["queries"]["frequency"] * 60, 0)
             case "memory_use":
                 return self.api.cache_padd["%mem"]
             case "cpu_use":
@@ -201,5 +209,27 @@ class PiHoleV6Sensor(PiHoleV6Entity, SensorEntity):
             messages: List[Any] = [{k: v for k, v in message.items() if k != "html"} for message in raw_messages]
             status: str = self.api.cache_ftl_info["status"]
             return {"messages": messages, "status": status}
+
+        match self.entity_description.key:
+            case "ads_blocked_today":
+                return {"note": "Number of blocked queries during the last 24h."}
+            case "ads_percentage_blocked_today":
+                return {"note": "Percent of blocked queries during the last 24h."}
+            case "seen_clients":
+                return {"note": "Total number of clients seen by FTL."}
+            case "dns_queries_today":
+                return {"note": "Total number of queries during the last 24h."}
+            case "domains_blocked":
+                return {"note": "Number of domain on your Pi-hole's gravity."}
+            case "dns_queries_cached":
+                return {"note": "Number of queries replied to from cache or local configuration."}
+            case "dns_queries_forwarded":
+                return {"note": "Number of queries that have been forwarded."}
+            case "dns_unique_clients":
+                return {"note": "Number of active clients (seen in the last 24h."}
+            case "dns_unique_domains":
+                return {"note": "Number of unique domains FTL knows."}
+            case "dns_queries_frequency":
+                return {"note": "Average number of DNS queries per minute."}
 
         return None

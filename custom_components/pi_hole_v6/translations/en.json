@@ -96,6 +96,10 @@
                 "name": "Domains blocked",
                 "unit_of_measurement": "domains"
             },
+            "dns_queries_frequency": {
+                "name": "Average number of DNS queries",
+                "unit_of_measurement": "queries/min"
+            },
             "dns_queries_cached": {
                 "name": "DNS queries cached",
                 "unit_of_measurement": "queries"

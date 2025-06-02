@@ -21,6 +21,9 @@
             "domains_blocked": {
                 "default": "mdi:domain"
             },
+            "dns_queries_frequency": {
+                "default": "mdi:dns-outline"
+            },
             "dns_queries_cached": {
                 "default": "mdi:cached"
             },

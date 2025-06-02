@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import datetime
 import logging
-from typing import Any
+from typing import Any, Dict, List
 
 import voluptuous as vol
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
@@ -52,12 +52,12 @@ async def async_setup_entry(
         )
     ]
 
-    for group in hole_data.api.cache_groups:
+    for group in hole_data.api.cache_groups.values():
         description: SwitchEntityDescription = SwitchEntityDescription(
             key="group",
             translation_key="group",
             translation_placeholders={
-                "group_name": group,
+                "group_name": group["name"],
             },
         )
 
@@ -79,9 +79,7 @@ async def async_setup_entry(
     platform.async_register_entity_service(
         SERVICE_DISABLE,
         {
-            vol.Optional(SERVICE_DISABLE_ATTR_DURATION): vol.All(
-                cv.time_period_str, cv.positive_timedelta
-            ),
+            vol.Optional(SERVICE_DISABLE_ATTR_DURATION): vol.All(cv.time_period_str, cv.positive_timedelta),
         },
         "async_service_disable",
     )
@@ -195,19 +193,22 @@ class PiHoleV6Group(PiHoleV6Entity, SwitchEntity):
         coordinator: DataUpdateCoordinator,
         name: str,
         server_unique_id: str,
-        group: str,
+        group: Dict[str, Any],
         description: SwitchEntityDescription,
     ) -> None:
         super().__init__(api, coordinator, name, server_unique_id)
         self.entity_description = description
-        self._attr_unique_id = f"{self._server_unique_id}/{name}_group_{group.lower()}"
-        self.entity_id = f"switch.{name}_group_{group.lower()}"
-        self._group = group
+
+        group_name: str = group["name"]
+
+        self._attr_unique_id = f"{self._server_unique_id}/{name}_group_{group_name.lower()}"
+        self.entity_id = f"switch.{name}_group_{group_name.lower()}"
+        self.group_name = group_name
 
     @property
     def is_on(self) -> bool:
         """Return if the group is on."""
-        return self.api.cache_groups[self._group]["enabled"]
+        return self.api.cache_groups[self.group_name]["enabled"]
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the group."""
@@ -222,10 +223,10 @@ class PiHoleV6Group(PiHoleV6Entity, SwitchEntity):
 
         try:
             if action == "enable":
-                await self.api.call_group_enable(self._group)
+                await self.api.call_group_enable(self.group_name)
 
             if action == "disable":
-                await self.api.call_group_disable(self._group)
+                await self.api.call_group_disable(self.group_name)
 
             await self.async_update()
             self.schedule_update_ha_state(force_refresh=True)
@@ -242,12 +243,38 @@ class PiHoleV6Group(PiHoleV6Entity, SwitchEntity):
             ServiceUnavailableException,
             GatewayTimeoutException,
         ) as err:
-            _LOGGER.error(
-                "Unable to %s Pi-hole V6 group %s: %s", action, self._group, err
-            )
+            _LOGGER.error("Unable to %s Pi-hole V6 group %s: %s", action, self.group_name, err)
 
     async def async_service_enable(self) -> None:
         """..."""
 
     async def async_service_disable(self, duration: Any = None) -> None:
         """..."""
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any] | None:
+        """Return the state attributes of the switch Pi-hole V6."""
+
+        if self.entity_description.key == "group":
+            clients_group: List[Any] = []
+
+            for client in self.api.cache_clients:
+                group_id: int = self.api.cache_groups[self.group_name]["id"]
+
+                if group_id in client["groups"]:
+                    clients_group.append(
+                        {
+                            "client": client["client"],
+                            "id": client["id"],
+                            "name": client["name"],
+                        }
+                    )
+
+            return {
+                "info": {
+                    "name": self.group_name,
+                    "id": group_id,
+                    "comment": self.api.cache_groups[self.group_name]["comment"],
+                },
+                "clients": clients_group,
+            }

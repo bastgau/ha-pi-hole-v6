@@ -96,6 +96,10 @@
                 "name": "Domaines bloqués",
                 "unit_of_measurement": "domaines"
             },
+            "dns_queries_frequency": {
+                "name": "Nombre moyen de requêtes DNS",
+                "unit_of_measurement": "requêtes/min"
+            },
             "dns_queries_cached": {
                 "name": "Requêtes DNS mises en cache",
                 "unit_of_measurement": "requêtes"

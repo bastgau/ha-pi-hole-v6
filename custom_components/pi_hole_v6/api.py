@@ -32,6 +32,8 @@ class API:
     cache_summary: dict[str, Any] = {}
     cache_groups: dict[str, dict[str, Any]] = {}
     cache_ftl_info: dict[str, dict[str, Any]] = {}
+    cache_clients: dict[str, dict[str, Any]] = {}
+
     last_refresh: datetime | None = None
     just_initialized: bool = False
 
@@ -434,6 +436,30 @@ class API:
             "data": result["data"],
         }
 
+    async def call_get_clients(self) -> dict[str, Any]:
+        """Get clients
+
+        Returns:
+          result (dict[str, Any]): A dictionary with the keys "code", "reason", and "data".
+
+        """
+
+        url: str = "/clients"
+
+        result: dict[str, Any] = await self._call(
+            url,
+            action="get_clients",
+            method="GET",
+        )
+
+        self.cache_clients = result["data"]["clients"]
+
+        return {
+            "code": result["code"],
+            "reason": result["reason"],
+            "data": result["data"],
+        }
+
     async def call_get_ftl_info_messages(self) -> dict[str, Any]:
         """Get FTL information messages
 
@@ -506,6 +532,7 @@ class API:
                 "name": group["name"],
                 "comment": group["comment"],
                 "enabled": group["enabled"],
+                "id": group["id"],
             }
 
         return {

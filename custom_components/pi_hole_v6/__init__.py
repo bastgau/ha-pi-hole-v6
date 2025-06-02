@@ -89,6 +89,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: PiHoleV6ConfigEntry) -> 
             if not isinstance(result, dict):
                 raise DataStructureException()
 
+            result = await api_client.call_get_clients()
+            if not isinstance(result, dict):
+                raise DataStructureException()
+
             result = await api_client.call_get_groups()
             if not isinstance(result, dict):
                 raise DataStructureException()
