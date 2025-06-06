@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import logging
+from datetime import timedelta
 from typing import Any, List
 
 from homeassistant.components.sensor import (
@@ -13,12 +15,15 @@ from homeassistant.components.sensor import (
 from homeassistant.const import CONF_NAME, PERCENTAGE, EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import PiHoleV6ConfigEntry
 from .api import API as ClientAPI
 from .entity import PiHoleV6Entity
+
+_LOGGER = logging.getLogger(__name__)
 
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
@@ -114,6 +119,8 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     ),
 )
 
+context_name: str = ""
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -134,6 +141,31 @@ async def async_setup_entry(
         for description in SENSOR_TYPES
     ]
     async_add_entities(sensors, True)
+
+    hass.data[f"pi_hole_entities_{name}"] = []
+    hass.data[f"pi_hole_entities_{name}"].extend(sensors)
+
+    context_name = name
+
+    async def update_domain_interval(now):
+        for entity in hass.data.get(f"pi_hole_entities_{context_name}", []):
+            if (
+                hasattr(entity, "entity_description")
+                and entity.entity_description.key == "remaining_until_blocking_mode"
+            ):
+                if hass.states.get(entity.entity_id) is not None and float(hass.states.get(entity.entity_id).state) > 0:
+                    state = hass.states.get(entity.entity_id)
+                    existing_attributes = dict(state.attributes)
+
+                    if float(hass.states.get(entity.entity_id).state) >= 1:
+                        new_value = round(float(hass.states.get(entity.entity_id).state) - 1)
+                    else:
+                        new_value = 0
+
+                    existing_attributes = existing_attributes | {"timers": {"entity.entity_description.key": new_value}}
+                    hass.states.async_set(entity.entity_id, new_value, existing_attributes)
+
+    async_track_time_interval(hass, update_domain_interval, timedelta(seconds=1))
 
 
 class PiHoleV6Sensor(PiHoleV6Entity, SensorEntity):
