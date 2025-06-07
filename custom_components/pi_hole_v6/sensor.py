@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 import logging
-from datetime import timedelta
-from typing import Any, List
+from datetime import datetime, timedelta
+from typing import Any, Dict, List
+from zoneinfo import ZoneInfo
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -145,27 +146,43 @@ async def async_setup_entry(
     hass.data[f"pi_hole_entities_{name}"] = []
     hass.data[f"pi_hole_entities_{name}"].extend(sensors)
 
-    context_name = name
+    async def update_timer(now):
+        entity = find_entity(hass, "remaining_until_blocking_mode", name)
 
-    async def update_domain_interval(now):
-        for entity in hass.data.get(f"pi_hole_entities_{context_name}", []):
-            if (
-                hasattr(entity, "entity_description")
-                and entity.entity_description.key == "remaining_until_blocking_mode"
-            ):
-                if hass.states.get(entity.entity_id) is not None and float(hass.states.get(entity.entity_id).state) > 0:
-                    state = hass.states.get(entity.entity_id)
-                    existing_attributes = dict(state.attributes)
+        if entity is not None and hass.states.get(entity.entity_id) is not None:
+            new_value = calculate_remaining_until_blocking_mode_until_value(entity)
 
-                    if float(hass.states.get(entity.entity_id).state) >= 1:
-                        new_value = round(float(hass.states.get(entity.entity_id).state) - 1)
-                    else:
-                        new_value = 0
+            state = hass.states.get(entity.entity_id)
+            existing_attributes = dict(state.attributes)
 
-                    existing_attributes = existing_attributes | {"timers": {"entity.entity_description.key": new_value}}
-                    hass.states.async_set(entity.entity_id, new_value, existing_attributes)
+            until_date_attribute: Dict[str, Any] = {}
 
-    async_track_time_interval(hass, update_domain_interval, timedelta(seconds=1))
+            if new_value > 0:
+                paris_tz: ZoneInfo = ZoneInfo("Europe/Paris")
+                until_date: datetime = entity.api.cache_remaining_until_blocking_mode_until.astimezone(paris_tz)
+                until_date_attribute = {"until_date": until_date}
+
+            new_attributes = existing_attributes | until_date_attribute
+            hass.states.async_set(entity.entity_id, new_value, new_attributes)
+
+    async_track_time_interval(hass, update_timer, timedelta(seconds=1))
+
+
+def calculate_remaining_until_blocking_mode_until_value(entity) -> int:
+    new_value = 0
+    if entity.api.cache_remaining_until_blocking_mode_until is not None:
+        if entity.api.cache_remaining_until_blocking_mode_until > datetime.now():
+            new_value = round((entity.api.cache_remaining_until_blocking_mode_until - datetime.now()).total_seconds())
+
+    return new_value
+
+
+def find_entity(current_hass: Any, key: str, context_name: str) -> Any:
+    """..."""
+
+    for entity in current_hass.data.get(f"pi_hole_entities_{context_name}", []):
+        if hasattr(entity, "entity_description") and entity.entity_description.key == key:
+            return entity
 
 
 class PiHoleV6Sensor(PiHoleV6Entity, SensorEntity):
@@ -221,10 +238,22 @@ class PiHoleV6Sensor(PiHoleV6Entity, SensorEntity):
             case "ftl_info_message_count":
                 return self.api.cache_ftl_info["message_count"]
             case "remaining_until_blocking_mode":
-                value: int | None = self.api.cache_blocking["timer"]
-                return value if value is not None else 0
+                return self.native_remaining_until_blocking_mode()
 
         return ""
+
+    def native_remaining_until_blocking_mode(self) -> int:
+        """..."""
+
+        value = self.api.cache_blocking["timer"] if self.api.cache_blocking["timer"] is not None else 0
+
+        if value > 0:
+            until_date: datetime = datetime.now() + timedelta(seconds=value)
+            self.api.cache_remaining_until_blocking_mode_until = until_date
+        else:
+            self.api.cache_remaining_until_blocking_mode_until = None
+
+        return value
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
@@ -263,5 +292,7 @@ class PiHoleV6Sensor(PiHoleV6Entity, SensorEntity):
                 return {"note": "Number of unique domains FTL knows."}
             case "dns_queries_frequency":
                 return {"note": "Average number of DNS queries per minute."}
+            case "remaining_until_blocking_mode":
+                return {"note": "Remaining seconds until blocking mode is automatically changed"}
 
         return None
