@@ -88,6 +88,11 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
+        key="configured_clients",
+        translation_key="configured_clients",
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
         entity_category=EntityCategory.DIAGNOSTIC,
         key="latest_data_refresh",
         translation_key="latest_data_refresh",
@@ -255,6 +260,8 @@ class PiHoleV6Sensor(PiHoleV6Entity, SensorEntity):
                 return self.api.cache_ftl_info["message_count"]
             case "remaining_until_blocking_mode":
                 return self.native_remaining_until_blocking_mode()
+            case "configured_clients":
+                return len(self.api.cache_configured_clients)
 
         return ""
 
@@ -285,7 +292,13 @@ class PiHoleV6Sensor(PiHoleV6Entity, SensorEntity):
             raw_messages: List[Any] = self.api.cache_ftl_info["message_list"]
             messages: List[Any] = [{k: v for k, v in message.items() if k != "html"} for message in raw_messages]
             status: str = self.api.cache_ftl_info["status"]
-            return {"messages": messages, "status": status}
+            return {"messages": messages, "status": status, "note": "Total number of Pi-hole diagnosis messages."}
+
+        if self.entity_description.key == "configured_clients":
+            raw_clients: List[Any] = self.api.cache_configured_clients
+            excluding: List[str] = ["date_added", "date_modified"]
+            clients: List[Any] = [{k: v for k, v in client.items() if k not in excluding} for client in raw_clients]
+            return {"clients": clients, "note": "Total number of configured clients."}
 
         match self.entity_description.key:
             case "ads_blocked_today":
@@ -303,12 +316,12 @@ class PiHoleV6Sensor(PiHoleV6Entity, SensorEntity):
             case "dns_queries_forwarded":
                 return {"note": "Number of queries that have been forwarded."}
             case "dns_unique_clients":
-                return {"note": "Number of active clients (seen in the last 24h."}
+                return {"note": "Number of active clients (seen in the last 24h)."}
             case "dns_unique_domains":
                 return {"note": "Number of unique domains FTL knows."}
             case "dns_queries_frequency":
                 return {"note": "Average number of DNS queries per minute."}
             case "remaining_until_blocking_mode":
-                return {"note": "Remaining seconds until blocking mode is automatically changed"}
+                return {"note": "Remaining seconds until blocking mode is automatically changed."}
 
         return None

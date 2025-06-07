@@ -131,6 +131,10 @@
             "ftl_info_message_count": {
                 "name": "FTL diagnosis messages count",
                 "unit_of_measurement": "messages"
+            },
+            "configured_clients": {
+                "name": "Clients configurés",
+                "unit_of_measurement": "clients"
             }
         },
         "switch": {

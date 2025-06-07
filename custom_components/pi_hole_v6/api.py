@@ -34,6 +34,7 @@ class API:
     cache_ftl_info: dict[str, dict[str, Any]] = {}
     cache_clients: dict[str, dict[str, Any]] = {}
     cache_remaining_until_blocking_mode_until: datetime | None = None
+    cache_configured_clients: dict[str, dict[str, Any]] = {}
 
     last_refresh: datetime | None = None
     just_initialized: bool = False
@@ -535,6 +536,30 @@ class API:
                 "enabled": group["enabled"],
                 "id": group["id"],
             }
+
+        return {
+            "code": result["code"],
+            "reason": result["reason"],
+            "data": result["data"],
+        }
+
+    async def call_get_configured_clients(self) -> dict[str, Any]:
+        """Retrieve the configured clients.
+
+        Returns:
+          result (dict[str, Any]): A dictionary with the keys "code", "reason", and "data".
+
+        """
+
+        url: str = "/clients"
+
+        result: dict[str, Any] = await self._call(
+            url,
+            action="configured_clients",
+            method="GET",
+        )
+
+        self.cache_configured_clients = result["data"]["clients"]
 
         return {
             "code": result["code"],

@@ -13,7 +13,7 @@
                 "default": "mdi:close-octagon-outline"
             },
             "seen_clients": {
-                "default": "mdi:account-outline"
+                "default": "mdi:account-eye-outline"
             },
             "dns_queries_today": {
                 "default": "mdi:dns"
@@ -31,7 +31,7 @@
                 "default": "mdi:share-outline"
             },
             "dns_unique_clients": {
-                "default": "mdi:account-outline"
+                "default": "mdi:account-badge-outline"
             },
             "dns_unique_domains": {
                 "default": "mdi:domain"
@@ -50,6 +50,9 @@
             },
             "ftl_info_message_count": {
                 "default": "mdi:message-cog-outline"
+            },
+            "configured_clients": {
+                "default": "mdi:account-check-outline"
             }
         }
     },

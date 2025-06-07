@@ -101,6 +101,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: PiHoleV6ConfigEntry) -> 
             if not isinstance(result, dict):
                 raise DataStructureException()
 
+            result = await api_client.call_get_configured_clients()
+            if not isinstance(result, dict):
+                raise DataStructureException()
+
             api_client.last_refresh = datetime.now(timezone.utc)
 
         except UnauthorizedException as err:
