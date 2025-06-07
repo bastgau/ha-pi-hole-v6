@@ -146,31 +146,47 @@ async def async_setup_entry(
     hass.data[f"pi_hole_entities_{name}"] = []
     hass.data[f"pi_hole_entities_{name}"].extend(sensors)
 
-    async def update_timer(now):
+    async def update_timer(now) -> None:
         entity = find_entity(hass, "remaining_until_blocking_mode", name)
 
         if entity is not None and hass.states.get(entity.entity_id) is not None:
             new_value = calculate_remaining_until_blocking_mode_until_value(entity)
+
+            if new_value < 0:
+                return None
 
             state = hass.states.get(entity.entity_id)
             existing_attributes = dict(state.attributes)
 
             until_date_attribute: Dict[str, Any] = {}
 
+            request_refresh: bool = False
+
             if new_value > 0:
                 paris_tz: ZoneInfo = ZoneInfo("Europe/Paris")
                 until_date: datetime = entity.api.cache_remaining_until_blocking_mode_until.astimezone(paris_tz)
                 until_date_attribute = {"until_date": until_date}
+            else:
+                request_refresh = True
+                del existing_attributes["until_date"]
 
             new_attributes = existing_attributes | until_date_attribute
             hass.states.async_set(entity.entity_id, new_value, new_attributes)
+
+            if request_refresh is True:
+                hass.async_create_task(entity.async_update_ha_state(force_refresh=True))
 
     async_track_time_interval(hass, update_timer, timedelta(seconds=1))
 
 
 def calculate_remaining_until_blocking_mode_until_value(entity) -> int:
-    new_value = 0
+    """..."""
+
+    new_value = -1
+
     if entity.api.cache_remaining_until_blocking_mode_until is not None:
+        new_value = 0
+
         if entity.api.cache_remaining_until_blocking_mode_until > datetime.now():
             new_value = round((entity.api.cache_remaining_until_blocking_mode_until - datetime.now()).total_seconds())
 
