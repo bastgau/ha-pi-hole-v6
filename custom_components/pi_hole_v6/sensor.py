@@ -169,11 +169,12 @@ async def async_setup_entry(
 
             if new_value > 0:
                 paris_tz: ZoneInfo = ZoneInfo("Europe/Paris")
-                until_date: datetime = entity.api.cache_remaining_until_blocking_mode_until.astimezone(paris_tz)
+                until_date: datetime = entity.api.cache_remaining_until_blocking_mode_date.astimezone(paris_tz)
                 until_date_attribute = {"until_date": until_date}
             else:
                 request_refresh = True
-                del existing_attributes["until_date"]
+                if "until_date" in existing_attributes:
+                    del existing_attributes["until_date"]
 
             new_attributes = existing_attributes | until_date_attribute
             hass.states.async_set(entity.entity_id, new_value, new_attributes)
@@ -189,11 +190,11 @@ def calculate_remaining_until_blocking_mode_until_value(entity) -> int:
 
     new_value = -1
 
-    if entity.api.cache_remaining_until_blocking_mode_until is not None:
+    if entity.api.cache_remaining_until_blocking_mode_date is not None:
         new_value = 0
 
-        if entity.api.cache_remaining_until_blocking_mode_until > datetime.now():
-            new_value = round((entity.api.cache_remaining_until_blocking_mode_until - datetime.now()).total_seconds())
+        if entity.api.cache_remaining_until_blocking_mode_date > datetime.now():
+            new_value = round((entity.api.cache_remaining_until_blocking_mode_date - datetime.now()).total_seconds())
 
     return new_value
 
@@ -272,9 +273,9 @@ class PiHoleV6Sensor(PiHoleV6Entity, SensorEntity):
 
         if value > 0:
             until_date: datetime = datetime.now() + timedelta(seconds=value)
-            self.api.cache_remaining_until_blocking_mode_until = until_date
+            self.api.cache_remaining_until_blocking_mode_date = until_date
         else:
-            self.api.cache_remaining_until_blocking_mode_until = None
+            self.api.cache_remaining_until_blocking_mode_date = None
 
         return value
 

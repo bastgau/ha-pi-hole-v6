@@ -33,7 +33,7 @@ class API:
     cache_groups: dict[str, dict[str, Any]] = {}
     cache_ftl_info: dict[str, dict[str, Any]] = {}
     cache_clients: dict[str, dict[str, Any]] = {}
-    cache_remaining_until_blocking_mode_until: datetime | None = None
+    cache_remaining_until_blocking_mode_date: datetime | None = None
     cache_configured_clients: dict[str, dict[str, Any]] = {}
 
     last_refresh: datetime | None = None
