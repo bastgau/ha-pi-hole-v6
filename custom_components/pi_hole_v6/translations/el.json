@@ -71,6 +71,9 @@
             },
             "action_refresh_data": {
                 "name": "Ανανέωση δεδομένων"
+            },
+            "action_ftl_purge_diagnosis_messages": {
+                "name": "Εκκαθάριση μηνύματα διάγνωσης FTL"
             }
         },
         "sensor": {
@@ -114,6 +117,16 @@
             },
             "latest_data_refresh": {
                 "name": "Τελευταία ανανέωση δεδομένων"
+            },
+            "cpu_use": {
+                "name": "Χρήση CPU"
+            },
+            "memory_use": {
+                "name": "Χρήση μνήμης"
+            },
+            "ftl_info_message_count": {
+                "name": "Αριθμός μηνυμάτων διάγνωσης FTL",
+                "unit_of_measurement": "μηνύματα"
             }
         },
         "switch": {
