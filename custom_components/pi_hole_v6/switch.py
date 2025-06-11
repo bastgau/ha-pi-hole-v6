@@ -257,10 +257,9 @@ class PiHoleV6Group(PiHoleV6Entity, SwitchEntity):
 
         if self.entity_description.key == "group":
             clients_group: List[Any] = []
+            group_id: int = self.api.cache_groups[self.group_name]["id"]
 
             for client in self.api.cache_clients:
-                group_id: int = self.api.cache_groups[self.group_name]["id"]
-
                 if group_id in client["groups"]:
                     clients_group.append(
                         {
