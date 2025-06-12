@@ -73,7 +73,7 @@
                 "name": "Ανανέωση δεδομένων"
             },
             "action_ftl_purge_diagnosis_messages": {
-                "name": "Εκκαθάριση μηνύματα διάγνωσης FTL"
+                "name": "Εκκαθάριση μηνυμάτων διάγνωσης FTL"
             }
         },
         "sensor": {
