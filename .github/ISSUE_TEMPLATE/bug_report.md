@@ -5,7 +5,7 @@ about: Use this template for tracking a bug.
 labels: [pending triage]
 title: ''
 labels: [bug,triage]
-assignees: [bastgau]
+assignees: []
 ---
 
 <!--
