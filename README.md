@@ -17,9 +17,12 @@ Original component : [Pi-hole](https://www.home-assistant.io/integrations/pi_hol
 
 ## Description
 
-Due to major changes in the Pi-hole API, the native Home Assistant integration was no longer functional. 
+Due to major changes in the Pi-hole API, the native integration with Home Assistant was no longer functional for several months in 2025, until August 2025.
 
-The "Pi-hole V6 Integration" adds compatibility with the new API in Home Assistant. This integration aims to restore compatibility and provide Pi-hole management directly from Home Assistant.
+The 'Pi-hole V6 Integration' added compatibility with the new API in Home Assistant. This integration aimed to restore compatibility and provide Pi-hole management directly from Home Assistant.
+
+> [!NOTE] 
+> **Today, this integration remains active and not only restores full functionality but also offers additional and complementary features to the native integration. Users can now enjoy enhanced capabilities and a seamless experience when managing Pi-hole through Home Assistant.**
 
 ## Features
 
