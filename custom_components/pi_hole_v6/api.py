@@ -33,7 +33,6 @@ class API:
     cache_summary: dict[str, Any] = {}
     cache_groups: dict[str, dict[str, Any]] = {}
     cache_ftl_info: dict[str, dict[str, Any]] = {}
-    cache_clients: dict[str, dict[str, Any]] = {}
     cache_remaining_dates: Dict[str, datetime] = {}
     cache_configured_clients: dict[str, dict[str, Any]] = {}
 
@@ -479,30 +478,6 @@ class API:
         )
 
         self.cache_blocking = result["data"]
-
-        return {
-            "code": result["code"],
-            "reason": result["reason"],
-            "data": result["data"],
-        }
-
-    async def call_get_clients(self) -> dict[str, Any]:
-        """Get clients
-
-        Returns:
-          result (dict[str, Any]): A dictionary with the keys "code", "reason", and "data".
-
-        """
-
-        url: str = "/clients"
-
-        result: dict[str, Any] = await self._call(
-            url,
-            action="get_clients",
-            method="GET",
-        )
-
-        self.cache_clients = result["data"]["clients"]
 
         return {
             "code": result["code"],
