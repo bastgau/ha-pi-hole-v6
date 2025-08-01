@@ -135,6 +135,10 @@
             "configured_clients": {
                 "name": "Clients configurés",
                 "unit_of_measurement": "clients"
+            },
+            "auth_sessions": {
+                "name": "Sessions actives",
+                "unit_of_measurement": "sessions"
             }
         },
         "switch": {

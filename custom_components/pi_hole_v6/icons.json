@@ -53,6 +53,9 @@
             },
             "configured_clients": {
                 "default": "mdi:account-check-outline"
+            },
+            "auth_sessions": {
+                "default": "mdi:robot-outline"
             }
         }
     },

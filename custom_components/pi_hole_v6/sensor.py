@@ -4,8 +4,7 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime, timedelta
-from typing import Any, Dict, List
-from zoneinfo import ZoneInfo
+from typing import Any, List
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -22,6 +21,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import PiHoleV6ConfigEntry
 from .api import API as ClientAPI
+from .common import sensor_update_timer
 from .entity import PiHoleV6Entity
 
 _LOGGER = logging.getLogger(__name__)
@@ -123,6 +123,14 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
     ),
+    SensorEntityDescription(
+        entity_category=EntityCategory.DIAGNOSTIC,
+        key="auth_sessions",
+        translation_key="auth_sessions",
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
+        entity_registry_enabled_default=False,
+    ),
 )
 
 context_name: str = ""
@@ -148,63 +156,14 @@ async def async_setup_entry(
     ]
     async_add_entities(sensors, True)
 
-    hass.data[f"pi_hole_entities_{name}"] = []
-    hass.data[f"pi_hole_entities_{name}"].extend(sensors)
+    hass.data[f"pi_hole_entities_sensor_{name}"] = []
+    hass.data[f"pi_hole_entities_sensor_{name}"].extend(sensors)
 
-    async def update_timer(now) -> None:
-        entity = find_entity(hass, "remaining_until_blocking_mode", name)
-
-        if entity is not None and hass.states.get(entity.entity_id) is not None:
-            new_value = calculate_remaining_until_blocking_mode_until_value(entity)
-
-            if new_value < 0:
-                return None
-
-            state = hass.states.get(entity.entity_id)
-            existing_attributes = dict(state.attributes)
-
-            until_date_attribute: Dict[str, Any] = {}
-
-            request_refresh: bool = False
-
-            if new_value > 0:
-                paris_tz: ZoneInfo = ZoneInfo("Europe/Paris")
-                until_date: datetime = entity.api.cache_remaining_until_blocking_mode_date.astimezone(paris_tz)
-                until_date_attribute = {"until_date": until_date}
-            else:
-                request_refresh = True
-                if "until_date" in existing_attributes:
-                    del existing_attributes["until_date"]
-
-            new_attributes = existing_attributes | until_date_attribute
-            hass.states.async_set(entity.entity_id, new_value, new_attributes)
-
-            if request_refresh is True:
-                hass.async_create_task(entity.async_update_ha_state(force_refresh=True))
+    async def update_timer(now: Any) -> None:
+        """..."""
+        await sensor_update_timer(hass, now, name)
 
     async_track_time_interval(hass, update_timer, timedelta(seconds=1))
-
-
-def calculate_remaining_until_blocking_mode_until_value(entity) -> int:
-    """..."""
-
-    new_value = -1
-
-    if entity.api.cache_remaining_until_blocking_mode_date is not None:
-        new_value = 0
-
-        if entity.api.cache_remaining_until_blocking_mode_date > datetime.now():
-            new_value = round((entity.api.cache_remaining_until_blocking_mode_date - datetime.now()).total_seconds())
-
-    return new_value
-
-
-def find_entity(current_hass: Any, key: str, context_name: str) -> Any:
-    """..."""
-
-    for entity in current_hass.data.get(f"pi_hole_entities_{context_name}", []):
-        if hasattr(entity, "entity_description") and entity.entity_description.key == key:
-            return entity
 
 
 class PiHoleV6Sensor(PiHoleV6Entity, SensorEntity):
@@ -263,6 +222,8 @@ class PiHoleV6Sensor(PiHoleV6Entity, SensorEntity):
                 return self.native_remaining_until_blocking_mode()
             case "configured_clients":
                 return len(self.api.cache_configured_clients)
+            case "auth_sessions":
+                return len(self.api.cache_auth_sessions)
 
         return ""
 
@@ -273,9 +234,9 @@ class PiHoleV6Sensor(PiHoleV6Entity, SensorEntity):
 
         if value > 0:
             until_date: datetime = datetime.now() + timedelta(seconds=value)
-            self.api.cache_remaining_until_blocking_mode_date = until_date
-        else:
-            self.api.cache_remaining_until_blocking_mode_date = None
+            self.api.cache_remaining_dates["global"] = until_date
+        elif "global" in self.api.cache_remaining_dates:
+            del self.api.cache_remaining_dates["global"]
 
         return value
 
@@ -300,6 +261,12 @@ class PiHoleV6Sensor(PiHoleV6Entity, SensorEntity):
             excluding: List[str] = ["date_added", "date_modified"]
             clients: List[Any] = [{k: v for k, v in client.items() if k not in excluding} for client in raw_clients]
             return {"clients": clients, "note": "Total number of configured clients."}
+
+        if self.entity_description.key == "auth_sessions":
+            raw_sessions: List[Any] = self.api.cache_auth_sessions
+            excluding: List[str] = ["tls", "x_forwarded_for"]
+            sessions: List[Any] = [{k: v for k, v in session.items() if k not in excluding} for session in raw_sessions]
+            return {"sessions": sessions, "note": "Total number of auth sessions."}
 
         match self.entity_description.key:
             case "ads_blocked_today":
