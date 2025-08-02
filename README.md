@@ -119,6 +119,11 @@ Logs do not remove sensitive information so careful what you share, check what y
 
 By default, the data is updated every 5 minutes. You can configure a different frequency as explained on the following [page](docs/guide-configuring-refresh.md).
 
+
+### Need more information during adding a new service?
+
+Some additional information is available if you encounter any problems while adding a new service in this [page](docs/guide-additional-config-information.md).
+
 ## Support & Contributions
 
 If you encounter any issues or wish to contribute to improving this integration, feel free to open an issue or a pull request on the GitHub repository.
