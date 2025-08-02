@@ -1,6 +1,16 @@
 ## How do I configure the refresh frequency?
 
-### Deactivate the default refresh
+### Configure the service (recommanded solution)
+
+On the Pi-hole V6 Integration page (_/config/integrations/integration/pi_hole_v6_), configure your service.
+
+<img src="../img/integration-page.png" width="500">
+
+In the pop-up window, enter the desired `Data refresh rate` value in seconds.
+
+<img src="../img/integration-configuration.png" width="500">
+
+### Deactivate the default refresh (alternative solution)
 
 In the integration page, you have to deactivate the automatic polling for the `Pi-hole V6` Integration.
 
