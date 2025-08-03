@@ -162,8 +162,14 @@ Please refer to the Pi-hole documentation to understand the meaning of each of t
 
 <img src="../img/entities-buttons.png" width="300">
 
+> [!NOTE]
+> The '**Permit destructive actions via API**' option must be enabled in the Pi-hole options to perform the following actions:
+>  - `Flush the network table`
+>  - `Flush the DNS logs`
+>  - `Restart pihole-FTL` 
+
 <details>
-  <summary>Display the actions via buttons</summary>
+  <summary>Display the actions via buttons</summary>  
 
 #### -  Flush the DNS logs
 
@@ -189,11 +195,6 @@ Please refer to the Pi-hole documentation to understand the meaning of each of t
 #### -  Run gravity
 
 **Name:** button.<service\_name>_action_gravity  
-
-> The '**Permit destructive actions via API**' option must be enabled in the Pi-hole options to perform the following actions:
-> - `Flush the network table`
-> - `Flush the DNS logs`
-> - `Restart pihole-FTL` 
 
 </details>
 
