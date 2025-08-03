@@ -190,7 +190,6 @@ Please refer to the Pi-hole documentation to understand the meaning of each of t
 
 **Name:** button.<service\_name>_action_gravity  
 
-> [!NOTE]  
 > The '**Permit destructive actions via API**' option must be enabled in the Pi-hole options to perform the following actions:
 > - `Flush the network table`
 > - `Flush the DNS logs`
@@ -379,9 +378,8 @@ target:
     - switch.<service\_name>_group_single_xiaomi_mipad_6
 ```
 
-> [!NOTE]  
 > The duration is optional.  
-Temporary deactivation of blocking works with the global switch (via native Pi-hole feature) or group switches (via Pi-hole V6 Integration).
+> Temporary deactivation of blocking works with the global switch (via native Pi-hole feature) or group switches (via Pi-hole V6 Integration).
 
 #### -  Enable blocking
 
