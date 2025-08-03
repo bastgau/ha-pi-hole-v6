@@ -25,7 +25,7 @@ The entities / services name is depending on the name of the service (_<service\
 
 #### -  Average number of DNS queries
 
-**Name:** sensor.<service\_name>_dns_queries_frequency 
+**Name:** sensor.<service\_name>_dns_queries_frequency  
 **Description:** Average number of DNS queries per minute.  
 **Unit**: queries/minute  
 
@@ -334,7 +334,7 @@ The switches name is depending on the name of the group.
 
 **Name:** sensor.<service\_name>_memory_use   
 **Description:** Amount of memory utilized by the Pi-hole instance.  
-**Unit**: percentage
+**Unit**: percentage  
 **Attributes:** Information about the memory usage. 
 
 ```json
