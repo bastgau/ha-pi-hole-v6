@@ -13,13 +13,16 @@
                 "default": "mdi:close-octagon-outline"
             },
             "seen_clients": {
-                "default": "mdi:account-outline"
+                "default": "mdi:account-eye-outline"
             },
             "dns_queries_today": {
                 "default": "mdi:dns"
             },
             "domains_blocked": {
                 "default": "mdi:domain"
+            },
+            "dns_queries_frequency": {
+                "default": "mdi:dns-outline"
             },
             "dns_queries_cached": {
                 "default": "mdi:cached"
@@ -28,7 +31,7 @@
                 "default": "mdi:share-outline"
             },
             "dns_unique_clients": {
-                "default": "mdi:account-outline"
+                "default": "mdi:account-badge-outline"
             },
             "dns_unique_domains": {
                 "default": "mdi:domain"
@@ -47,6 +50,12 @@
             },
             "ftl_info_message_count": {
                 "default": "mdi:message-cog-outline"
+            },
+            "configured_clients": {
+                "default": "mdi:account-check-outline"
+            },
+            "auth_sessions": {
+                "default": "mdi:robot-outline"
             }
         }
     },

@@ -81,15 +81,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: PiHoleV6ConfigEntry) -> 
             if not isinstance(result, dict):
                 raise DataStructureException()
 
-            result = await api_client.call_blocking_status()
-            if not isinstance(result, dict):
-                raise DataStructureException()
-
             result = await api_client.call_padd()
-            if not isinstance(result, dict):
-                raise DataStructureException()
-
-            result = await api_client.call_get_groups()
             if not isinstance(result, dict):
                 raise DataStructureException()
 
@@ -97,15 +89,28 @@ async def async_setup_entry(hass: HomeAssistant, entry: PiHoleV6ConfigEntry) -> 
             if not isinstance(result, dict):
                 raise DataStructureException()
 
-            api_client.last_refresh = datetime.now(timezone.utc)
+            result = await api_client.call_get_configured_clients()
+            if not isinstance(result, dict):
+                raise DataStructureException()
+
+            result = await api_client.call_get_auth_sessions()
+            if not isinstance(result, dict):
+                raise DataStructureException()
+
+            result = await api_client.call_blocking_status()
+            if not isinstance(result, dict):
+                raise DataStructureException()
+
+            result = await api_client.call_get_groups()
+            if not isinstance(result, dict):
+                raise DataStructureException()
 
         except UnauthorizedException as err:
             raise ConfigEntryAuthFailed("Credentials must be updated.") from err
         except DataStructureException as err:
+            await api_client.call_logout()
             _LOGGER.error("DataStructureException Debug: " + str(result))
             raise err
-        finally:
-            await api_client.call_logout()
 
         try:
             result = await api_client.call_get_ftl_info_messages()
@@ -119,6 +124,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: PiHoleV6ConfigEntry) -> 
             api_client.remove_cache("ftl_info_messages")
         finally:
             await api_client.call_logout()
+
+        api_client.last_refresh = datetime.now(timezone.utc)
 
     conf_update_interval: int | None = entry.data.get(CONF_UPDATE_INTERVAL)
 

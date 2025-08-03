@@ -96,6 +96,10 @@
                 "name": "Domains blocked",
                 "unit_of_measurement": "domains"
             },
+            "dns_queries_frequency": {
+                "name": "Average number of DNS queries",
+                "unit_of_measurement": "queries/min"
+            },
             "dns_queries_cached": {
                 "name": "DNS queries cached",
                 "unit_of_measurement": "queries"
@@ -127,6 +131,14 @@
             "ftl_info_message_count": {
                 "name": "FTL diagnosis messages count",
                 "unit_of_measurement": "messages"
+            },
+            "configured_clients": {
+                "name": "Configured clients",
+                "unit_of_measurement": "clients"
+            },
+            "auth_sessions": {
+                "name": "Active sessions",
+                "unit_of_measurement": "sessions"
             }
         },
         "switch": {
