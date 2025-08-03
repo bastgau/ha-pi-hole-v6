@@ -34,7 +34,7 @@ The 'Pi-hole V6 Integration' added compatibility with the new API in Home Assist
 The following sensors are currently implemented :
 
 <p align="center" width="100%">
-    <img src="https://raw.githubusercontent.com/bastgau/ha-pi-hole-v6/main/img/entities-overview.png" width="800">
+    <img src="https://raw.githubusercontent.com/bastgau/ha-pi-hole-v6/develop/img/entities-overview.png" width="800">
 </p>
 
 A complete list with explanations is available on this [page](docs/guide-explained-entities.md).
