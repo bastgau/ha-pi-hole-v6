@@ -34,11 +34,10 @@ The 'Pi-hole V6 Integration' added compatibility with the new API in Home Assist
 The following sensors are currently implemented :
 
 <p align="center" width="100%">
-    <img src="https://raw.githubusercontent.com/bastgau/ha-pi-hole-v6/main/img/release-v1.12.0.png" width="800">
+    <img src="https://raw.githubusercontent.com/bastgau/ha-pi-hole-v6/main/img/entities-overview.png" width="800">
 </p>
 
-> [!NOTE]
-> To perform the `flush/arp`, `flush/logs` and `restartdns` actions, the *'Permit destructive actions via API'* option must be enabled in the Pi-hole options.
+A complete list with explanations is available on this [page](docs/guide-explained-entities.md).
 
 ## Translation
 
