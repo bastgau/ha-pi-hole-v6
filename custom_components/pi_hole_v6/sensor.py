@@ -230,13 +230,13 @@ class PiHoleV6Sensor(PiHoleV6Entity, SensorEntity):
     def native_remaining_until_blocking_mode(self) -> int:
         """..."""
 
-        value = self.api.cache_blocking["timer"] if self.api.cache_blocking["timer"] is not None else 0
+        value = round(self.api.cache_blocking["timer"]) if self.api.cache_blocking["timer"] is not None else 0
 
         if value > 0:
             until_date: datetime = datetime.now() + timedelta(seconds=value)
-            self.api.cache_remaining_dates["global"] = until_date
-        elif "global" in self.api.cache_remaining_dates:
-            del self.api.cache_remaining_dates["global"]
+            self.api.cache_remaining_dates[f"{self._name}_sensor/global"] = until_date
+        elif f"{self._name}_sensor/global" in self.api.cache_remaining_dates:
+            del self.api.cache_remaining_dates[f"{self._name}_sensor/global"]
 
         return value
 

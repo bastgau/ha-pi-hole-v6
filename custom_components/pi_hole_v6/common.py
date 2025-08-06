@@ -65,7 +65,7 @@ async def sensor_update_timer(hass: HomeAssistant, now: Any, name: str) -> None:
     entity = find_entity_sensor(hass, "remaining_until_blocking_mode", name)
 
     if entity is not None and hass.states.get(entity.entity_id) is not None:
-        new_value = calculate_remaining_until_blocking_mode_until_value(entity, "global")
+        new_value = calculate_remaining_until_blocking_mode_until_value(entity, f"{name}_sensor/global")
 
         if new_value < 0:
             return None
@@ -79,7 +79,7 @@ async def sensor_update_timer(hass: HomeAssistant, now: Any, name: str) -> None:
 
         if new_value > 0:
             paris_tz: ZoneInfo = ZoneInfo("Europe/Paris")
-            until_date: datetime = entity.api.cache_remaining_dates["global"].astimezone(paris_tz)
+            until_date: datetime = entity.api.cache_remaining_dates[f"{name}_sensor/global"].astimezone(paris_tz)
             until_date_attribute = {"until_date": until_date}
         else:
             request_refresh = True
@@ -132,7 +132,7 @@ async def switch_update_timer(hass: HomeAssistant, now: Any, name: str) -> None:
                     del existing_attributes["until_date"]
 
                 if (
-                    remaining_key != "global"
+                    remaining_key != f"{name}_sensor/global"
                     and f"{name}/{switch_entity.group_name}" in switch_entity.api.cache_remaining_dates
                 ):
                     del switch_entity.api.cache_remaining_dates[f"{name}/{switch_entity.group_name}"]

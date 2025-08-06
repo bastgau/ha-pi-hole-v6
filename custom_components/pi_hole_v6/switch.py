@@ -47,7 +47,7 @@ async def async_setup_entry(
     hole_data = entry.runtime_data
 
     description: SwitchEntityDescription = SwitchEntityDescription(
-        key="global",
+        key=f"{name}_sensor/global",
     )
 
     switches = [
