@@ -1,8 +1,8 @@
-# A Pi-hole Control Card
+## A Pi-hole Control Card
 
 A handy dashboard card for easy management of your Pi-hole.
 
-## Prerequisites
+### Prerequisites
 
 In this example, you have to consider that there are two switches.
 
@@ -18,7 +18,7 @@ The second switch is a group switch to disable ad blocking on all my MacBooks."
 
 Before creating your dashboard card, ensure you have two dropdown menus and a script ready.
 
-### Dropdown deactivating delays
+#### Dropdown deactivating delays
 
 First, we create a dropdown menu for selecting deactivation delays.
 
@@ -26,7 +26,7 @@ First, we create a dropdown menu for selecting deactivation delays.
 
 The dropdown entity_id is: `input_select.pi_hole_entity_dropdown`.
 
-### Dropdown entity names
+#### Dropdown entity names
 
 Next, we create a dropdown menu for a selecting Pi-hole group (switch) to deactivate.
 
@@ -34,7 +34,7 @@ Next, we create a dropdown menu for a selecting Pi-hole group (switch) to deacti
 
 The dropdown entity_id is: `input_select.pi_hole_entity_dropdown`.
 
-### The script
+#### The script
 
 Next, we will create a script to execute the service that allows disabling the blocking.
 
@@ -62,7 +62,7 @@ description: ""
 
 The script entity_id is: `script.pi_hole_switch_status_off_generic`
 
-## Pi-hole Control Card creation
+### Pi-hole Control Card creation
 
 Now, we will combine the dropdowns, the script, and an entities card.
 
