@@ -212,6 +212,15 @@ Please refer to the Pi-hole documentation to understand the meaning of each of t
 
 The switch name is depending on the name of the service. 
 
+```json
+{
+  "until_date":"2025-08-07T00:29:58.760494+02:00",
+  "remaining_seconds":26
+}
+```
+
+The attributes `until_date` and `remaining_seconds` are existing only if the ads blocking is deactivated.
+
 #### - Group switch (one switch per group)
 
 A new switch is created for each group in order to control it specifically.
@@ -235,8 +244,12 @@ The switches name is depending on the name of the group.
       "name": "phone-bastien.local"
     }
   ],
+  "until_date":"2025-08-07T00:29:58.760494+02:00",
+  "remaining_seconds":26
 }
 ```
+
+The attributes `until_date` and `remaining_seconds` are existing only if the ads blocking is deactivated.
 
 </details>
 
