@@ -123,7 +123,7 @@ Some additional information is available if you encounter any problems while add
 
 ### Need to implement Pi-hole Controls in your dashboard?
 
-A quick exemple to integrate controls in a dashboard is available in this [page](docs/guide-group-blocking.md).
+A quick example to integrate controls in a dashboard is available in this [page](docs/guide-group-blocking.md).
 
 
 ## Support & Contributions
