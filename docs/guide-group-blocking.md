@@ -1,42 +1,42 @@
 # A Pi-hole Control Card
 
-A quick card to add in your dashboard in order to control your Pi-hole.
+A handy dashboard card for easy management of your Pi-hole.
 
 ## Prerequisites
 
 In this example, you have to consider that there are two switches.
 
-The first switch is the global switch to deactivate the ads blocking for all devices.
+The first switch serves as the master control to disable ad blocking across all devices.
 
 - **name:** Pi-hole
 - **entity_id:** switch.pi_hole
 
-The second switch is a group switch to deactivate the ads blocking for all my macbooks.
+The second switch is a group switch to disable ad blocking on all my MacBooks."
 
 - **name:** [single] Macbook Air Bastien
 - **entity_id:** switch.pi_hole_group_single_macbook_air_bastien
 
-You also need two dropdowns and a script before creating your card in the dashboard.
+Before creating your dashboard card, ensure you have two dropdown menus and a script ready.
 
 ### Dropdown deactivating delays
 
-In a first time, we create a dropdown with the deactivating delays.
+First, we create a dropdown menu for selecting deactivation delays.
 
 <img src="../img/dropdown-time.png" width="300">
 
-The dropdown entity name is: `input_select.pi_hole_entity_dropdown`.
+The dropdown entity_id is: `input_select.pi_hole_entity_dropdown`.
 
 ### Dropdown entity names
 
-In a second time, we create a dropdown with the Pi-hole switches to deactivate.
+Next, we create a dropdown menu for a selecting Pi-hole group (switch) to deactivate.
 
 <img src="../img/dropdown-entity.png" width="300">
 
-The dropdown entity name is: `input_select.pi_hole_entity_dropdown`.
+The dropdown entity_id is: `input_select.pi_hole_entity_dropdown`.
 
-### A script to execute the service to disable the blocking
+### The script
 
-The script entity_id is: `script.pi_hole_switch_status_off_generic`
+Next, we will create a script to execute the service that allows disabling the blocking.
 
 ```yaml
 sequence:
@@ -60,11 +60,13 @@ mode: single
 description: ""
 ```
 
+The script entity_id is: `script.pi_hole_switch_status_off_generic`
+
 ## Pi-hole Control Card creation
 
-Now, we will combine the dropbdowns and an entities card.
+Now, we will combine the dropdowns, the script, and an entities card.
 
-The Pi-hole control is composed of two parts. A first part to deactivate a blocking after selecting a group.
+The Pi-hole control system consists of two parts. The first part allows you to deactivate blocking after selecting a group."
 
 <img src="../img/pi-hole-control-part-01.png" width="300">
 
@@ -72,7 +74,7 @@ A second part which will be displayed only if the ads blocking is deactivated.
 
 <img src="../img/pi-hole-control-part-02.png" width="300">
 
-The information related to the end of blocking deactivation is diplayed.
+The second part will only be displayed if the ad blocking is deactivated.
 
 The code is available bellow:
 
@@ -132,3 +134,5 @@ cards:
       title: "[single] Macbook Air Bastien"
       show_header_toggle: false
 ```
+
+Feel free to modify this to suit your needs and share your implementations with the community!
