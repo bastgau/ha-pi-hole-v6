@@ -11,7 +11,7 @@ The first switch serves as the master control to disable ad blocking across all 
 - **name:** Pi-hole
 - **entity_id:** switch.pi_hole
 
-The second switch is a group switch to disable ad blocking on all my MacBooks."
+The second switch is a group switch to disable ad blocking on all my MacBooks.
 
 - **name:** [single] Macbook Air Bastien
 - **entity_id:** switch.pi_hole_group_single_macbook_air_bastien
