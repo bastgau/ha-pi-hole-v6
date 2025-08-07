@@ -117,6 +117,7 @@ class PiHoleV6Button(PiHoleV6Entity, ButtonEntity):
                 case "action_restartdns":
                     result = await self.api.call_action_restartdns()
                 case "action_refresh_data":
+                    await self.api.call_blocking_status()
                     await self.async_update()
                     self.schedule_update_ha_state(force_refresh=True)
                 case "action_ftl_purge_diagnosis_messages":

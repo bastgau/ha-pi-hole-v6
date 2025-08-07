@@ -92,6 +92,10 @@
                 "name": "Ερωτήματα DNS σήμερα",
                 "unit_of_measurement": "ερωτήματα"
             },
+            "dns_queries_frequency": {
+                "name": "Average number of DNS queries",
+                "unit_of_measurement": "queries/min"
+            },
             "domains_blocked": {
                 "name": "Τομείς που μπλοκαρίστηκαν",
                 "unit_of_measurement": "τομείς"

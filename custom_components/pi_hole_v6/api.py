@@ -4,7 +4,7 @@ import asyncio
 import logging
 from datetime import datetime
 from socket import gaierror as GaiError
-from typing import Any, List
+from typing import Any, Dict, List
 
 import requests
 from aiohttp import ClientError, ContentTypeError, client
@@ -27,11 +27,15 @@ class API:
     _session: client.ClientSession = None
     _sid: str | None = None
 
+    cache_auth_sessions: dict[str, Any] = {}
     cache_blocking: dict[str, Any] = {}
     cache_padd: dict[str, Any] = {}
     cache_summary: dict[str, Any] = {}
     cache_groups: dict[str, dict[str, Any]] = {}
     cache_ftl_info: dict[str, dict[str, Any]] = {}
+    cache_remaining_dates: Dict[str, datetime] = {}
+    cache_configured_clients: dict[str, dict[str, Any]] = {}
+
     last_refresh: datetime | None = None
     just_initialized: bool = False
 
@@ -56,6 +60,7 @@ class API:
         self._logger = logger
         self._password = password
         self._session = session
+        self._call_lock = asyncio.Lock()
 
     def _get_logger(self) -> logging.Logger:
         """Return a logger if it exists, otherwise it creates a new logger.
@@ -90,9 +95,7 @@ class API:
 
         """
 
-        await self._check_authentification(action)
-        await self._abort_logout(action)
-        await self._request_login(action)
+        await self._authentification_step_with_lock(action)
 
         url: str = f"{self.url}{route}"
 
@@ -192,6 +195,30 @@ class API:
         exception_name: str = str(type(api_error))
 
         return f"{exception_name} - {log}"
+
+    async def _authentification_step(self, action) -> None:
+        """..."""
+        await self._check_authentification(action)
+        await self._abort_logout(action)
+        await self._request_login(action)
+
+    async def _authentification_step_with_lock(self, action) -> None:
+        """..."""
+
+        if action not in ("login", "authentification_status", "logout"):
+            try:
+                await asyncio.wait_for(self._call_lock.acquire(), timeout=5.0)
+
+                try:
+                    await self._authentification_step(action)
+                finally:
+                    self._call_lock.release()
+
+            except asyncio.TimeoutError:
+                pass
+
+        else:
+            await self._authentification_step(action)
 
     async def _check_authentification(self, action: str) -> None:
         """..."""
@@ -345,6 +372,30 @@ class API:
         )
 
         self.cache_padd = result["data"]
+
+        return {
+            "code": result["code"],
+            "reason": result["reason"],
+            "data": result["data"],
+        }
+
+    async def call_get_auth_sessions(self) -> dict[str, Any]:
+        """Retrieve all active sessions.
+
+        Returns:
+          result (dict[str, Any]): A Dictionary with the keys "code", "reason", and "data".
+
+        """
+
+        url: str = "/auth/sessions"
+
+        result: dict[str, Any] = await self._call(
+            url,
+            action="auth_sessions",
+            method="GET",
+        )
+
+        self.cache_auth_sessions = result["data"]["sessions"]
 
         return {
             "code": result["code"],
@@ -506,7 +557,32 @@ class API:
                 "name": group["name"],
                 "comment": group["comment"],
                 "enabled": group["enabled"],
+                "id": group["id"],
             }
+
+        return {
+            "code": result["code"],
+            "reason": result["reason"],
+            "data": result["data"],
+        }
+
+    async def call_get_configured_clients(self) -> dict[str, Any]:
+        """Retrieve the configured clients.
+
+        Returns:
+          result (dict[str, Any]): A dictionary with the keys "code", "reason", and "data".
+
+        """
+
+        url: str = "/clients"
+
+        result: dict[str, Any] = await self._call(
+            url,
+            action="configured_clients",
+            method="GET",
+        )
+
+        self.cache_configured_clients = result["data"]["clients"]
 
         return {
             "code": result["code"],

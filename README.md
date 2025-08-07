@@ -34,11 +34,10 @@ The 'Pi-hole V6 Integration' added compatibility with the new API in Home Assist
 The following sensors are currently implemented :
 
 <p align="center" width="100%">
-    <img src="https://raw.githubusercontent.com/bastgau/ha-pi-hole-v6/main/img/release-v1.12.0.png" width="800">
+    <img src="https://raw.githubusercontent.com/bastgau/ha-pi-hole-v6/main/img/entities-overview.png" width="800">
 </p>
 
-> [!NOTE]
-> To perform the `flush/arp`, `flush/logs` and `restartdns` actions, the *'Permit destructive actions via API'* option must be enabled in the Pi-hole options.
+A complete list with explanations is available on this [page](docs/guide-explained-entities.md).
 
 ## Translation
 
@@ -97,8 +96,6 @@ The installation instructions are available on the repository: [homeassistant-ex
     <img src="https://raw.githubusercontent.com/bastgau/ha-pi-hole-v6/main/img/pihole-card.png" width="300">
 </p>
 
-
-
 ## Debugging
 
 It is possible to show the info and debug logs for the Pi-hole V6 integration, to do this you need to enable logging in the configuration.yaml, example below:
@@ -123,6 +120,11 @@ By default, the data is updated every 5 minutes. You can configure a different f
 ### Need more information during adding a new service?
 
 Some additional information is available if you encounter any problems while adding a new service in this [page](docs/guide-additional-config-information.md).
+
+### Need to implement Pi-hole Controls in your dashboard?
+
+A quick example to integrate controls in a dashboard is available in this [page](docs/guide-group-blocking.md).
+
 
 ## Support & Contributions
 
