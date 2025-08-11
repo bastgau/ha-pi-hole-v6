@@ -207,7 +207,7 @@ class API:
 
         if action not in ("login", "authentification_status", "logout"):
             try:
-                await asyncio.wait_for(self._call_lock.acquire(), timeout=5.0)
+                await asyncio.wait_for(self._call_lock.acquire(), timeout=10)
 
                 try:
                     await self._authentification_step(action)

@@ -149,15 +149,30 @@ class PiHoleV6Switch(PiHoleV6Entity, SwitchEntity):
     async def async_turn_switch(self, action: str, duration: Any = None, with_update: bool = True) -> None:
         """Turn on/off the service."""
 
+        if duration is not None and duration == 0.0:
+            duration = None
+
         try:
             if action == "enable":
+                self.api.cache_blocking["blocking"] = "enabled"
+
+                if f"{self._name}_sensor/global" in self.api.cache_remaining_dates:
+                    del self.api.cache_remaining_dates[f"{self._name}_sensor/global"]
+
                 await self.api.call_blocking_enabled()
 
             if action == "disable":
+                if duration is not None:
+                    until_date: datetime = datetime.now() + timedelta(seconds=duration)
+                    self.api.cache_remaining_dates[f"{self._name}_sensor/global"] = until_date
+                elif f"{self._name}_sensor/global" in self.api.cache_remaining_dates:
+                    del self.api.cache_remaining_dates[f"{self._name}_sensor/global"]
                 await self.api.call_blocking_disabled(duration)
 
+            # await self.api.call_blocking_status()
+            # await self.api.call_padd()
+
             if with_update is True:
-                await self.async_update()
                 self.schedule_update_ha_state(force_refresh=True)
 
         except (
@@ -214,32 +229,43 @@ class PiHoleV6Group(PiHoleV6Entity, SwitchEntity):
     @property
     def is_on(self) -> bool:
         """Return if the group is on."""
-        return self.api.cache_groups[self.group_name]["enabled"]
+        return bool(self.api.cache_groups[self.group_name]["enabled"])
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the group."""
-        await self.async_turn_group(action="enable")
+        await self.async_turn_switch(action="enable")
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the group."""
-        await self.async_turn_group(action="disable")
+        await self.async_turn_switch(action="disable")
 
-    async def async_turn_group(self, action: str, with_update: bool = True) -> None:
+    async def async_turn_switch(self, action: str, duration: Any = None, with_update: bool = True) -> None:
         """Turn on/off the group."""
+
+        if duration is not None and duration == 0.0:
+            duration = None
 
         try:
             if action == "enable":
                 self.api.cache_groups[self.group_name]["enabled"] = True
-                await self.api.call_group_enable(self.group_name)
+
                 if f"{self._name}/{self.group_name}" in self.api.cache_remaining_dates:
                     del self.api.cache_remaining_dates[f"{self._name}/{self.group_name}"]
 
+                await self.api.call_group_enable(self.group_name)
+
             if action == "disable":
                 self.api.cache_groups[self.group_name]["enabled"] = False
+
+                if duration is not None:
+                    until_date: datetime = datetime.now() + timedelta(seconds=duration)
+                    self.api.cache_remaining_dates[f"{self._name}/{self.group_name}"] = until_date
+                elif f"{self._name}/{self.group_name}" in self.api.cache_remaining_dates:
+                    del self.api.cache_remaining_dates[f"{self._name}/{self.group_name}"]
+
                 await self.api.call_group_disable(self.group_name)
 
             if with_update is True:
-                await self.async_update()
                 self.schedule_update_ha_state(force_refresh=True)
 
         except (
@@ -258,7 +284,6 @@ class PiHoleV6Group(PiHoleV6Entity, SwitchEntity):
 
     async def async_service_enable(self) -> None:
         """..."""
-
         _LOGGER.debug("Enabling Pi-hole '%s'", self.name)
         await self.async_turn_switch(action="enable")
 
@@ -266,22 +291,6 @@ class PiHoleV6Group(PiHoleV6Entity, SwitchEntity):
         """..."""
         duration_seconds: int | None = calculate_duration(duration, f"group/{self.group_name}")
         await self.async_turn_switch(action="disable", duration=duration_seconds)
-
-    async def async_turn_switch(self, action: str, duration: Any = None, with_update: bool = True) -> None:
-        """Turn on/off the service."""
-
-        if action == "enable":
-            if f"{self._name}/{self.group_name}" in self.api.cache_remaining_dates:
-                del self.api.cache_remaining_dates[f"{self._name}/{self.group_name}"]
-
-            await self.async_turn_group(action="enable")
-
-        if action == "disable":
-            if duration is not None:
-                until_date: datetime = datetime.now() + timedelta(seconds=duration)
-                self.api.cache_remaining_dates[f"{self._name}/{self.group_name}"] = until_date
-
-            await self.async_turn_group(action="disable", with_update=with_update)
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:

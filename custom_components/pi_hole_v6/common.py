@@ -62,35 +62,49 @@ def get_remaining_dates(hass: HomeAssistant, name: str) -> Dict[str, datetime]:
 async def sensor_update_timer(hass: HomeAssistant, now: Any, name: str) -> None:
     """..."""
 
-    entity = find_entity_sensor(hass, "remaining_until_blocking_mode", name)
+    entity_sensor = find_entity_sensor(hass, "remaining_until_blocking_mode", name)
+    entity_switch = find_entity_switch(hass, f"{name}_sensor/global", name)
 
-    if entity is not None and hass.states.get(entity.entity_id) is not None:
-        new_value = calculate_remaining_until_blocking_mode_until_value(entity, f"{name}_sensor/global")
-
-        if new_value < 0:
-            return None
-
-        state = hass.states.get(entity.entity_id)
-        existing_attributes = dict(state.attributes)
-
+    if entity_sensor is not None and hass.states.get(entity_sensor.entity_id) is not None:
         until_date_attribute: Dict[str, Any] = {}
+        existing_sensor_attributes: Dict[str, Any] = {}
+        new_value = 0
 
-        request_refresh: bool = False
+        request_refresh: bool = True
 
-        if new_value > 0:
-            paris_tz: ZoneInfo = ZoneInfo("Europe/Paris")
-            until_date: datetime = entity.api.cache_remaining_dates[f"{name}_sensor/global"].astimezone(paris_tz)
-            until_date_attribute = {"until_date": until_date}
-        else:
-            request_refresh = True
-            if "until_date" in existing_attributes:
-                del existing_attributes["until_date"]
+        entity_switch_state = hass.states.get(entity_switch.entity_id)
+        existing_attributes = dict(entity_switch_state.attributes)
 
-        new_attributes = existing_attributes | until_date_attribute
-        hass.states.async_set(entity.entity_id, new_value, new_attributes)
+        switch_without_until_date: bool = "until_date" not in existing_attributes
+
+        if switch_without_until_date is False:
+            new_value = calculate_remaining_until_blocking_mode_until_value(entity_sensor, f"{name}_sensor/global")
+
+            if new_value < 0:
+                return None
+
+            entity_sensor_state = hass.states.get(entity_sensor.entity_id)
+            existing_sensor_attributes = dict(entity_sensor_state.attributes)
+
+            request_refresh: bool = False
+
+            if new_value > 0 and switch_without_until_date is False:
+                paris_tz: ZoneInfo = ZoneInfo("Europe/Paris")
+                until_date: datetime = entity_sensor.api.cache_remaining_dates[f"{name}_sensor/global"].astimezone(
+                    paris_tz
+                )
+                until_date_attribute = {"until_date": until_date}
+            else:
+                request_refresh = True
+                if "until_date" in existing_sensor_attributes:
+                    del existing_sensor_attributes["until_date"]
+
+        new_attributes = existing_sensor_attributes | until_date_attribute
+
+        hass.states.async_set(entity_sensor.entity_id, new_value, new_attributes)
 
         if request_refresh is True:
-            hass.async_create_task(entity.async_update_ha_state(force_refresh=True))
+            hass.async_create_task(entity_sensor.async_update_ha_state(force_refresh=True))
 
 
 async def switch_update_timer(hass: HomeAssistant, now: Any, name: str) -> None:
