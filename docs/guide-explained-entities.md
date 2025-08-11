@@ -152,6 +152,7 @@ The entities / services name is depending on the name of the service (_<service\
   "Docker version": "2025.07.1",
   "FTL version": "v6.2.3",
   "Web interface version": "v6.2.1"
+}
 ```  
 
 </details>
