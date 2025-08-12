@@ -10,7 +10,7 @@
             "nodeGypDependencies": true,
             "version": "lts"
         },
-        "ghcr.io/devcontainers-contrib/features/poetry:2": {
+        "ghcr.io/devcontainers-extra/features/poetry:2": {
             "version": "latest"
         },
         "ghcr.io/devcontainers/features/rust:1": {},
