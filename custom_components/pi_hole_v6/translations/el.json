@@ -92,13 +92,13 @@
                 "name": "Ερωτήματα DNS σήμερα",
                 "unit_of_measurement": "ερωτήματα"
             },
-            "dns_queries_frequency": {
-                "name": "Average number of DNS queries",
-                "unit_of_measurement": "queries/min"
-            },
             "domains_blocked": {
                 "name": "Τομείς που μπλοκαρίστηκαν",
                 "unit_of_measurement": "τομείς"
+            },
+            "dns_queries_frequency": {
+                "name": "Μέσος όρος ερωτημάτων DNS",
+                "unit_of_measurement": "ερωτήματα/λεπτό"
             },
             "dns_queries_cached": {
                 "name": "Ερωτήματα DNS στην κρυφή μνήμη",
@@ -131,6 +131,14 @@
             "ftl_info_message_count": {
                 "name": "Αριθμός μηνυμάτων διάγνωσης FTL",
                 "unit_of_measurement": "μηνύματα"
+            },
+            "configured_clients": {
+                "name": "Ρυθμισμένοι πελάτες",
+                "unit_of_measurement": "πελάτες"
+            },
+            "auth_sessions": {
+                "name": "Ενεργές συνεδρίες",
+                "unit_of_measurement": "συνεδρίες"
             }
         },
         "switch": {
