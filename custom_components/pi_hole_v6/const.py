@@ -16,3 +16,5 @@ SERVICE_DISABLE_ATTR_DURATION = "duration"
 SERVICE_ENABLE = "enable"
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=300)
+
+ATTRIBUTION = "Data provided by your Pi-hole instance API"
