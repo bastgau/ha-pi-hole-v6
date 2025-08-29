@@ -72,6 +72,12 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
+            if CONF_NAME in user_input:
+                user_input[CONF_NAME] = user_input[CONF_NAME].strip()
+
+            if CONF_URL in user_input:
+                user_input[CONF_URL] = user_input[CONF_URL].strip()
+
             self._config = {
                 CONF_NAME: user_input[CONF_NAME].strip(),
                 CONF_URL: user_input[CONF_URL].strip(),
