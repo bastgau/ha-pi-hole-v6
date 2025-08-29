@@ -73,8 +73,8 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             self._config = {
-                CONF_NAME: user_input[CONF_NAME],
-                CONF_URL: user_input[CONF_URL],
+                CONF_NAME: user_input[CONF_NAME].strip(),
+                CONF_URL: user_input[CONF_URL].strip(),
                 CONF_PASSWORD: user_input[CONF_PASSWORD],
             }
 
@@ -87,6 +87,13 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                 user_input["password"] = ""
 
         user_input = user_input or {}
+
+        if CONF_NAME in user_input:
+            user_input[CONF_NAME] = user_input[CONF_NAME].strip()
+
+        if CONF_URL in user_input:
+            user_input[CONF_URL] = user_input[CONF_URL].strip()
+
         return self.async_show_form(
             step_id="user",
             data_schema=_get_data_config_schema(user_input),
