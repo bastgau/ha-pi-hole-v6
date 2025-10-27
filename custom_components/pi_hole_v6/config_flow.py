@@ -7,6 +7,7 @@ from collections.abc import Mapping
 from typing import Any
 
 import voluptuous as vol
+from aiohttp import client
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import (
     CONF_NAME,
@@ -143,9 +144,9 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         return OptionsFlowHandler()
 
     async def _async_try_connect(self) -> dict[str, str]:
-        session = async_get_clientsession(self.hass, False)
+        session: client.ClientSession = async_get_clientsession(self.hass, False)
 
-        api_client = ClientAPI(
+        api_client: ClientAPI = ClientAPI(
             session=session,
             url=self._config[CONF_URL],
             password=self._config[CONF_PASSWORD],
