@@ -1,6 +1,7 @@
 """The above class represents Pi-hole API Client with methods for authentication, retrieving summary data, managing blocking status, and logging requests."""
 
 import asyncio
+import json
 import logging
 from datetime import datetime
 from socket import gaierror as GaiError
@@ -164,16 +165,21 @@ class API:
         try:
             if request.status != 204:
                 text = await request.json()
-                if (
-                    privacy is True
-                    and "session" in text
-                    and "sid" in text["session"]
-                    and text["session"]["sid"] is not None
-                ):
-                    text["session"]["sid"] = "[redacted]"
-
+        except UnicodeDecodeError:
+            raw_data = await request.read()
+            text_data = raw_data.decode(encoding="utf-8", errors="replace")  # ou un autre encodage
+            text = json.loads(text_data)
         except ContentTypeError:
             pass
+
+        if (
+            text is not None
+            and privacy is True
+            and "session" in text
+            and "sid" in text["session"]
+            and text["session"]["sid"] is not None
+        ):
+            text["session"]["sid"] = "[redacted]"
 
         return text
 
