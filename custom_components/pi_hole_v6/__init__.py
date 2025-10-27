@@ -76,6 +76,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: PiHoleV6ConfigEntry) -> 
             api_client.just_initialized = False
             return None
 
+        api_client.last_refresh = datetime.now(timezone.utc)
+
         result: Dict[str, Any] = {}
 
         try:
