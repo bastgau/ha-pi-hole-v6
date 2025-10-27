@@ -185,6 +185,12 @@ def _get_data_option_schema(user_input) -> vol.Schema:
                 ),
                 vol.Coerce(int),
             ),
+            vol.Required(
+                CONF_URL,
+            ): vol.All(
+                selector.TextSelector(),
+                vol.Coerce(str),
+            ),
         }
     )
 
