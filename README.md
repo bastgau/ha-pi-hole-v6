@@ -118,12 +118,15 @@ By default, the data is updated every 5 minutes. You can configure a different f
 
 ### Need more (noobs) information to install/configure the integration?
 
-Some additional information is available if you encounter any problems while adding a new service in this [page](docs/guide-additional-config-information.md).
+Some additional information is available if you encounter any problems while adding a new service on this [page](docs/guide-additional-config-information.md).
 
 ### Need to implement Pi-hole Controls in your dashboard?
 
-A quick example to integrate controls in a dashboard is available in this [page](docs/guide-group-blocking.md).
+A quick example to integrate controls in a dashboard is available on this [page](docs/guide-group-blocking.md).
 
+### Need to optimize your Home Assistant database?
+
+A useful tip to exclude unnecessary sensors from the Recorder is available on this [page](docs/guide-database-optimization.md).
 
 ## Support & Contributions
 
