@@ -136,6 +136,10 @@
                 "name": "Configured clients",
                 "unit_of_measurement": "clients"
             },
+            "dhcp_leases": {
+                "name": "Active DHCP leases",
+                "unit_of_measurement": "leases"
+            },
             "auth_sessions": {
                 "name": "Active sessions",
                 "unit_of_measurement": "sessions"

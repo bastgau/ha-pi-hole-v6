@@ -85,6 +85,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: PiHoleV6ConfigEntry) -> 
             if not isinstance(result, dict):
                 raise DataStructureException()
 
+            result = await api_client.call_blocking_status()
+            if not isinstance(result, dict):
+                raise DataStructureException()
+
+            result = await api_client.call_get_groups()
+            if not isinstance(result, dict):
+                raise DataStructureException()
+
             result = await api_client.call_padd()
             if not isinstance(result, dict):
                 raise DataStructureException()
@@ -97,15 +105,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: PiHoleV6ConfigEntry) -> 
             if not isinstance(result, dict):
                 raise DataStructureException()
 
+            result = await api_client.call_get_dhcp_leases()
+            if not isinstance(result, dict):
+                raise DataStructureException()
+
             result = await api_client.call_get_auth_sessions()
-            if not isinstance(result, dict):
-                raise DataStructureException()
-
-            result = await api_client.call_blocking_status()
-            if not isinstance(result, dict):
-                raise DataStructureException()
-
-            result = await api_client.call_get_groups()
             if not isinstance(result, dict):
                 raise DataStructureException()
 
