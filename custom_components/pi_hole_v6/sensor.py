@@ -91,12 +91,12 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="configured_clients",
         translation_key="configured_clients",
         state_class=SensorStateClass.MEASUREMENT,
-        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="dhcp_leases",
         translation_key="dhcp_leases",
         state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -274,7 +274,7 @@ class PiHoleV6Sensor(PiHoleV6Entity, SensorEntity):
             raw_leases: List[Any] = self.api.cache_dhcp_leases
             excluding: List[str] = []
             leases: List[Any] = [{k: v for k, v in lease.items() if k not in excluding} for lease in raw_leases]
-            return {"clients": leases, "note": "Total number of active DHCP leases."}
+            return {"leases": leases, "note": "Total number of active DHCP leases."}
 
         if self.entity_description.key == "auth_sessions":
             raw_sessions: List[Any] = self.api.cache_auth_sessions

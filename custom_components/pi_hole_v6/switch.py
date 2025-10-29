@@ -161,8 +161,9 @@ class PiHoleV6Switch(PiHoleV6Entity, SwitchEntity):
                     self.api.cache_remaining_dates[f"{self._name}_sensor/global"] = until_date
                 else:
                     duration = 0
-                if f"{self._name}_sensor/global" in self.api.cache_remaining_dates:
-                    del self.api.cache_remaining_dates[f"{self._name}_sensor/global"]
+
+                    if f"{self._name}_sensor/global" in self.api.cache_remaining_dates:
+                        del self.api.cache_remaining_dates[f"{self._name}_sensor/global"]
 
                 await self.api.call_blocking_disabled(duration)
 
