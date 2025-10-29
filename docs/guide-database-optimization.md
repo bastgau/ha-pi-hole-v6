@@ -25,4 +25,4 @@ recorder:
 
 ## Need more details?
 
-See the official `Recorder` [documentation](https://www.home-assistant.io/integrations/recorder/).
+See the official `recorder` [documentation](https://www.home-assistant.io/integrations/recorder/).
