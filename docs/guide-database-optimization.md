@@ -23,6 +23,6 @@ recorder:
 
 3. Verify the sensors no longer appear in the history.
 
-### Need more details?
+## Need more details?
 
 See the official `Recorder` [documentation](https://www.home-assistant.io/integrations/recorder/).
