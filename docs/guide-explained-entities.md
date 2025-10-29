@@ -159,7 +159,10 @@ The entities / services name is depending on the name of the service (_<service\
 
 **Name:** sensor.<service\_name>_remaining_until_blocking_mode  
 **Description:** Remaining seconds until blocking mode is automatically changed.  
-**Unit**: seconds  
+**Unit**: seconds
+
+> [!TIP]
+> This entity generates frequent and unnecessary data. To improve performance and reduce database size, exclude it from the recorder by adding it to the `recorder.exclude list` in your `configuration.yaml`.
 
 #### - Seen clients
 
@@ -371,6 +374,9 @@ The attributes `until_date` and `remaining_seconds` are existing only if the ads
 **Name:** sensor.<service\_name>_latest_data_refresh   
 **Description:** Last data update from the Pi-hole API.  
 **Unit**: date
+
+> [!TIP]
+> This entity generates frequent and unnecessary data. To improve performance and reduce database size, exclude it from the recorder by adding it to the `recorder.exclude list` in your `configuration.yaml`.
 
 #### - Memory usage
 
