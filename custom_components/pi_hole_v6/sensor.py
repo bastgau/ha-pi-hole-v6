@@ -91,6 +91,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="configured_clients",
         translation_key="configured_clients",
         state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="dhcp_leases",
