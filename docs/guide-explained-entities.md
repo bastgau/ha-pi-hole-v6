@@ -161,8 +161,7 @@ The entities / services name is depending on the name of the service (_<service\
 **Description:** Remaining seconds until blocking mode is automatically changed.  
 **Unit**: seconds
 
-> [!TIP]
-> This entity generates frequent and unnecessary data. To improve performance and reduce database size, exclude it from the recorder by adding it to the `recorder.exclude list` in your `configuration.yaml`.
+_This entity generates frequent and unnecessary data. To improve performance and reduce database size, exclude it from the recorder by adding it to the `recorder.exclude list` in your `configuration.yaml`._
 
 #### - Seen clients
 
@@ -375,8 +374,7 @@ The attributes `until_date` and `remaining_seconds` are existing only if the ads
 **Description:** Last data update from the Pi-hole API.  
 **Unit**: date
 
-> [!TIP]
-> This entity generates frequent and unnecessary data. To improve performance and reduce database size, exclude it from the recorder by adding it to the `recorder.exclude list` in your `configuration.yaml`.
+_This entity generates frequent and unnecessary data. To improve performance and reduce database size, exclude it from the recorder by adding it to the recorder.exclude list in your configuration.yaml._
 
 #### - Memory usage
 
