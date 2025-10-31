@@ -7,6 +7,7 @@ from collections.abc import Mapping
 from typing import Any
 
 import voluptuous as vol
+from aiohttp import client
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import (
     CONF_NAME,
@@ -72,6 +73,12 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
+            if CONF_NAME in user_input:
+                user_input[CONF_NAME] = user_input[CONF_NAME].strip()
+
+            if CONF_URL in user_input:
+                user_input[CONF_URL] = user_input[CONF_URL].strip()
+
             self._config = {
                 CONF_NAME: user_input[CONF_NAME],
                 CONF_URL: user_input[CONF_URL],
@@ -87,6 +94,7 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                 user_input["password"] = ""
 
         user_input = user_input or {}
+
         return self.async_show_form(
             step_id="user",
             data_schema=_get_data_config_schema(user_input),
@@ -136,9 +144,9 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         return OptionsFlowHandler()
 
     async def _async_try_connect(self) -> dict[str, str]:
-        session = async_get_clientsession(self.hass, False)
+        session: client.ClientSession = async_get_clientsession(self.hass, False)
 
-        api_client = ClientAPI(
+        api_client: ClientAPI = ClientAPI(
             session=session,
             url=self._config[CONF_URL],
             password=self._config[CONF_PASSWORD],
@@ -177,6 +185,12 @@ def _get_data_option_schema(user_input) -> vol.Schema:
                     )
                 ),
                 vol.Coerce(int),
+            ),
+            vol.Required(
+                CONF_URL,
+            ): vol.All(
+                selector.TextSelector(),
+                vol.Coerce(str),
             ),
         }
     )

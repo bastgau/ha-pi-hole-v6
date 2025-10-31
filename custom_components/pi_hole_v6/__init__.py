@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict
 
+from aiohttp import client
 from homeassistant.config_entries import ConfigEntry, ConfigEntryAuthFailed
 from homeassistant.const import (
     CONF_NAME,
@@ -54,8 +55,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: PiHoleV6ConfigEntry) -> 
 
     _LOGGER.debug("Setting up %s integration with host %s", DOMAIN, url)
 
-    session = async_get_clientsession(hass, False)
-    api_client = PiholeAPI(
+    session: client.ClientSession = async_get_clientsession(hass, False)
+
+    api_client: PiholeAPI = PiholeAPI(
         session=session,
         url=url,
         password=password,
@@ -74,10 +76,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: PiHoleV6ConfigEntry) -> 
             api_client.just_initialized = False
             return None
 
+        api_client.last_refresh = datetime.now(timezone.utc)
+
         result: Dict[str, Any] = {}
 
         try:
             result = await api_client.call_summary()
+            if not isinstance(result, dict):
+                raise DataStructureException()
+
+            result = await api_client.call_blocking_status()
+            if not isinstance(result, dict):
+                raise DataStructureException()
+
+            result = await api_client.call_get_groups()
             if not isinstance(result, dict):
                 raise DataStructureException()
 
@@ -93,15 +105,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: PiHoleV6ConfigEntry) -> 
             if not isinstance(result, dict):
                 raise DataStructureException()
 
+            result = await api_client.call_get_dhcp_leases()
+            if not isinstance(result, dict):
+                raise DataStructureException()
+
             result = await api_client.call_get_auth_sessions()
-            if not isinstance(result, dict):
-                raise DataStructureException()
-
-            result = await api_client.call_blocking_status()
-            if not isinstance(result, dict):
-                raise DataStructureException()
-
-            result = await api_client.call_get_groups()
             if not isinstance(result, dict):
                 raise DataStructureException()
 

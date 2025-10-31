@@ -11,25 +11,25 @@ The entities / services name is depending on the name of the service (_<service\
 <details>
   <summary>Display the sensors</summary>
 
-#### -  Ads blocked during the last 24 hours
+#### - Ads blocked during the last 24 hours
 
 **Name:** sensor.<service\_name>_ads_blocked_today  
 **Description:** Number of blocked queries during the last 24h.  
 **Unit**: ads  
 
-#### -  Ads percentage blocked during the last 24 hours
+#### - Ads percentage blocked during the last 24 hours
 
 **Name:** sensor.<service\_name>_ads_percentage_blocked_today  
 **Description:** Percent of blocked queries during the last 24h.  
 **Unit**: percentage  
 
-#### -  Average number of DNS queries
+#### - Average number of DNS queries
 
 **Name:** sensor.<service\_name>_dns_queries_frequency  
 **Description:** Average number of DNS queries per minute.  
 **Unit**: queries/minute  
 
-#### -  Configured clients
+#### - Configured clients
 
 **Name:** sensor.<service\_name>_configured_clients  
 **Description:** Total number of configured clients.  
@@ -70,43 +70,71 @@ The entities / services name is depending on the name of the service (_<service\
 }
 ```
 
-#### -  DNS queries cached
+#### - Active DHCP leases
+
+**Name:** sensor.<service\_name>_dhcp_leases  
+**Description:** Total number of active DHCP leases.  
+**Unit**: leases  
+**Attributes:**  Information about the active DHCP leases.
+
+```json
+{
+   "leases":[
+      {
+         "expires": 1675671991,
+         "name": "raspberrypi",
+         "hwaddr": "00:00:00:00:00:00",
+         "ip": "192.168.31.171",
+         "clientid": "00:00:00:00:00:00"
+      },
+      {
+         "expires": 1675671991,
+         "name": "laptop",
+         "hwaddr": "00:00:00:00:00:00",
+         "ip": "192.168.31.145",
+         "clientid": "00:00:00:00:00:00"
+      }
+   ]
+}
+```
+
+#### - DNS queries cached
 
 **Name:** sensor.<service\_name>_dns_queries_cached  
 **Description:** Number of queries replied to from cache or local configuration.  
 **Unit**: queries  
 
-#### -  DNS queries during the last 24 hours
+#### - DNS queries during the last 24 hours
 
 **Name:** sensor.<service\_name>_dns_queries_today  
 **Description:** Total number of queries during the last 24h.  
 **Unit**: queries  
 
-#### -  DNS queries forwarded
+#### - DNS queries forwarded
 
 **Name:** sensor.<service\_name>_dns_queries_forwarded  
 **Description:** Number of queries that have been forwarded.  
 **Unit**: queries  
 
-#### -  DNS unique clients
+#### - DNS unique clients
 
 **Name:** sensor.<service\_name>_dns_unique_clients  
 **Description:** Number of active clients (seen in the last 24h).  
 **Unit**: clients  
 
-#### -  DNS unique domains
+#### - DNS unique domains
 
 **Name:** sensor.<service\_name>_dns_unique_domains  
 **Description:** Number of unique domains FTL knows.  
 **Unit**: domains  
 
-#### -  Domains blocked
+#### - Domains blocked
 
 **Name:** sensor.<service\_name>_domains_blocked  
 **Description:** Number of domain on your Pi-hole's gravity.  
 **Unit**: domains  
 
-#### -  FTL diagnosis messages count
+#### - FTL diagnosis messages count
 
 **Name:** sensor.<service\_name>_ftl_info_message_count  
 **Description:** Total number of Pi-hole diagnosis messages.  
@@ -127,19 +155,21 @@ The entities / services name is depending on the name of the service (_<service\
 }
 ```
 
-#### -  Remaining until blocking mode
+#### - Remaining until blocking mode
 
 **Name:** sensor.<service\_name>_remaining_until_blocking_mode  
 **Description:** Remaining seconds until blocking mode is automatically changed.  
-**Unit**: seconds  
+**Unit**: seconds
 
-#### -  Seen clients
+_This entity generates frequent and unnecessary data. To improve performance and reduce database size, exclude it from the recorder by adding it to the `recorder.exclude list` in your `configuration.yaml`._
+
+#### - Seen clients
 
 **Name:** sensor.<service\_name>_seen_clients  
 **Description:** Total number of clients seen by FTL.  
 **Unit**: clients  
 
-#### -  Status
+#### - Status
 
 **Name:** binary_sensor.<service\_name>_status  
 **Description:** Blocking status  
@@ -172,28 +202,28 @@ Please refer to the Pi-hole documentation to understand the meaning of each of t
 <details>
   <summary>Display the actions via buttons</summary>  
 
-#### -  Flush the DNS logs
+#### - Flush the DNS logs
 
 **Name:** button.<service\_name>_action_flush_logs  
 
-#### -  Flush the network table
+#### - Flush the network table
 
 **Name:** button.<service\_name>_action_flush_arp  
 
-#### -  Purge FTL diagnosis messages
+#### - Purge FTL diagnosis messages
 
 **Name:** button.<service\_name>_action_ftl_purge_diagnosis_messages  
 
-#### -  Refresh data
+#### - Refresh data
 
 **Name:** button.<service\_name>_action_refresh_data  
 **Description:** Action to force the refresh of Pi-hole information in Home Assistant.
 
-#### -  Restart pihole-FTL
+#### - Restart pihole-FTL
 
 **Name:** button.<service\_name>_action_restartdns  
 
-#### -  Run gravity
+#### - Run gravity
 
 **Name:** button.<service\_name>_action_gravity  
 
@@ -344,6 +374,8 @@ The attributes `until_date` and `remaining_seconds` are existing only if the ads
 **Description:** Last data update from the Pi-hole API.  
 **Unit**: date
 
+_This entity generates frequent and unnecessary data. To improve performance and reduce database size, exclude it from the recorder by adding it to the recorder.exclude list in your configuration.yaml._
+
 #### - Memory usage
 
 **Name:** sensor.<service\_name>_memory_use   
@@ -378,7 +410,7 @@ The attributes `until_date` and `remaining_seconds` are existing only if the ads
 <details>
   <summary>Display the services</summary>
 
-#### -  Disable blocking
+#### - Disable blocking
 
 **Name:** pi_hole_v6.disable  
 **Description:** Disables configured Pi-hole for an amount of time.  
@@ -396,7 +428,7 @@ target:
 > The duration is optional.  
 > Temporary deactivation of blocking works with the global switch (via native Pi-hole feature) or group switches (via Pi-hole V6 Integration).
 
-#### -  Enable blocking
+#### - Enable blocking
 
 **Name:** pi_hole_v6.enable  
 **Description:** Enables configured Pi-hole.  

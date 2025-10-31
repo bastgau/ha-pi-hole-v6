@@ -9,12 +9,13 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 from .api import API as PiholeAPI
-from .const import DOMAIN
+from .const import ATTRIBUTION, DOMAIN
 
 
 class PiHoleV6Entity(CoordinatorEntity[DataUpdateCoordinator[None]]):
     """Representation of a Pi-hole V6 entity."""
 
+    _attr_attribution = ATTRIBUTION
     _attr_has_entity_name = True
 
     def __init__(

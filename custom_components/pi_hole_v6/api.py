@@ -1,6 +1,7 @@
 """The above class represents Pi-hole API Client with methods for authentication, retrieving summary data, managing blocking status, and logging requests."""
 
 import asyncio
+import json
 import logging
 from datetime import datetime
 from socket import gaierror as GaiError
@@ -29,15 +30,16 @@ class API:
 
     cache_auth_sessions: dict[str, Any] = {}
     cache_blocking: dict[str, Any] = {}
-    cache_padd: dict[str, Any] = {}
-    cache_summary: dict[str, Any] = {}
-    cache_groups: dict[str, dict[str, Any]] = {}
-    cache_ftl_info: dict[str, dict[str, Any]] = {}
-    cache_remaining_dates: Dict[str, datetime] = {}
     cache_configured_clients: dict[str, dict[str, Any]] = {}
+    cache_dhcp_leases: dict[str, dict[str, Any]] = {}
+    cache_ftl_info: dict[str, dict[str, Any]] = {}
+    cache_groups: dict[str, dict[str, Any]] = {}
+    cache_padd: dict[str, Any] = {}
+    cache_remaining_dates: Dict[str, datetime] = {}
+    cache_summary: dict[str, Any] = {}
 
-    last_refresh: datetime | None = None
     just_initialized: bool = False
+    last_refresh: datetime | None = None
 
     url: str = ""
 
@@ -164,16 +166,21 @@ class API:
         try:
             if request.status != 204:
                 text = await request.json()
-                if (
-                    privacy is True
-                    and "session" in text
-                    and "sid" in text["session"]
-                    and text["session"]["sid"] is not None
-                ):
-                    text["session"]["sid"] = "[redacted]"
-
+        except UnicodeDecodeError:
+            raw_data = await request.read()
+            text_data = raw_data.decode(encoding="utf-8", errors="replace")  # ou un autre encodage
+            text = json.loads(text_data)
         except ContentTypeError:
             pass
+
+        if (
+            text is not None
+            and privacy is True
+            and "session" in text
+            and "sid" in text["session"]
+            and text["session"]["sid"] is not None
+        ):
+            text["session"]["sid"] = "[redacted]"
 
         return text
 
@@ -207,7 +214,7 @@ class API:
 
         if action not in ("login", "authentification_status", "logout"):
             try:
-                await asyncio.wait_for(self._call_lock.acquire(), timeout=5.0)
+                await asyncio.wait_for(self._call_lock.acquire(), timeout=10)
 
                 try:
                     await self._authentification_step(action)
@@ -583,6 +590,30 @@ class API:
         )
 
         self.cache_configured_clients = result["data"]["clients"]
+
+        return {
+            "code": result["code"],
+            "reason": result["reason"],
+            "data": result["data"],
+        }
+
+    async def call_get_dhcp_leases(self) -> dict[str, Any]:
+        """Retrieve the active DHCP leases.
+
+        Returns:
+          result (dict[str, Any]): A dictionary with the keys "code", "reason", and "data".
+
+        """
+
+        url: str = "/dhcp/leases"
+
+        result: dict[str, Any] = await self._call(
+            url,
+            action="dhcp_leases",
+            method="GET",
+        )
+
+        self.cache_dhcp_leases = result["data"]["leases"]
 
         return {
             "code": result["code"],

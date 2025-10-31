@@ -136,6 +136,10 @@
                 "name": "Clients configurés",
                 "unit_of_measurement": "clients"
             },
+            "dhcp_leases": {
+                "name": "Baux DHCP actifs",
+                "unit_of_measurement": "baux"
+            },
             "auth_sessions": {
                 "name": "Sessions actives",
                 "unit_of_measurement": "sessions"

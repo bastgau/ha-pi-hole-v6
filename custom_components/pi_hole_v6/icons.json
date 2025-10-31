@@ -54,6 +54,9 @@
             "configured_clients": {
                 "default": "mdi:account-check-outline"
             },
+            "dhcp_leases": {
+                "default": "mdi:lan"
+            },
             "auth_sessions": {
                 "default": "mdi:robot-outline"
             }

@@ -93,6 +93,12 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
+        key="dhcp_leases",
+        translation_key="dhcp_leases",
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
         entity_category=EntityCategory.DIAGNOSTIC,
         key="latest_data_refresh",
         translation_key="latest_data_refresh",
@@ -222,6 +228,8 @@ class PiHoleV6Sensor(PiHoleV6Entity, SensorEntity):
                 return self.native_remaining_until_blocking_mode()
             case "configured_clients":
                 return len(self.api.cache_configured_clients)
+            case "dhcp_leases":
+                return len(self.api.cache_dhcp_leases)
             case "auth_sessions":
                 return len(self.api.cache_auth_sessions)
 
@@ -261,6 +269,12 @@ class PiHoleV6Sensor(PiHoleV6Entity, SensorEntity):
             excluding: List[str] = ["date_added", "date_modified"]
             clients: List[Any] = [{k: v for k, v in client.items() if k not in excluding} for client in raw_clients]
             return {"clients": clients, "note": "Total number of configured clients."}
+
+        if self.entity_description.key == "dhcp_leases":
+            raw_leases: List[Any] = self.api.cache_dhcp_leases
+            excluding: List[str] = []
+            leases: List[Any] = [{k: v for k, v in lease.items() if k not in excluding} for lease in raw_leases]
+            return {"leases": leases, "note": "Total number of active DHCP leases."}
 
         if self.entity_description.key == "auth_sessions":
             raw_sessions: List[Any] = self.api.cache_auth_sessions

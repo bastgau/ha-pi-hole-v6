@@ -152,8 +152,19 @@ class PiHoleV6Switch(PiHoleV6Entity, SwitchEntity):
         try:
             if action == "enable":
                 await self.api.call_blocking_enabled()
+                if f"{self._name}_sensor/global" in self.api.cache_remaining_dates:
+                    del self.api.cache_remaining_dates[f"{self._name}_sensor/global"]
 
             if action == "disable":
+                if duration is not None and duration != 0:
+                    until_date: datetime = datetime.now() + timedelta(seconds=duration)
+                    self.api.cache_remaining_dates[f"{self._name}_sensor/global"] = until_date
+                else:
+                    duration = 0
+
+                    if f"{self._name}_sensor/global" in self.api.cache_remaining_dates:
+                        del self.api.cache_remaining_dates[f"{self._name}_sensor/global"]
+
                 await self.api.call_blocking_disabled(duration)
 
             if with_update is True:
@@ -277,9 +288,11 @@ class PiHoleV6Group(PiHoleV6Entity, SwitchEntity):
             await self.async_turn_group(action="enable")
 
         if action == "disable":
-            if duration is not None:
+            if duration is not None and duration != 0:
                 until_date: datetime = datetime.now() + timedelta(seconds=duration)
                 self.api.cache_remaining_dates[f"{self._name}/{self.group_name}"] = until_date
+            elif f"{self._name}/{self.group_name}" in self.api.cache_remaining_dates:
+                del self.api.cache_remaining_dates[f"{self._name}/{self.group_name}"]
 
             await self.async_turn_group(action="disable", with_update=with_update)
 

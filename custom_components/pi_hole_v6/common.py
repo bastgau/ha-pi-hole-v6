@@ -67,7 +67,7 @@ async def sensor_update_timer(hass: HomeAssistant, now: Any, name: str) -> None:
     if entity is not None and hass.states.get(entity.entity_id) is not None:
         new_value = calculate_remaining_until_blocking_mode_until_value(entity, f"{name}_sensor/global")
 
-        if new_value < 0:
+        if hass.states.get(entity.entity_id).state == str(0) and new_value < 0:
             return None
 
         state = hass.states.get(entity.entity_id)
