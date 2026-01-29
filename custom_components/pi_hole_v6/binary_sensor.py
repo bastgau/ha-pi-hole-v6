@@ -19,6 +19,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from . import PiHoleV6ConfigEntry
 from .api import API as PiholeAPI
 from .entity import PiHoleV6Entity
+from .helper import create_entity_id_name
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -77,7 +78,9 @@ class PiHoleV6BinarySensor(PiHoleV6Entity, BinarySensorEntity):
         super().__init__(api, coordinator, name, server_unique_id)
         self.entity_description = description
         self._attr_unique_id = f"{self._server_unique_id}/{description.key}"
-        self.entity_id = f"binary_sensor.{name}_{description.key}"
+
+        raw_name: str = f"binary_sensor.{name}_{description.key}"
+        self.entity_id = create_entity_id_name(raw_name)
 
     @property
     def is_on(self) -> bool:
