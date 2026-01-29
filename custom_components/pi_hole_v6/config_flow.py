@@ -26,6 +26,7 @@ from .const import (
     DEFAULT_PASSWORD,
     DEFAULT_URL,
     DOMAIN,
+    EXAMPLE_URL,
     MIN_TIME_BETWEEN_UPDATES,
 )
 from .exceptions import (
@@ -99,6 +100,9 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=_get_data_config_schema(user_input),
             errors=errors,
+            description_placeholders={
+                "example_url": EXAMPLE_URL,
+            },
         )
 
     async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> ConfigFlowResult:

@@ -10,6 +10,7 @@ DOMAIN = "pi_hole_v6"
 DEFAULT_NAME = "Pi-hole"
 DEFAULT_URL = "https://pihole.local:443/api"
 DEFAULT_PASSWORD = ""
+EXAMPLE_URL = "https://pihole.local:443/api"
 
 SERVICE_DISABLE = "disable"
 SERVICE_DISABLE_ATTR_DURATION = "duration"
