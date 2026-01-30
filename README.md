@@ -128,7 +128,7 @@ A quick example to integrate controls in a dashboard is available on this [page]
 
 A useful tip to exclude unnecessary sensors from the Recorder is available on this [page](docs/guide-database-optimization.md).
 
-### Advantages of using the integration compared to the Core one ?
+### Advantages of using the integration compared to the Core one?
 
 I listed the features implemented in the **HA Pi-hole V6 Integration** and the **Core Integration**.
 
