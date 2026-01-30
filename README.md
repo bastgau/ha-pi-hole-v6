@@ -130,7 +130,7 @@ A useful tip to exclude unnecessary sensors from the Recorder is available on th
 
 ### Advantages of using the integration compared to the Core one?
 
-I listed the features implemented in the **HA Pi-hole V6 Integration** and the **Core Integration**.
+I listed the implemented features in the **HA Pi-hole V6 Integration** and the **Core Integration**.
 
 #### Compatibility
 
