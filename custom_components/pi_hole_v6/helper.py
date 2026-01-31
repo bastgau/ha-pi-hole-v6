@@ -1,7 +1,5 @@
 """..."""
 
-import re
-
 from homeassistant.util import slugify
 
 
