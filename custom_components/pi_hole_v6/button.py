@@ -16,6 +16,7 @@ from . import PiHoleV6ConfigEntry
 from .api import API as PiholeAPI
 from .entity import PiHoleV6Entity
 from .exceptions import ActionExecutionException, ForbiddenException
+from .helper import create_entity_id_name
 
 PARALLEL_UPDATES = 1
 _LOGGER = logging.getLogger(__name__)
@@ -96,8 +97,10 @@ class PiHoleV6Button(PiHoleV6Entity, ButtonEntity):
         super().__init__(api, coordinator, name, server_unique_id)
         self.entity_description = description
         self._attr_unique_id = f"{self._server_unique_id}/{description.key}"
-        self.entity_id = f"button.{name}_{description.key}"
         self._is_enabled = True  # Initial state is enabled
+
+        raw_name: str = f"button.{name}_{description.key}"
+        self.entity_id = create_entity_id_name(raw_name)
 
     async def async_press(self) -> None:
         """Press the button."""

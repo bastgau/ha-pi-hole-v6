@@ -19,7 +19,7 @@
                 },
                 "data_description": {
                     "password": "Passwort für den Login",
-                    "url": "URL oder Adresse von deinem Pi-hole (ie: https://pi.hole:443/api)"
+                    "url": "URL oder Adresse von deinem Pi-hole (ie: {example_url})"
                 },
                 "description": "Diese Integration erlaubt das interagieren und abrufen von Statistiken mit einer Pi-hole V6 Installation.",
                 "title": "Pi-hole V6"

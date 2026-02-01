@@ -1,2 +1,2 @@
-homeassistant==2025.12.03
-ruff==0.14.9
+homeassistant==2026.2.0b0
+ruff==0.14.14

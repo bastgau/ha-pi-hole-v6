@@ -19,7 +19,7 @@
                 },
                 "data_description": {
                     "password": "Κωδικός που θα χρησιμοποιηθεί για τη σύνδεση",
-                    "url": "URL ή διεύθυνση του Pi-hole σας (π.χ.: https://pi.hole:443/api)"
+                    "url": "URL ή διεύθυνση του Pi-hole σας (π.χ.: {example_url})"
                 },
                 "description": "Αυτή η ενσωμάτωση επιτρέπει τη λήψη στατιστικών και την αλληλεπίδραση με ένα σύστημα που έχει Pi-hole V6.",
                 "title": "Pi-hole V6"

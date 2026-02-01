@@ -33,6 +33,7 @@ from .exceptions import (
     TooManyRequestsException,
     UnauthorizedException,
 )
+from .helper import create_entity_id_name
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -219,8 +220,10 @@ class PiHoleV6Group(PiHoleV6Entity, SwitchEntity):
         group_name: str = group["name"]
 
         self._attr_unique_id = f"{self._server_unique_id}/{name}_group_{group_name.lower()}"
-        self.entity_id = f"switch.{name}_group_{group_name.lower()}"
         self.group_name = group_name
+
+        raw_name: str = f"switch.{name}_group_{group_name.lower()}"
+        self.entity_id = create_entity_id_name(raw_name)
 
     @property
     def is_on(self) -> bool:
