@@ -15,6 +15,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from . import PiHoleV6ConfigEntry
 from .api import API as ClientAPI
 from .entity import PiHoleV6Entity
+from .helper import create_entity_id_name
 
 
 @dataclass(frozen=True)
@@ -107,7 +108,9 @@ class PiHoleV6UpdateEntity(PiHoleV6Entity, UpdateEntity):
         super().__init__(api, coordinator, name, server_unique_id)
         self.entity_description = description
         self._attr_unique_id = f"{self._server_unique_id}/{description.key}"
-        self.entity_id = f"update.{name}_{description.key}"
+
+        raw_name: str = f"update.{name}_{description.key}"
+        self.entity_id = create_entity_id_name(raw_name)
 
         enabled_value: bool = self.get_entity_registry_enabled_value()
         self.entity_registry_enabled_default = enabled_value

@@ -19,7 +19,7 @@
                 },
                 "data_description": {
                     "password": "Heslo ktoré sa použije na prihlásenie",
-                    "url": "URL alebo adresa vášho Pi-hole (napr.: https://pi.hole:443/api)"
+                    "url": "URL alebo adresa vášho Pi-hole (napr.: {example_url})"
                 },
                 "description": "Táto integrácia vám umožňuje získať štatistiky a interagovať so systémom Pi-hole V6.",
                 "title": "Pi-hole V6"

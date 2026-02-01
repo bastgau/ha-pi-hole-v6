@@ -19,7 +19,7 @@
                 },
                 "data_description": {
                     "password": "Lösenord för inloggning på Pi-hole",
-                    "url": "URL eller adress till din Pi-hole (tex: https://pi.hole:443/api)"
+                    "url": "URL eller adress till din Pi-hole (tex: {example_url})"
                 },
                 "description": "Denna integrationen låter dig ta emot statistik samt interagera med ett Pi-hole V6 systen.",
                 "title": "Pi-hole V6"
