@@ -2,7 +2,7 @@
 
 from copy import deepcopy
 from datetime import datetime
-from typing import Any, Dict
+from typing import Any
 from zoneinfo import ZoneInfo
 
 from homeassistant.core import HomeAssistant
@@ -44,7 +44,7 @@ def calculate_remaining_until_blocking_mode_until_value(entity: Any, remaining_k
     return new_value
 
 
-def get_remaining_dates(hass: HomeAssistant, name: str) -> Dict[str, datetime]:
+def get_remaining_dates(hass: HomeAssistant, name: str) -> dict[str, datetime]:
     """..."""
 
     entities = hass.data.get(f"pi_hole_entities_switch_{name}", [])
@@ -73,7 +73,7 @@ async def sensor_update_timer(hass: HomeAssistant, now: Any, name: str) -> None:
         state = hass.states.get(entity.entity_id)
         existing_attributes = dict(state.attributes)
 
-        until_date_attribute: Dict[str, Any] = {}
+        until_date_attribute: dict[str, Any] = {}
 
         request_refresh: bool = False
 
@@ -96,7 +96,7 @@ async def sensor_update_timer(hass: HomeAssistant, now: Any, name: str) -> None:
 async def switch_update_timer(hass: HomeAssistant, now: Any, name: str) -> None:
     """..."""
 
-    remaining_dates: Dict[str, datetime] = get_remaining_dates(hass, name)
+    remaining_dates: dict[str, datetime] = get_remaining_dates(hass, name)
 
     if len(remaining_dates) == 0:
         return
@@ -119,8 +119,8 @@ async def switch_update_timer(hass: HomeAssistant, now: Any, name: str) -> None:
 
             new_state_value: str = switch_entity.state
 
-            until_date_attribute: Dict[str, Any] = {}
-            remaining_seconds_attribute: Dict[str, Any] = {"remaining_seconds": 0}
+            until_date_attribute: dict[str, Any] = {}
+            remaining_seconds_attribute: dict[str, Any] = {"remaining_seconds": 0}
 
             if new_value > 0:
                 paris_tz: ZoneInfo = ZoneInfo("Europe/Paris")

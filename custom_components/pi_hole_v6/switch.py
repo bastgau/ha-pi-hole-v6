@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime, timedelta
-from typing import Any, Dict, List
+from typing import Any
 
 import voluptuous as vol
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
@@ -212,7 +212,7 @@ class PiHoleV6Group(PiHoleV6Entity, SwitchEntity):
         name: str,
         server_unique_id: str,
         description: SwitchEntityDescription,
-        group: Dict[str, Any],
+        group: dict[str, Any],
     ) -> None:
         super().__init__(api, coordinator, name, server_unique_id)
         self.entity_description = description
@@ -304,7 +304,7 @@ class PiHoleV6Group(PiHoleV6Entity, SwitchEntity):
         """Return the state attributes of the switch Pi-hole V6."""
 
         if self.entity_description.key == "group":
-            clients_group: List[Any] = []
+            clients_group: list[Any] = []
             group_id: int = self.api.cache_groups[self.group_name]["id"]
 
             for client in self.api.cache_configured_clients:

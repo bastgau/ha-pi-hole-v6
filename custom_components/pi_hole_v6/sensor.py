@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime, timedelta
-from typing import Any, List
+from typing import Any
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -262,27 +262,27 @@ class PiHoleV6Sensor(PiHoleV6Entity, SensorEntity):
             return self.api.cache_padd["system"]["cpu"]
 
         if self.entity_description.key == "ftl_info_message_count":
-            raw_messages: List[Any] = self.api.cache_ftl_info["message_list"]
-            messages: List[Any] = [{k: v for k, v in message.items() if k != "html"} for message in raw_messages]
+            raw_messages: list[Any] = self.api.cache_ftl_info["message_list"]
+            messages: list[Any] = [{k: v for k, v in message.items() if k != "html"} for message in raw_messages]
             status: str = self.api.cache_ftl_info["status"]
             return {"messages": messages, "status": status, "note": "Total number of Pi-hole diagnosis messages."}
 
         if self.entity_description.key == "configured_clients":
-            raw_clients: List[Any] = self.api.cache_configured_clients
-            excluding: List[str] = ["date_added", "date_modified"]
-            clients: List[Any] = [{k: v for k, v in client.items() if k not in excluding} for client in raw_clients]
+            raw_clients: list[Any] = self.api.cache_configured_clients
+            excluding: list[str] = ["date_added", "date_modified"]
+            clients: list[Any] = [{k: v for k, v in client.items() if k not in excluding} for client in raw_clients]
             return {"clients": clients, "note": "Total number of configured clients."}
 
         if self.entity_description.key == "dhcp_leases":
-            raw_leases: List[Any] = self.api.cache_dhcp_leases
-            excluding: List[str] = []
-            leases: List[Any] = [{k: v for k, v in lease.items() if k not in excluding} for lease in raw_leases]
+            raw_leases: list[Any] = self.api.cache_dhcp_leases
+            excluding: list[str] = []
+            leases: list[Any] = [{k: v for k, v in lease.items() if k not in excluding} for lease in raw_leases]
             return {"leases": leases, "note": "Total number of active DHCP leases."}
 
         if self.entity_description.key == "auth_sessions":
-            raw_sessions: List[Any] = self.api.cache_auth_sessions
-            excluding: List[str] = ["tls", "x_forwarded_for"]
-            sessions: List[Any] = [{k: v for k, v in session.items() if k not in excluding} for session in raw_sessions]
+            raw_sessions: list[Any] = self.api.cache_auth_sessions
+            excluding: list[str] = ["tls", "x_forwarded_for"]
+            sessions: list[Any] = [{k: v for k, v in session.items() if k not in excluding} for session in raw_sessions]
             return {"sessions": sessions, "note": "Total number of auth sessions."}
 
         match self.entity_description.key:

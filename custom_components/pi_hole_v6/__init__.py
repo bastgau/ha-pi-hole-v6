@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
-from typing import Any, Dict
+from typing import Any
 
 from aiohttp import client
 from homeassistant.config_entries import ConfigEntry, ConfigEntryAuthFailed
@@ -29,11 +29,10 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
+    Platform.BUTTON,
     Platform.SENSOR,
     Platform.SWITCH,
     Platform.UPDATE,
-    Platform.BUTTON,
-    # Platform.NUMBER,
 ]
 
 type PiHoleV6ConfigEntry = ConfigEntry[PiHoleV6Data]
@@ -78,7 +77,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: PiHoleV6ConfigEntry) -> 
 
         api_client.last_refresh = datetime.now(timezone.utc)
 
-        result: Dict[str, Any] = {}
+        result: dict[str, Any] = {}
 
         try:
             result = await api_client.call_summary()

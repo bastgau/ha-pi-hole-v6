@@ -5,7 +5,7 @@ import json
 import logging
 from datetime import datetime
 from socket import gaierror as GaiError
-from typing import Any, Dict, List
+from typing import Any
 
 import requests
 from aiohttp import ClientError, ContentTypeError, client
@@ -35,7 +35,7 @@ class API:
     cache_ftl_info: dict[str, dict[str, Any]] = {}
     cache_groups: dict[str, dict[str, Any]] = {}
     cache_padd: dict[str, Any] = {}
-    cache_remaining_dates: Dict[str, datetime] = {}
+    cache_remaining_dates: dict[str, datetime] = {}
     cache_summary: dict[str, Any] = {}
 
     just_initialized: bool = False
@@ -729,7 +729,7 @@ class API:
 
         """
 
-        messages: List[Any] = self.cache_ftl_info["message_list"]
+        messages: list[Any] = self.cache_ftl_info["message_list"]
 
         result: dict[str, Any] = {"code": None, "reason": None, "data": {}}
 

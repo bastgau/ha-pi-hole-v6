@@ -135,9 +135,8 @@ class PiHoleV6Button(PiHoleV6Entity, ButtonEntity):
         except ActionExecutionException:
             _LOGGER.error(f"Unable to launch '{action}' action : %s", result["data"])
         except ForbiddenException:
-            _LOGGER.error(
-                "To perform the 'flush/arp', 'flush/logs' and 'restartdns' actions, the 'Permit destructive actions via API' option must be enabled in the Pi-hole options."
-            )
+            msg: str = "To perform the 'flush/arp', 'flush/logs' and 'restartdns' actions, the 'Permit destructive actions via API' option must be enabled in the Pi-hole options"
+            _LOGGER.exception(msg)
 
         self.coordinator.async_update_listeners()
 
