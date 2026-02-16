@@ -143,8 +143,6 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     ),
 )
 
-context_name: str = ""
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -158,7 +156,6 @@ async def async_setup_entry(
         PiHoleV6Sensor(
             hole_data.api,
             hole_data.coordinator,
-            name,
             entry.entry_id,
             description,
         )
@@ -185,11 +182,11 @@ class PiHoleV6Sensor(PiHoleV6Entity, SensorEntity):
         self,
         api: ClientAPI,
         coordinator: DataUpdateCoordinator[None],
-        name: str,
         server_unique_id: str,
         description: SensorEntityDescription,
     ) -> None:
         """Initialize a Pi-hole V6 sensor."""
+        name: str = coordinator.name
         super().__init__(api, coordinator, name, server_unique_id)
         self.entity_description = description
         self._attr_unique_id = f"{self._server_unique_id}/{description.key}"
@@ -198,7 +195,7 @@ class PiHoleV6Sensor(PiHoleV6Entity, SensorEntity):
         self.entity_id = create_entity_id_name(raw_name)
 
     @property
-    def native_value(self) -> StateType:
+    def native_value(self) -> StateType:  # pylint: disable=too-many-return-statements, too-many-branches
         """Return the state of the device."""
 
         match self.entity_description.key:
@@ -255,7 +252,7 @@ class PiHoleV6Sensor(PiHoleV6Entity, SensorEntity):
         return value
 
     @property
-    def extra_state_attributes(self) -> dict[str, Any] | None:
+    def extra_state_attributes(self) -> dict[str, Any] | None:  # pylint: disable=too-many-return-statements, too-many-branches
         """Return the state attributes of the Pi-hole V6."""
 
         if self.entity_description.key == "memory_use":

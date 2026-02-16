@@ -13,7 +13,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_URL,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import callback
 from homeassistant.helpers import selector
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -176,7 +176,7 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             return {CONF_PASSWORD: "invalid_auth"}
 
 
-def _get_data_option_schema(user_input: Any) -> vol.Schema:  # noqa: ARG001
+def _get_data_option_schema() -> vol.Schema:
     return vol.Schema(
         {
             vol.Required(
@@ -203,7 +203,6 @@ def _get_data_option_schema(user_input: Any) -> vol.Schema:  # noqa: ARG001
 
 
 async def _async_validate_input(
-    hass: HomeAssistant,  # noqa: ARG001
     user_input: dict[str, Any],
 ) -> Any:
     if user_input[CONF_UPDATE_INTERVAL] == 1:
@@ -218,7 +217,7 @@ class OptionsFlowHandler(OptionsFlow):
     async def async_step_init(self, user_input: Any) -> ConfigFlowResult:
         """..."""
         if user_input is not None:  # we asked to validate values entered by user
-            errors = await _async_validate_input(self.hass, user_input)
+            errors = await _async_validate_input(user_input)
 
             if not errors:
                 self.hass.config_entries.async_update_entry(

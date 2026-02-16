@@ -34,7 +34,7 @@ if TYPE_CHECKING:
     from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
     from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-    from . import PiHoleV6ConfigEntry
+    from . import PiHoleV6ConfigEntry, PiHoleV6Data
     from .api import Api as PiholeAPI
 
 _LOGGER = logging.getLogger(__name__)
@@ -74,8 +74,7 @@ async def async_setup_entry(
 
         switches.append(
             PiHoleV6Group(
-                hole_data.api,
-                hole_data.coordinator,
+                hole_data,
                 entry.entry_id,
                 description,
                 group,
@@ -209,13 +208,15 @@ class PiHoleV6Group(PiHoleV6Entity, SwitchEntity):
 
     def __init__(
         self,
-        api: PiholeAPI,
-        coordinator: DataUpdateCoordinator,
+        hole_data: PiHoleV6Data,
         server_unique_id: str,
         description: SwitchEntityDescription,
         group: dict[str, Any],
     ) -> None:
         """..."""
+        api: PiholeAPI = hole_data.api
+        coordinator: DataUpdateCoordinator = hole_data.coordinator
+
         name: str = coordinator.name
         super().__init__(api, coordinator, name, server_unique_id)
         self.entity_description = description

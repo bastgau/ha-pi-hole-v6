@@ -7,7 +7,6 @@ import logging
 from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
-from homeassistant.const import CONF_NAME
 
 from .entity import PiHoleV6Entity
 from .exceptions import ActionExecutionError, ForbiddenError
@@ -60,12 +59,12 @@ BUTTON_TYPES: tuple[PiholeV6ButtonEntityDescription, ...] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant,  # noqa: ARG001
+    hass: HomeAssistant,  # noqa: ARG001 # pylint: disable=unused-argument
     entry: PiHoleV6ConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """..."""
-    name = entry.data[CONF_NAME]
+
     hole_data = entry.runtime_data
 
     entities: list[PiHoleV6Button] = []
@@ -74,7 +73,6 @@ async def async_setup_entry(
         PiHoleV6Button(
             hole_data.api,
             hole_data.coordinator,
-            name,
             entry.entry_id,
             description,
         )
@@ -93,11 +91,11 @@ class PiHoleV6Button(PiHoleV6Entity, ButtonEntity):
         self,
         api: PiholeAPI,
         coordinator: DataUpdateCoordinator,
-        name: str,
         server_unique_id: str,
         description: PiholeV6ButtonEntityDescription,
     ) -> None:
         """Initialize Pi-hole V6 button."""
+        name: str = coordinator.name
         super().__init__(api, coordinator, name, server_unique_id)
         self.entity_description = description
         self._attr_unique_id = f"{self._server_unique_id}/{description.key}"

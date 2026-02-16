@@ -118,15 +118,11 @@ async def switch_update_timer(hass: HomeAssistant, name: str) -> None:
             state = hass.states.get(switch_entity.entity_id)
             existing_attributes = dict(state.attributes)
 
-            new_state_value: str = switch_entity.state
-
             until_date_attribute: dict[str, Any] = {}
             remaining_seconds_attribute: dict[str, Any] = {"remaining_seconds": 0}
 
             if new_value > 0:
-                paris_tz: ZoneInfo = ZoneInfo("Europe/Paris")
-                until_date: datetime = remaining_date.astimezone(paris_tz)
-                until_date_attribute = {"until_date": until_date}
+                until_date_attribute = {"until_date": remaining_date.astimezone(ZoneInfo("Europe/Paris"))}
                 remaining_seconds_attribute = {"remaining_seconds": new_value}
             else:
                 existing_attributes.pop("until_date", None)
@@ -138,7 +134,7 @@ async def switch_update_timer(hass: HomeAssistant, name: str) -> None:
                     del switch_entity.api.cache_remaining_dates[f"{name}/{switch_entity.group_name}"]
 
             new_attributes = existing_attributes | until_date_attribute | remaining_seconds_attribute
-            hass.states.async_set(switch_entity.entity_id, new_state_value, new_attributes)
+            hass.states.async_set(switch_entity.entity_id, switch_entity.state, new_attributes)
 
             if new_value == 0:
                 await switch_entity.async_turn_switch(action="enable", with_update=True)

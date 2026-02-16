@@ -72,7 +72,7 @@ UPDATE_ENTITY_TYPES: tuple[PiHoleV6UpdateEntityDescription, ...] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant,  # noqa: ARG001
+    hass: HomeAssistant,  # noqa: ARG001 # pylint: disable=unused-argument
     entry: PiHoleV6ConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
@@ -136,7 +136,7 @@ class PiHoleV6UpdateEntity(PiHoleV6Entity, UpdateEntity):
             ):
                 return True
 
-        except Exception:
+        except Exception:  # pylint: disable=broad-exception-caught
             pass
 
         return False

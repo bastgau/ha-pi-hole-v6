@@ -10,7 +10,6 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.const import CONF_NAME
 
 from .entity import PiHoleV6Entity
 from .helper import create_entity_id_name
@@ -44,18 +43,16 @@ BINARY_SENSOR_TYPES: tuple[PiHoleV6BinarySensorEntityDescription, ...] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant,  # noqa: ARG001
+    hass: HomeAssistant,  # noqa: ARG001 # pylint: disable=unused-argument
     entry: PiHoleV6ConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Pi-hole V6 binary sensor."""
-    name = entry.data[CONF_NAME]
     hole_data = entry.runtime_data
     binary_sensors = [
         PiHoleV6BinarySensor(
             hole_data.api,
             hole_data.coordinator,
-            name,
             entry.entry_id,
             description,
         )
@@ -73,11 +70,11 @@ class PiHoleV6BinarySensor(PiHoleV6Entity, BinarySensorEntity):
         self,
         api: PiholeAPI,
         coordinator: DataUpdateCoordinator[None],
-        name: str,
         server_unique_id: str,
         description: PiHoleV6BinarySensorEntityDescription,
     ) -> None:
         """Initialize a Pi-hole V6 sensor."""
+        name: str = coordinator.name
         super().__init__(api, coordinator, name, server_unique_id)
         self.entity_description = description
         self._attr_unique_id = f"{self._server_unique_id}/{description.key}"

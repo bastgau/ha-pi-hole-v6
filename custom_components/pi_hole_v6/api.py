@@ -19,7 +19,7 @@ from .exceptions import (
 )
 
 
-class Api:
+class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attributes
     """Pi-hole API Client."""
 
     _logger: logging.Logger | None

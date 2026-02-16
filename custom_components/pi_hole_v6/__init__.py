@@ -60,6 +60,34 @@ async def check_result(result: dict[str, Any], api_client: PiholeAPI) -> None:
         raise DataStructureError
 
 
+async def async_get_all_data(api_client: PiholeAPI) -> None:
+    """..."""
+
+    result = await api_client.call_summary()
+    await check_result(result, api_client)
+
+    result = await api_client.call_blocking_status()
+    await check_result(result, api_client)
+
+    result = await api_client.call_get_groups()
+    await check_result(result, api_client)
+
+    result = await api_client.call_padd()
+    await check_result(result, api_client)
+
+    result = await api_client.call_get_ftl_info_messages_count()
+    await check_result(result, api_client)
+
+    result = await api_client.call_get_configured_clients()
+    await check_result(result, api_client)
+
+    result = await api_client.call_get_dhcp_leases()
+    await check_result(result, api_client)
+
+    result = await api_client.call_get_auth_sessions()
+    await check_result(result, api_client)
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: PiHoleV6ConfigEntry) -> bool:
     """Set up Pi-hole V6 entry."""
 
@@ -95,29 +123,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: PiHoleV6ConfigEntry) -> 
         result: dict[str, Any] = {}
 
         try:
-            result = await api_client.call_summary()
-            await check_result(result, api_client)
-
-            result = await api_client.call_blocking_status()
-            await check_result(result, api_client)
-
-            result = await api_client.call_get_groups()
-            await check_result(result, api_client)
-
-            result = await api_client.call_padd()
-            await check_result(result, api_client)
-
-            result = await api_client.call_get_ftl_info_messages_count()
-            await check_result(result, api_client)
-
-            result = await api_client.call_get_configured_clients()
-            await check_result(result, api_client)
-
-            result = await api_client.call_get_dhcp_leases()
-            await check_result(result, api_client)
-
-            result = await api_client.call_get_auth_sessions()
-            await check_result(result, api_client)
+            await async_get_all_data(api_client=api_client)
 
         except UnauthorizedError as err:
             msg: str = "Credentials must be updated."
