@@ -132,13 +132,13 @@ class PiHoleV6Button(PiHoleV6Entity, ButtonEntity):
             if result["code"] != 200:
                 raise ActionExecutionError  # noqa: TRY301
 
-            _LOGGER.info("Action '%s' just executed correctly for '%s'.", action, self._name)
+            _LOGGER.info("Action '%s' just executed correctly for '%s'", action, self._name)
 
         except ActionExecutionError:
             _LOGGER.exception("Unable to launch '%s' action : %s", action, result["data"])
         except ForbiddenError:
             _LOGGER.exception(
-                "To perform the 'flush/arp', 'flush/logs' and 'restartdns' actions, the 'Permit destructive actions via API' option must be enabled in the Pi-hole options."
+                "To perform the 'flush/arp', 'flush/logs' and 'restartdns' actions, the 'Permit destructive actions via API' option must be enabled in the Pi-hole options"
             )
 
         self.coordinator.async_update_listeners()

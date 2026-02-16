@@ -162,17 +162,17 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         try:
             await api_client.call_authentification_status()
         except ClientConnectorError:
-            _LOGGER.exception("Connection failed (%s).", api_client.url)
+            _LOGGER.exception("Connection failed (%s)", api_client.url)
             return {CONF_URL: "cannot_connect"}
         except (
             NotFoundError,
             ContentTypeError,
             MethodNotAllowedError,
         ):
-            _LOGGER.error("Connection failed (%s).", api_client.url)  # noqa: TRY400
+            _LOGGER.error("Connection failed (%s)", api_client.url)  # noqa: TRY400
             return {CONF_URL: "invalid_path"}
         except (UnauthorizedError, ForbiddenError):
-            _LOGGER.error("Connection failed (%s).", api_client.url)  # noqa: TRY400
+            _LOGGER.error("Connection failed (%s)", api_client.url)  # noqa: TRY400
             return {CONF_PASSWORD: "invalid_auth"}
 
 

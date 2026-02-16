@@ -185,7 +185,7 @@ class PiHoleV6Switch(PiHoleV6Entity, SwitchEntity):
             ServiceUnavailableError,
             GatewayTimeoutError,
         ):
-            _LOGGER.exception("Unable to %s Pi-hole V6.", action)
+            _LOGGER.exception("Unable to %s Pi-hole V6", action)
 
     async def async_service_disable(self, duration: Any = None) -> None:
         """..."""
@@ -272,7 +272,7 @@ class PiHoleV6Group(PiHoleV6Entity, SwitchEntity):
             ServiceUnavailableError,
             GatewayTimeoutError,
         ):
-            _LOGGER.exception("Unable to %s Pi-hole V6 group %s.", action, self.group_name)
+            _LOGGER.exception("Unable to %s Pi-hole V6 group %s", action, self.group_name)
 
     async def async_service_enable(self) -> None:
         """..."""
