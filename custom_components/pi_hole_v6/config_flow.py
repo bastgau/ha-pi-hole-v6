@@ -3,11 +3,10 @@
 from __future__ import annotations
 
 import logging
-from collections.abc import Mapping
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
-from aiohttp import client
+
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import (
     CONF_NAME,
@@ -18,7 +17,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import selector
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .api import API as ClientAPI
+from .api import Api as ClientAPI
 from .const import (
     CONF_UPDATE_INTERVAL,
     CONFIG_ENTRY_VERSION,
@@ -30,18 +29,23 @@ from .const import (
     MIN_TIME_BETWEEN_UPDATES,
 )
 from .exceptions import (
-    ClientConnectorException,
-    ContentTypeException,
-    ForbiddenException,
-    MethodNotAllowedException,
-    NotFoundException,
-    UnauthorizedException,
+    ClientConnectorError,
+    ContentTypeError,
+    ForbiddenError,
+    MethodNotAllowedError,
+    NotFoundError,
+    UnauthorizedError,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
+
+    from aiohttp import client
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def _get_data_config_schema(user_input) -> vol.Schema:
+def _get_data_config_schema(user_input: Any) -> vol.Schema:
     return vol.Schema(
         {
             vol.Required(
@@ -91,8 +95,7 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
 
             if not (errors := await self._async_try_connect()):
                 return self.async_create_entry(title=user_input[CONF_NAME], data=self._config)
-            else:
-                user_input["password"] = ""
+            user_input["password"] = ""
 
         user_input = user_input or {}
 
@@ -124,8 +127,7 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                     self._get_reauth_entry(),
                     data_updates=user_input,
                 )
-            else:
-                del user_input[CONF_PASSWORD]
+            del user_input[CONF_PASSWORD]
 
         user_input = user_input or {}
         return self.async_show_form(
@@ -143,12 +145,12 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry):
+    def async_get_options_flow(config_entry: Any) -> OptionsFlowHandler:  # noqa: ARG004
         """Get the options flow for this handler."""
         return OptionsFlowHandler()
 
     async def _async_try_connect(self) -> dict[str, str]:
-        session: client.ClientSession = async_get_clientsession(self.hass, False)
+        session: client.ClientSession = async_get_clientsession(self.hass, verify_ssl=False)
 
         api_client: ClientAPI = ClientAPI(
             session=session,
@@ -159,22 +161,22 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
 
         try:
             await api_client.call_authentification_status()
-        except ClientConnectorException as err:
-            _LOGGER.error("Connection failed (%s): %s", api_client.url, err)
+        except ClientConnectorError:
+            _LOGGER.exception("Connection failed (%s).", api_client.url)
             return {CONF_URL: "cannot_connect"}
         except (
-            NotFoundException,
-            ContentTypeException,
-            MethodNotAllowedException,
-        ) as err:
-            _LOGGER.error("Connection failed (%s): %s", api_client.url, err)
+            NotFoundError,
+            ContentTypeError,
+            MethodNotAllowedError,
+        ):
+            _LOGGER.error("Connection failed (%s).", api_client.url)  # noqa: TRY400
             return {CONF_URL: "invalid_path"}
-        except (UnauthorizedException, ForbiddenException) as err:
-            _LOGGER.error("Connection failed (%s): %s", api_client.url, err)
+        except UnauthorizedError, ForbiddenError:
+            _LOGGER.error("Connection failed (%s).", api_client.url)  # noqa: TRY400
             return {CONF_PASSWORD: "invalid_auth"}
 
 
-def _get_data_option_schema(user_input) -> vol.Schema:
+def _get_data_option_schema(user_input: Any) -> vol.Schema:  # noqa: ARG001
     return vol.Schema(
         {
             vol.Required(
@@ -201,7 +203,7 @@ def _get_data_option_schema(user_input) -> vol.Schema:
 
 
 async def _async_validate_input(
-    hass: HomeAssistant,
+    hass: HomeAssistant,  # noqa: ARG001
     user_input: dict[str, Any],
 ) -> Any:
     if user_input[CONF_UPDATE_INTERVAL] == 1:
@@ -213,7 +215,8 @@ async def _async_validate_input(
 class OptionsFlowHandler(OptionsFlow):
     """Options flow used to change configuration (options) of existing instance of integration."""
 
-    async def async_step_init(self, user_input=None) -> ConfigFlowResult:
+    async def async_step_init(self, user_input: Any) -> ConfigFlowResult:
+        """..."""
         if user_input is not None:  # we asked to validate values entered by user
             errors = await _async_validate_input(self.hass, user_input)
 
@@ -222,15 +225,14 @@ class OptionsFlowHandler(OptionsFlow):
                     self.config_entry, data={**self.config_entry.data, **user_input}
                 )
                 return self.async_create_entry(title="", data={})
-            else:
-                return self.async_show_form(
-                    step_id="init",
-                    data_schema=self.add_suggested_values_to_schema(
-                        _get_data_option_schema(user_input),
-                        user_input,
-                    ),
-                    errors=dict(errors),
-                )
+            return self.async_show_form(
+                step_id="init",
+                data_schema=self.add_suggested_values_to_schema(
+                    _get_data_option_schema(user_input),
+                    user_input,
+                ),
+                errors=dict(errors),
+            )
 
         update_interval = self.config_entry.data.get(CONF_UPDATE_INTERVAL, None)
 
@@ -239,7 +241,7 @@ class OptionsFlowHandler(OptionsFlow):
                 self.config_entry,
                 data={
                     **self.config_entry.data,
-                    **{CONF_UPDATE_INTERVAL: MIN_TIME_BETWEEN_UPDATES.seconds},
+                    CONF_UPDATE_INTERVAL: MIN_TIME_BETWEEN_UPDATES.seconds,
                 },
             )
 

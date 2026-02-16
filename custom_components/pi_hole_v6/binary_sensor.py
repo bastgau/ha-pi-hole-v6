@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -12,22 +11,26 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.const import CONF_NAME
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from . import PiHoleV6ConfigEntry
-from .api import API as PiholeAPI
 from .entity import PiHoleV6Entity
 from .helper import create_entity_id_name
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+    from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+
+    from . import PiHoleV6ConfigEntry
+    from .api import Api as PiholeAPI
 
 
 @dataclass(frozen=True, kw_only=True)
 class PiHoleV6BinarySensorEntityDescription(BinarySensorEntityDescription):
     """Describes PiHole binary sensor entity."""
 
-    state_value: Callable[[PiholeAPI], bool]
-    extra_value: Callable[[PiholeAPI], dict[str, Any] | None] = lambda PiholeAPI: None
+    state_value: Callable[[PiholeAPI]]
 
 
 BINARY_SENSOR_TYPES: tuple[PiHoleV6BinarySensorEntityDescription, ...] = (
@@ -35,13 +38,13 @@ BINARY_SENSOR_TYPES: tuple[PiHoleV6BinarySensorEntityDescription, ...] = (
         key="status",
         device_class=BinarySensorDeviceClass.RUNNING,
         translation_key="status",
-        state_value=lambda ClientAPI: bool(ClientAPI.cache_blocking.get("blocking", None) == "enabled"),
+        state_value=lambda client_api: bool(client_api.cache_blocking.get("blocking", None) == "enabled"),
     ),
 )
 
 
 async def async_setup_entry(
-    hass: HomeAssistant,
+    hass: HomeAssistant,  # noqa: ARG001
     entry: PiHoleV6ConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
@@ -58,7 +61,7 @@ async def async_setup_entry(
         )
         for description in BINARY_SENSOR_TYPES
     ]
-    async_add_entities(binary_sensors, True)
+    async_add_entities(binary_sensors, update_before_add=True)
 
 
 class PiHoleV6BinarySensor(PiHoleV6Entity, BinarySensorEntity):
