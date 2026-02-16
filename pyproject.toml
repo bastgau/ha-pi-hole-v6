@@ -105,7 +105,7 @@ disable = [
 # free to run mypy on Windows, Linux, or macOS and get consistent
 # results.
 platform = "linux"
-python_version = "3.14"
+python_version = "3.13"
 
 # show error messages from unrelated files
 follow_imports = "normal"
@@ -134,7 +134,7 @@ ignore_missing_imports = true
 max-complexity = 25
 
 [tool.ruff]
-target-version = "py314"
+target-version = "py313"
 line-length = 120
 indent-width = 4
 src = ["custom_components/pi_hole_v6"]

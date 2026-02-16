@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.update import UpdateEntity, UpdateEntityDescription
-from homeassistant.const import CONF_NAME, EntityCategory
+from homeassistant.const import EntityCategory
 
 from .entity import PiHoleV6Entity
 from .helper import create_entity_id_name
@@ -77,14 +77,12 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Pi-hole update entities."""
-    name = entry.data[CONF_NAME]
     hole_data = entry.runtime_data
 
     async_add_entities(
         PiHoleV6UpdateEntity(
             hole_data.api,
             hole_data.coordinator,
-            name,
             entry.entry_id,
             description,
         )
@@ -101,12 +99,14 @@ class PiHoleV6UpdateEntity(PiHoleV6Entity, UpdateEntity):
         self,
         api: ClientAPI,
         coordinator: DataUpdateCoordinator[None],
-        name: str,
         server_unique_id: str,
         description: PiHoleV6UpdateEntityDescription,
     ) -> None:
         """Initialize a Pi-hole update entity."""
-        super().__init__(api, coordinator, name, server_unique_id)
+
+        name: str = coordinator.name
+
+        super().__init__(api, coordinator, coordinator.name, server_unique_id)
         self.entity_description = description
         self._attr_unique_id = f"{self._server_unique_id}/{description.key}"
 

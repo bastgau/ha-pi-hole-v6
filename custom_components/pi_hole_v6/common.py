@@ -2,11 +2,10 @@
 
 from copy import deepcopy
 from datetime import UTC, datetime
-from typing import TYPE_CHECKING, Any
+from typing import Any
 from zoneinfo import ZoneInfo
 
-if TYPE_CHECKING:
-    from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant
 
 
 def find_entity_switch(current_hass: HomeAssistant, key: str, context_name: str) -> Any:

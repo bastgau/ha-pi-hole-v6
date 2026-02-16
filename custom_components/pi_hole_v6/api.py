@@ -1,12 +1,14 @@
 """The above class represents Pi-hole API Client with methods for authentication, retrieving summary data, managing blocking status, and logging requests."""
 
 import asyncio
+from datetime import datetime
 import json
 import logging
 from socket import gaierror
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from aiohttp import ClientError, ContentTypeError, client
+import requests
 
 from .exceptions import (
     AbortLogoutError,
@@ -15,11 +17,6 @@ from .exceptions import (
     UnauthorizedError,
     handle_status,
 )
-
-if TYPE_CHECKING:
-    from datetime import datetime
-
-    import requests
 
 
 class Api:

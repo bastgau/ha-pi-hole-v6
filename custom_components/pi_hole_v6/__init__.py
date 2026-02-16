@@ -56,7 +56,7 @@ async def check_result(result: dict[str, Any], api_client: PiholeAPI) -> None:
 
     if not isinstance(result, dict):
         await api_client.call_logout()
-        _LOGGER.error("DataStructureError Debug: %S", str(result))
+        _LOGGER.error("DataStructureError Debug: %s", str(result))
         raise DataStructureError
 
 
