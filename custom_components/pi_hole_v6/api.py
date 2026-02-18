@@ -157,7 +157,18 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
         }
 
     async def _try_to_retrieve_json_result(self, request: requests.Response, privacy: bool = True) -> str | None:
-        """..."""
+        """Attempt to parse the JSON body from an HTTP response.
+
+        Handles encoding errors gracefully and optionally redacts the session SID for privacy.
+
+        Args:
+            request (requests.Response): The HTTP response object to parse.
+            privacy (bool): If True, redacts the session SID from the result. Defaults to True.
+
+        Returns:
+            str | None: The parsed JSON content, or None if the response has no body.
+
+        """
 
         text: str | None = None
 
@@ -183,7 +194,17 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
         return text
 
     async def _create_log_message_on_api_result(self, request: requests.Response, method: str, url: str) -> str:
-        """..."""
+        """Build a log message string from an HTTP response.
+
+        Args:
+            request (requests.Response): The HTTP response object.
+            method (str): The HTTP method used for the request.
+            url (str): The URL of the request.
+
+        Returns:
+            str: A formatted log message containing status, reason, method, URL and response body.
+
+        """
 
         text: str | None = await self._try_to_retrieve_json_result(request)
         status: str = str(request.status)
@@ -194,7 +215,18 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
     async def _create_log_message_on_api_exception(
         self, api_error: APIError, request: requests.Response, method: str, url: str
     ) -> str:
-        """..."""
+        """Build a log message string from an API exception and its associated HTTP response.
+
+        Args:
+            api_error (APIError): The API exception that was raised.
+            request (requests.Response): The HTTP response object associated with the error.
+            method (str): The HTTP method used for the request.
+            url (str): The URL of the request.
+
+        Returns:
+            str: A formatted log message prefixed with the exception type name.
+
+        """
 
         log: str = await self._create_log_message_on_api_result(request, method, url)
         exception_name: str = str(type(api_error))
@@ -202,13 +234,29 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
         return f"{exception_name} - {log}"
 
     async def _authentification_step(self, action: str) -> None:
-        """..."""
+        """Execute the full authentication sequence for a given action.
+
+        Checks current authentication status, aborts logout if not needed,
+        and requests a login if no session is active.
+
+        Args:
+            action (str): The name of the action being performed, used to determine authentication behavior.
+
+        """
         await self._check_authentification(action)
         await self._abort_logout(action)
         await self._request_login(action)
 
     async def _authentification_step_with_lock(self, action: str) -> None:
-        """..."""
+        """Execute the authentication sequence with a lock for non-auth actions.
+
+        Acquires the call lock before running the authentication step to prevent
+        concurrent authentication attempts. Auth-related actions bypass the lock.
+
+        Args:
+            action (str): The name of the action being performed.
+
+        """
 
         if action not in ("login", "authentification_status", "logout"):
             try:
@@ -226,7 +274,15 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
             await self._authentification_step(action)
 
     async def _check_authentification(self, action: str) -> None:
-        """..."""
+        """Verify the current session is still valid and reset it if not.
+
+        Calls the authentication status endpoint and sets the SID to None
+        if the session has expired or become invalid.
+
+        Args:
+            action (str): The name of the action being performed, used to skip the check for auth-related actions.
+
+        """
 
         try:
             if (
@@ -243,19 +299,40 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
             self._sid = None
 
     async def _request_login(self, action: str) -> None:
-        """..."""
+        """Request a login if no active session exists.
+
+        Triggers a login call when the action is not already a login
+        and no session ID is currently set.
+
+        Args:
+            action (str): The name of the action being performed.
+
+        """
 
         if action != "login" and self._sid is None:
             await self.call_login()
 
     async def _abort_logout(self, action: str) -> None:
-        """..."""
+        """Abort a logout call if no active session exists.
+
+        Raises AbortLogoutError when a logout is requested but there is
+        no active session to terminate.
+
+        Args:
+            action (str): The name of the action being performed.
+
+        """
 
         if action == "logout" and (self._sid is None or self._sid == "no password set"):
             raise AbortLogoutError
 
     async def call_authentification_status(self) -> dict[str, Any]:
-        """..."""
+        """Retrieve the current authentication session status.
+
+        Returns:
+            dict[str, Any]: A dictionary with the keys "code", "reason", and "data".
+
+        """
 
         url: str = "/auth"
 
@@ -774,7 +851,12 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
         }
 
     def remove_cache(self, data_name: str) -> None:
-        """..."""
+        """Reset a specific cache entry to its default error state.
+
+        Args:
+            data_name (str): The name of the cache to reset. Currently supports "ftl_info_messages".
+
+        """
 
         match data_name:
             case "ftl_info_messages":
