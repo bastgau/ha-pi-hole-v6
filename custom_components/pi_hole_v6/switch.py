@@ -86,7 +86,7 @@ async def async_setup_entry(
     hass.data[f"pi_hole_entities_switch_{name}"].extend(switches)
 
     async def update_timer(_: Any) -> None:
-        """..."""
+        """Trigger switch state update on a time interval basis."""
         await switch_update_timer(hass, name)
 
     async_track_time_interval(hass, update_timer, timedelta(seconds=1))
@@ -120,7 +120,7 @@ class PiHoleV6Switch(PiHoleV6Entity, SwitchEntity):
         server_unique_id: str,
         description: SwitchEntityDescription,
     ) -> None:
-        """..."""
+        """Initialize a Pi-hole V6 switch."""
         name: str = coordinator.name
         super().__init__(api, coordinator, name, server_unique_id)
         self.entity_description = description
@@ -188,12 +188,18 @@ class PiHoleV6Switch(PiHoleV6Entity, SwitchEntity):
             _LOGGER.exception("Unable to %s Pi-hole V6", action)
 
     async def async_service_disable(self, duration: Any = None) -> None:
-        """..."""
+        """Disable the Pi-hole blocking via the service call.
+
+        Args:
+            duration (Any): Optional duration as a timedelta or int (seconds) for which
+            blocking should be disabled. If None, disables indefinitely.
+
+        """
         duration_seconds: int | None = calculate_duration(duration, self._name)
         await self.async_turn_switch(action="disable", duration=duration_seconds)
 
     async def async_service_enable(self) -> None:
-        """..."""
+        """Enable the Pi-hole blocking via the service call."""
         _LOGGER.debug("Enabling Pi-hole '%s'", self.name)
         await self.async_turn_switch(action="enable")
 
@@ -213,7 +219,7 @@ class PiHoleV6Group(PiHoleV6Entity, SwitchEntity):
         description: SwitchEntityDescription,
         group: dict[str, Any],
     ) -> None:
-        """..."""
+        """Initialize a Pi-hole V6 group switch."""
         api: PiholeAPI = hole_data.api
         coordinator: DataUpdateCoordinator = hole_data.coordinator
 
@@ -275,13 +281,18 @@ class PiHoleV6Group(PiHoleV6Entity, SwitchEntity):
             _LOGGER.exception("Unable to %s Pi-hole V6 group %s", action, self.group_name)
 
     async def async_service_enable(self) -> None:
-        """..."""
-
+        """Enable the Pi-hole group blocking via the service call."""
         _LOGGER.debug("Enabling Pi-hole '%s'", self.name)
         await self.async_turn_switch(action="enable")
 
     async def async_service_disable(self, duration: Any = None) -> None:
-        """..."""
+        """Disable the Pi-hole group blocking via the service call.
+
+        Args:
+            duration (Any): Optional duration as a timedelta or int (seconds) for which
+            the group should be disabled. If None, disables indefinitely.
+
+        """
         duration_seconds: int | None = calculate_duration(duration, f"group/{self.group_name}")
         await self.async_turn_switch(action="disable", duration=duration_seconds)
 
@@ -334,7 +345,16 @@ class PiHoleV6Group(PiHoleV6Entity, SwitchEntity):
 
 
 def calculate_duration(duration: Any, name: str) -> int | None:
-    """..."""
+    """Calculate the duration in seconds from a timedelta or integer value.
+
+    Args:
+        duration (Any): The duration to convert. Can be a timedelta, an int (seconds), or None.
+        name (str): The name of the Pi-hole instance, used for logging purposes.
+
+    Returns:
+        int | None: The duration in seconds, or None if no duration was provided.
+
+    """
 
     duration_seconds: int | None = None
 
