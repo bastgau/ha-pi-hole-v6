@@ -167,7 +167,7 @@ async def async_setup_entry(
     hass.data[f"pi_hole_entities_sensor_{name}"].extend(sensors)
 
     async def update_timer(_: Any) -> None:
-        """..."""
+        """Trigger sensor state update on a time interval basis."""
         await sensor_update_timer(hass, name)
 
     async_track_time_interval(hass, update_timer, timedelta(seconds=1))
@@ -239,7 +239,14 @@ class PiHoleV6Sensor(PiHoleV6Entity, SensorEntity):
         return ""
 
     def native_remaining_until_blocking_mode(self) -> int:
-        """..."""
+        """Compute the remaining seconds until blocking mode is automatically restored.
+
+        Updates the cache of remaining dates based on the current blocking timer value.
+
+        Returns:
+            int: Remaining seconds until blocking mode is restored, or 0 if no timer is active.
+
+        """
 
         value = round(self.api.cache_blocking["timer"]) if self.api.cache_blocking["timer"] is not None else 0
 
