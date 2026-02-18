@@ -1,4 +1,4 @@
-"""..."""
+"""Common helper functions for Pi-hole V6 integration."""
 
 from copy import deepcopy
 from datetime import UTC, datetime
@@ -9,7 +9,17 @@ from homeassistant.core import HomeAssistant
 
 
 def find_entity_switch(current_hass: HomeAssistant, key: str, context_name: str) -> Any:
-    """..."""
+    """Find a switch entity by its key within a given context.
+
+    Args:
+        current_hass (HomeAssistant): The Home Assistant instance.
+        key (str): The entity description key or group-based composite key to match.
+        context_name (str): The name of the Pi-hole instance used to scope the entity list.
+
+    Returns:
+        Any: The matching switch entity, or None if not found.
+
+    """
 
     for entity in current_hass.data.get(f"pi_hole_entities_switch_{context_name}", []):
         if hasattr(entity, "entity_description"):
@@ -23,7 +33,17 @@ def find_entity_switch(current_hass: HomeAssistant, key: str, context_name: str)
 
 
 def find_entity_sensor(current_hass: HomeAssistant, key: str, context_name: str) -> Any:
-    """..."""
+    """Find a sensor entity by its key within a given context.
+
+    Args:
+        current_hass (HomeAssistant): The Home Assistant instance.
+        key (str): The entity description key to match.
+        context_name (str): The name of the Pi-hole instance used to scope the entity list.
+
+    Returns:
+        Any: The matching sensor entity, or None if not found.
+
+    """
 
     for entity in current_hass.data.get(f"pi_hole_entities_sensor_{context_name}", []):
         if hasattr(entity, "entity_description") and entity.entity_description.key == key:
@@ -33,7 +53,16 @@ def find_entity_sensor(current_hass: HomeAssistant, key: str, context_name: str)
 
 
 def calculate_remaining_until_blocking_mode_until_value(entity: Any, remaining_key: str) -> int:
-    """..."""
+    """Calculate the remaining seconds until the blocking mode is automatically restored.
+
+    Args:
+        entity (Any): The entity holding the API cache with remaining dates.
+        remaining_key (str): The key used to look up the target datetime in the cache.
+
+    Returns:
+        int: The remaining seconds as a positive integer, 0 if the date has passed, or -1 if the key is not present.
+
+    """
 
     new_value = -1
 
@@ -47,7 +76,16 @@ def calculate_remaining_until_blocking_mode_until_value(entity: Any, remaining_k
 
 
 def get_remaining_dates(hass: HomeAssistant, name: str) -> dict[str, datetime]:
-    """..."""
+    """Retrieve the remaining dates cache from the first registered switch entity.
+
+    Args:
+        hass (HomeAssistant): The Home Assistant instance.
+        name (str): The name of the Pi-hole instance used to scope the entity list.
+
+    Returns:
+        dict[str, datetime]: A dictionary of remaining dates keyed by their identifiers, or an empty dict if unavailable.
+
+    """
 
     entities = hass.data.get(f"pi_hole_entities_switch_{name}", [])
     entity_model = None
@@ -62,7 +100,16 @@ def get_remaining_dates(hass: HomeAssistant, name: str) -> dict[str, datetime]:
 
 
 async def sensor_update_timer(hass: HomeAssistant, name: str) -> None:
-    """..."""
+    """Update the remaining blocking mode sensor state on each timer tick.
+
+    Computes the remaining seconds and updates the entity state and attributes accordingly.
+    Triggers a full refresh when the timer reaches zero.
+
+    Args:
+        hass (HomeAssistant): The Home Assistant instance.
+        name (str): The name of the Pi-hole instance used to scope the entity lookup.
+
+    """
 
     entity = find_entity_sensor(hass, "remaining_until_blocking_mode", name)
 
@@ -95,7 +142,16 @@ async def sensor_update_timer(hass: HomeAssistant, name: str) -> None:
 
 
 async def switch_update_timer(hass: HomeAssistant, name: str) -> None:
-    """..."""
+    """Update all switch entity states related to blocking timers on each timer tick.
+
+    Iterates over all remaining dates, updates attributes and remaining seconds for each
+    switch entity, and re-enables blocking when the timer expires.
+
+    Args:
+        hass (HomeAssistant): The Home Assistant instance.
+        name (str): The name of the Pi-hole instance used to scope the entity lookup.
+
+    """
 
     remaining_dates: dict[str, datetime] = get_remaining_dates(hass, name)
 
