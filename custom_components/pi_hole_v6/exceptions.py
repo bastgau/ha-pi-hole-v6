@@ -60,6 +60,7 @@ class ClientConnectorError(Exception):
 
         Args:
             custom_message (str): An optional additional message to append to the default error message.
+                If empty (default), only the default message is used.
 
         """
         new_message: str = self.message
