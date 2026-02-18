@@ -1,6 +1,6 @@
 {
-    "name": "Pi-hole V6 Integration",
-    "image": "mcr.microsoft.com/devcontainers/python:dev-3.13",
+    "name": "Cudy Router Integration",
+    "dockerFile": "./Dockerfile",
     "features": {
         "ghcr.io/devcontainers/features/github-cli:1": {
             "installDirectlyFromGitHubRelease": true,
@@ -13,14 +13,7 @@
         "ghcr.io/devcontainers-extra/features/poetry:2": {
             "version": "latest"
         },
-        "ghcr.io/devcontainers/features/rust:1": {},
-        "ghcr.io/devcontainers-extra/features/apt-packages:1": {
-            "packages": [
-                "ffmpeg",
-                "libturbojpeg0",
-                "libpcap-dev"
-            ]
-        }
+        "ghcr.io/devcontainers/features/rust:1": {}
     },
     "postCreateCommand": "scripts/setup",
     "runArgs": [

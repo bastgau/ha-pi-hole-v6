@@ -2,12 +2,11 @@
 
 from __future__ import annotations
 
-import logging
 from dataclasses import dataclass
-from datetime import datetime, timedelta, timezone
-from typing import Any, Dict
+from datetime import UTC, datetime, timedelta
+import logging
+from typing import TYPE_CHECKING, Any
 
-from aiohttp import client
 from homeassistant.config_entries import ConfigEntry, ConfigEntryAuthFailed
 from homeassistant.const import (
     CONF_NAME,
@@ -16,24 +15,28 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
-from homeassistant.core import Event, HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .api import API as PiholeAPI
+from .api import Api as PiholeAPI
 from .const import CONF_UPDATE_INTERVAL, DOMAIN, MIN_TIME_BETWEEN_UPDATES
-from .exceptions import APIException, DataStructureException, UnauthorizedException
+from .exceptions import APIError, DataStructureError, UnauthorizedError
+
+if TYPE_CHECKING:
+    from aiohttp import client
+
+    from homeassistant.core import Event, HomeAssistant
+
 
 _LOGGER = logging.getLogger(__name__)
 
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
+    Platform.BUTTON,
     Platform.SENSOR,
     Platform.SWITCH,
     Platform.UPDATE,
-    Platform.BUTTON,
-    # Platform.NUMBER,
 ]
 
 type PiHoleV6ConfigEntry = ConfigEntry[PiHoleV6Data]
@@ -47,15 +50,53 @@ class PiHoleV6Data:
     coordinator: DataUpdateCoordinator[None]
 
 
+async def check_result(result: dict[str, Any], api_client: PiholeAPI) -> None:
+    """..."""
+
+    if not isinstance(result, dict):
+        await api_client.call_logout()
+        _LOGGER.error("DataStructureError Debug: %s", str(result))
+        raise DataStructureError
+
+
+async def async_get_all_data(api_client: PiholeAPI) -> None:
+    """..."""
+
+    result = await api_client.call_summary()
+    await check_result(result, api_client)
+
+    result = await api_client.call_blocking_status()
+    await check_result(result, api_client)
+
+    result = await api_client.call_get_groups()
+    await check_result(result, api_client)
+
+    result = await api_client.call_padd()
+    await check_result(result, api_client)
+
+    result = await api_client.call_get_ftl_info_messages_count()
+    await check_result(result, api_client)
+
+    result = await api_client.call_get_configured_clients()
+    await check_result(result, api_client)
+
+    result = await api_client.call_get_dhcp_leases()
+    await check_result(result, api_client)
+
+    result = await api_client.call_get_auth_sessions()
+    await check_result(result, api_client)
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: PiHoleV6ConfigEntry) -> bool:
     """Set up Pi-hole V6 entry."""
+
     password = entry.data.get(CONF_PASSWORD, "")
     name = entry.data[CONF_NAME]
     url = entry.data[CONF_URL]
 
     _LOGGER.debug("Setting up %s integration with host %s", DOMAIN, url)
 
-    session: client.ClientSession = async_get_clientsession(hass, False)
+    session: client.ClientSession = async_get_clientsession(hass, verify_ssl=False)
 
     api_client: PiholeAPI = PiholeAPI(
         session=session,
@@ -74,66 +115,32 @@ async def async_setup_entry(hass: HomeAssistant, entry: PiHoleV6ConfigEntry) -> 
 
         if api_client.just_initialized is True:
             api_client.just_initialized = False
-            return None
+            return
 
-        api_client.last_refresh = datetime.now(timezone.utc)
+        api_client.last_refresh = datetime.now(UTC)
 
-        result: Dict[str, Any] = {}
+        result: dict[str, Any] = {}
 
         try:
-            result = await api_client.call_summary()
-            if not isinstance(result, dict):
-                raise DataStructureException()
+            await async_get_all_data(api_client=api_client)
 
-            result = await api_client.call_blocking_status()
-            if not isinstance(result, dict):
-                raise DataStructureException()
-
-            result = await api_client.call_get_groups()
-            if not isinstance(result, dict):
-                raise DataStructureException()
-
-            result = await api_client.call_padd()
-            if not isinstance(result, dict):
-                raise DataStructureException()
-
-            result = await api_client.call_get_ftl_info_messages_count()
-            if not isinstance(result, dict):
-                raise DataStructureException()
-
-            result = await api_client.call_get_configured_clients()
-            if not isinstance(result, dict):
-                raise DataStructureException()
-
-            result = await api_client.call_get_dhcp_leases()
-            if not isinstance(result, dict):
-                raise DataStructureException()
-
-            result = await api_client.call_get_auth_sessions()
-            if not isinstance(result, dict):
-                raise DataStructureException()
-
-        except UnauthorizedException as err:
-            raise ConfigEntryAuthFailed("Credentials must be updated.") from err
-        except DataStructureException as err:
-            await api_client.call_logout()
-            _LOGGER.error("DataStructureException Debug: " + str(result))
-            raise err
+        except UnauthorizedError as err:
+            msg: str = "Credentials must be updated."
+            raise ConfigEntryAuthFailed(msg) from err
 
         try:
             result = await api_client.call_get_ftl_info_messages()
             if not isinstance(result, dict):
                 api_client.remove_cache("ftl_info_messages")
-                raise DataStructureException()
+                _LOGGER.error("DataStructureError Debug: %s", str(result))
+                raise DataStructureError
 
-        except DataStructureException:
-            _LOGGER.error("DataStructureException Debug: " + str(result))
-        except APIException:
+        except APIError:
             api_client.remove_cache("ftl_info_messages")
         finally:
             await api_client.call_logout()
 
-        api_client.last_refresh = datetime.now(timezone.utc)
+        api_client.last_refresh = datetime.now(UTC)
 
     conf_update_interval: int | None = entry.data.get(CONF_UPDATE_INTERVAL)
 

@@ -4,14 +4,14 @@ from homeassistant.util import slugify
 
 
 def create_entity_id_name(input_string: str) -> str:
-    """
-    Creates a normalized entity ID name from a raw input string.
+    """Create a normalized entity ID name from a raw input string.
 
     Args:
-        raw_name: The raw input string to transform.
+        input_string: The raw input string to transform.
 
     Returns:
         The normalized entity ID name.
+
     """
 
     # Split the string at the first "."
@@ -22,6 +22,4 @@ def create_entity_id_name(input_string: str) -> str:
     second_part = slugify(second_part)
 
     # Recombine with the first "." preserved
-    normalized_name = f"{first_part}.{second_part}"
-
-    return normalized_name
+    return f"{first_part}.{second_part}"

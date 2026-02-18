@@ -20,11 +20,11 @@ repository = "https://github.com/bastgau/ha-pi-hole-v6"
 version = "0.0.0"
 
 [tool.poetry.dependencies]
-homeassistant = "2025.8.0"
+homeassistant = "2026.2.1"
 python = ">=3.13,<3.14"
 
 [tool.poetry.group.dev.dependencies]
-ruff = "0.14.14"
+ruff = "0.15.1"
 
 [tool.poetry.urls]
 "Bug Tracker" = "https://github.com/bastgau/ha-pi-hole-v6/issues"
@@ -34,24 +34,31 @@ Changelog = "https://github.com/bastgau/ha-pi-hole-v6/releases"
 build-backend = "poetry.core.masonry.api"
 requires = ["poetry-core"]
 
-[tool.lint.ruff]
+[tool.ruff.lint]
 ignore = [
-  "ANN101", # Self... explanatory
-  "ANN401", # Opiniated warning on disallowing dynamically typed expressions
-  "D203",   # Conflicts with other rules
-  "D213",   # Conflicts with other rules
-  "TID252", # Relative imports
-  "RUF012", # Just broken
-  "D202",   # No blank lines allowed after function docstring
-  "D203",   # 1 blank line required before class docstring
-  "D213",   # Multi-line docstring summary should start at the second line
-  "D404",   # First word of the docstring should not be This
-  "D406",   # Section name should end with a newline
-  "D407",   # Section name underlining
-  "D411",   # Missing blank line before section
-  "E501",   # line too long
-  "E731",   # do not assign a lambda expression, use a def
-
+  "ANN401",  # Opiniated warning on disallowing dynamically typed expressions
+  "D203",    # Conflicts with other rules
+  "D213",    # Conflicts with other rules
+  "TID252",  # Relative imports
+  "RUF012",  # Just broken
+  "D202",    # No blank lines allowed after function docstring
+  "D203",    # 1 blank line required before class docstring
+  "D213",    # Multi-line docstring summary should start at the second line
+  "D404",    # First word of the docstring should not be This
+  "D406",    # Section name should end with a newline
+  "D407",    # Section name underlining
+  "D411",    # Missing blank line before section
+  "E501",    # line too long
+  "E731",    # do not assign a lambda expression, use a def
+  "PLR2004", # Magic value used in comparison, consider replacing `xxx` with a constant variable
+  "FBT001",  # Boolean default positional argument in function definition
+  "FBT002",  # Boolean-typed positional argument in function definition
+  "ARG002",  # Unused method argument: `kwargs`
+  "PLR0911", # Too many return statements (19 > 6)
+  "PLR0912", # Too many branches"
+  "PLR0915", # Too many statements (58 > 50)"
+  "BLE001",  # Do not catch blind exception: `Exception`
+  "S110",    # `try`-`except`-`pass` detected, consider logging the exception"
 
   # Formatter conflicts
   "COM812",
@@ -66,9 +73,8 @@ ignore = [
   "W191",
 ]
 select = ["ALL"]
-src = ["custom_components/pi_hole_v6"]
 
-[tool.link.flake8-import-conventions.extend-aliases]
+[tool.ruff.lint.flake8-import-conventions.extend-aliases]
 "homeassistant.helpers.area_registry" = "ar"
 "homeassistant.helpers.config_validation" = "cv"
 "homeassistant.helpers.device_registry" = "dr"
@@ -76,7 +82,7 @@ src = ["custom_components/pi_hole_v6"]
 "homeassistant.helpers.issue_registry" = "ir"
 voluptuous = "vol"
 
-[tool.lint.isort]
+[tool.ruff.lint.isort]
 force-sort-within-sections = true
 known-first-party = ["homeassistant"]
 combine-as-imports = true
@@ -131,3 +137,4 @@ max-complexity = 25
 target-version = "py313"
 line-length = 120
 indent-width = 4
+src = ["custom_components/pi_hole_v6"]

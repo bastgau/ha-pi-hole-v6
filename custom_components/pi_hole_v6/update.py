@@ -2,33 +2,34 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.update import UpdateEntity, UpdateEntityDescription
-from homeassistant.const import CONF_NAME, EntityCategory
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.const import EntityCategory
 
-from . import PiHoleV6ConfigEntry
-from .api import API as ClientAPI
 from .entity import PiHoleV6Entity
 from .helper import create_entity_id_name
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+    from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+
+    from . import PiHoleV6ConfigEntry
+    from .api import Api as ClientAPI
 
 
 @dataclass(frozen=True)
 class PiHoleV6UpdateEntityDescription(UpdateEntityDescription):
     """Describes PiHoleV6 update entity."""
 
-    installed_version: Callable[[dict], str | None] = lambda api: None
-    latest_version: Callable[[dict], str | None] = lambda api: None
+    installed_version: str | None = None
+    latest_version: str | None = None
+
     release_base_url: str | None = None
     title: str | None = None
 
-
-# entity_registry_enabled_default=False,
 
 UPDATE_ENTITY_TYPES: tuple[PiHoleV6UpdateEntityDescription, ...] = (
     PiHoleV6UpdateEntityDescription(
@@ -71,19 +72,17 @@ UPDATE_ENTITY_TYPES: tuple[PiHoleV6UpdateEntityDescription, ...] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant,
+    hass: HomeAssistant,  # noqa: ARG001 # pylint: disable=unused-argument
     entry: PiHoleV6ConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Pi-hole update entities."""
-    name = entry.data[CONF_NAME]
     hole_data = entry.runtime_data
 
     async_add_entities(
         PiHoleV6UpdateEntity(
             hole_data.api,
             hole_data.coordinator,
-            name,
             entry.entry_id,
             description,
         )
@@ -100,12 +99,14 @@ class PiHoleV6UpdateEntity(PiHoleV6Entity, UpdateEntity):
         self,
         api: ClientAPI,
         coordinator: DataUpdateCoordinator[None],
-        name: str,
         server_unique_id: str,
         description: PiHoleV6UpdateEntityDescription,
     ) -> None:
         """Initialize a Pi-hole update entity."""
-        super().__init__(api, coordinator, name, server_unique_id)
+
+        name: str = coordinator.name
+
+        super().__init__(api, coordinator, coordinator.name, server_unique_id)
         self.entity_description = description
         self._attr_unique_id = f"{self._server_unique_id}/{description.key}"
 
@@ -135,7 +136,7 @@ class PiHoleV6UpdateEntity(PiHoleV6Entity, UpdateEntity):
             ):
                 return True
 
-        except Exception:
+        except Exception:  # pylint: disable=broad-exception-caught
             pass
 
         return False

@@ -1,26 +1,25 @@
 """The above class represents Pi-hole API Client with methods for authentication, retrieving summary data, managing blocking status, and logging requests."""
 
 import asyncio
+from datetime import datetime
 import json
 import logging
-from datetime import datetime
-from socket import gaierror as GaiError
-from typing import Any, Dict, List
+from socket import gaierror
+from typing import Any
 
-import requests
 from aiohttp import ClientError, ContentTypeError, client
+import requests
 
 from .exceptions import (
-    AbortLogoutException,
-    APIException,
-    ClientConnectorException,
-    ContentTypeException,
-    UnauthorizedException,
+    AbortLogoutError,
+    APIError,
+    ClientConnectorError,
+    UnauthorizedError,
     handle_status,
 )
 
 
-class API:
+class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attributes
     """Pi-hole API Client."""
 
     _logger: logging.Logger | None
@@ -35,7 +34,7 @@ class API:
     cache_ftl_info: dict[str, dict[str, Any]] = {}
     cache_groups: dict[str, dict[str, Any]] = {}
     cache_padd: dict[str, Any] = {}
-    cache_remaining_dates: Dict[str, datetime] = {}
+    cache_remaining_dates: dict[str, datetime] = {}
     cache_summary: dict[str, Any] = {}
 
     just_initialized: bool = False
@@ -122,20 +121,19 @@ class API:
                 elif method.lower() == "get":
                     request = await self._session.get(url, headers=headers)
                 else:
-                    self._get_logger().critical("Method (%s) is not supported/implemented.", method.lower())
-                    raise RuntimeError("Method is not supported/implemented.")
+                    msg: str = f"Method ({method.lower()}) is not supported/implemented."
+                    self._get_logger().critical(msg)
+                    raise RuntimeError(msg)
 
-        except (TimeoutError, ClientError, GaiError) as err:
-            raise ClientConnectorException(str(err)) from err
+        except (TimeoutError, ClientError, gaierror) as err:
+            raise ClientConnectorError(str(err)) from err
 
         try:
             handle_status(request.status)
-        except APIException as api_error:
+        except APIError as api_error:
             log_message: str = await self._create_log_message_on_api_exception(api_error, request, method, url)
             self._get_logger().error(log_message)
-            raise api_error
-        except Exception as err:
-            raise err
+            raise
 
         result_data: dict[str, Any] = {}
 
@@ -150,7 +148,7 @@ class API:
                     self._get_logger().error(message)
 
             except ContentTypeError as err:
-                raise ContentTypeException from err
+                raise ContentTypeError from err
 
         return {
             "code": request.status,
@@ -194,7 +192,7 @@ class API:
         return f"{status} {reason} # {method.upper()} {url} : {text}"
 
     async def _create_log_message_on_api_exception(
-        self, api_error: APIException, request: requests.Response, method: str, url: str
+        self, api_error: APIError, request: requests.Response, method: str, url: str
     ) -> str:
         """..."""
 
@@ -203,13 +201,13 @@ class API:
 
         return f"{exception_name} - {log}"
 
-    async def _authentification_step(self, action) -> None:
+    async def _authentification_step(self, action: str) -> None:
         """..."""
         await self._check_authentification(action)
         await self._abort_logout(action)
         await self._request_login(action)
 
-    async def _authentification_step_with_lock(self, action) -> None:
+    async def _authentification_step_with_lock(self, action: str) -> None:
         """..."""
 
         if action not in ("login", "authentification_status", "logout"):
@@ -221,7 +219,7 @@ class API:
                 finally:
                     self._call_lock.release()
 
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 pass
 
         else:
@@ -241,7 +239,7 @@ class API:
                 if response["code"] != 200 or response["data"]["session"]["valid"] is False:
                     self._sid = None
 
-        except UnauthorizedException:
+        except UnauthorizedError:
             self._sid = None
 
     async def _request_login(self, action: str) -> None:
@@ -254,7 +252,7 @@ class API:
         """..."""
 
         if action == "logout" and (self._sid is None or self._sid == "no password set"):
-            raise AbortLogoutException()
+            raise AbortLogoutError
 
     async def call_authentification_status(self) -> dict[str, Any]:
         """..."""
@@ -294,7 +292,7 @@ class API:
         )
 
         if result["data"]["session"]["valid"] is False or result["data"]["session"]["message"] == "password incorrect":
-            raise UnauthorizedException()
+            raise UnauthorizedError
 
         if result["data"]["session"]["sid"] is not None:
             self._sid = result["data"]["session"]["sid"]
@@ -328,7 +326,7 @@ class API:
 
             self._sid = None
 
-        except AbortLogoutException as err:
+        except AbortLogoutError as err:
             result["code"] = err.code
             result["reason"] = err.reason
 
@@ -493,7 +491,7 @@ class API:
         }
 
     async def call_get_ftl_info_messages(self) -> dict[str, Any]:
-        """Get FTL information messages
+        """Get FTL information messages.
 
         Returns:
           result (dict[str, Any]): A dictionary with the keys "code", "reason", and "data".
@@ -518,7 +516,7 @@ class API:
         }
 
     async def call_get_ftl_info_messages_count(self) -> dict[str, Any]:
-        """Get FTL information messages
+        """Get FTL information messages.
 
         Returns:
           result (dict[str, Any]): A dictionary with the keys "code", "reason", and "data".
@@ -722,14 +720,14 @@ class API:
         return await self._call_action("restartdns")
 
     async def call_action_ftl_purge_diagnosis_messages(self) -> dict[str, Any]:
-        """Purge FTP diagnosis messages
+        """Purge FTP diagnosis messages.
 
         Returns:
           result (dict[str, Any]): A dictionary with the keys "code", "reason", and "data".
 
         """
 
-        messages: List[Any] = self.cache_ftl_info["message_list"]
+        messages: list[Any] = self.cache_ftl_info["message_list"]
 
         result: dict[str, Any] = {"code": None, "reason": None, "data": {}}
 

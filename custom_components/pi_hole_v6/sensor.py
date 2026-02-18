@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
+from datetime import UTC, datetime, timedelta
 import logging
-from datetime import datetime, timedelta
-from typing import Any, List
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -13,17 +13,20 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import CONF_NAME, PERCENTAGE, EntityCategory, UnitOfTime
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.helpers.typing import StateType
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from . import PiHoleV6ConfigEntry
-from .api import API as ClientAPI
 from .common import sensor_update_timer
 from .entity import PiHoleV6Entity
 from .helper import create_entity_id_name
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+    from homeassistant.helpers.typing import StateType
+    from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+
+    from . import PiHoleV6ConfigEntry
+    from .api import Api as ClientAPI
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -140,8 +143,6 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     ),
 )
 
-context_name: str = ""
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -155,20 +156,19 @@ async def async_setup_entry(
         PiHoleV6Sensor(
             hole_data.api,
             hole_data.coordinator,
-            name,
             entry.entry_id,
             description,
         )
         for description in SENSOR_TYPES
     ]
-    async_add_entities(sensors, True)
+    async_add_entities(sensors, update_before_add=True)
 
     hass.data[f"pi_hole_entities_sensor_{name}"] = []
     hass.data[f"pi_hole_entities_sensor_{name}"].extend(sensors)
 
-    async def update_timer(now: Any) -> None:
+    async def update_timer(_: Any) -> None:
         """..."""
-        await sensor_update_timer(hass, now, name)
+        await sensor_update_timer(hass, name)
 
     async_track_time_interval(hass, update_timer, timedelta(seconds=1))
 
@@ -182,11 +182,11 @@ class PiHoleV6Sensor(PiHoleV6Entity, SensorEntity):
         self,
         api: ClientAPI,
         coordinator: DataUpdateCoordinator[None],
-        name: str,
         server_unique_id: str,
         description: SensorEntityDescription,
     ) -> None:
         """Initialize a Pi-hole V6 sensor."""
+        name: str = coordinator.name
         super().__init__(api, coordinator, name, server_unique_id)
         self.entity_description = description
         self._attr_unique_id = f"{self._server_unique_id}/{description.key}"
@@ -195,7 +195,7 @@ class PiHoleV6Sensor(PiHoleV6Entity, SensorEntity):
         self.entity_id = create_entity_id_name(raw_name)
 
     @property
-    def native_value(self) -> StateType:
+    def native_value(self) -> StateType:  # pylint: disable=too-many-return-statements, too-many-branches
         """Return the state of the device."""
 
         match self.entity_description.key:
@@ -244,7 +244,7 @@ class PiHoleV6Sensor(PiHoleV6Entity, SensorEntity):
         value = round(self.api.cache_blocking["timer"]) if self.api.cache_blocking["timer"] is not None else 0
 
         if value > 0:
-            until_date: datetime = datetime.now() + timedelta(seconds=value)
+            until_date: datetime = datetime.now(UTC) + timedelta(seconds=value)
             self.api.cache_remaining_dates[f"{self._name}_sensor/global"] = until_date
         elif f"{self._name}_sensor/global" in self.api.cache_remaining_dates:
             del self.api.cache_remaining_dates[f"{self._name}_sensor/global"]
@@ -252,7 +252,7 @@ class PiHoleV6Sensor(PiHoleV6Entity, SensorEntity):
         return value
 
     @property
-    def extra_state_attributes(self) -> dict[str, Any] | None:
+    def extra_state_attributes(self) -> dict[str, Any] | None:  # pylint: disable=too-many-return-statements, too-many-branches
         """Return the state attributes of the Pi-hole V6."""
 
         if self.entity_description.key == "memory_use":
@@ -262,27 +262,27 @@ class PiHoleV6Sensor(PiHoleV6Entity, SensorEntity):
             return self.api.cache_padd["system"]["cpu"]
 
         if self.entity_description.key == "ftl_info_message_count":
-            raw_messages: List[Any] = self.api.cache_ftl_info["message_list"]
-            messages: List[Any] = [{k: v for k, v in message.items() if k != "html"} for message in raw_messages]
+            raw_messages: list[Any] = self.api.cache_ftl_info["message_list"]
+            messages: list[Any] = [{k: v for k, v in message.items() if k != "html"} for message in raw_messages]
             status: str = self.api.cache_ftl_info["status"]
             return {"messages": messages, "status": status, "note": "Total number of Pi-hole diagnosis messages."}
 
         if self.entity_description.key == "configured_clients":
-            raw_clients: List[Any] = self.api.cache_configured_clients
-            excluding: List[str] = ["date_added", "date_modified"]
-            clients: List[Any] = [{k: v for k, v in client.items() if k not in excluding} for client in raw_clients]
+            raw_clients: list[Any] = self.api.cache_configured_clients
+            excluding: list[str] = ["date_added", "date_modified"]
+            clients: list[Any] = [{k: v for k, v in client.items() if k not in excluding} for client in raw_clients]
             return {"clients": clients, "note": "Total number of configured clients."}
 
         if self.entity_description.key == "dhcp_leases":
-            raw_leases: List[Any] = self.api.cache_dhcp_leases
-            excluding: List[str] = []
-            leases: List[Any] = [{k: v for k, v in lease.items() if k not in excluding} for lease in raw_leases]
+            raw_leases: list[Any] = self.api.cache_dhcp_leases
+            excluding: list[str] = []
+            leases: list[Any] = [{k: v for k, v in lease.items() if k not in excluding} for lease in raw_leases]
             return {"leases": leases, "note": "Total number of active DHCP leases."}
 
         if self.entity_description.key == "auth_sessions":
-            raw_sessions: List[Any] = self.api.cache_auth_sessions
-            excluding: List[str] = ["tls", "x_forwarded_for"]
-            sessions: List[Any] = [{k: v for k, v in session.items() if k not in excluding} for session in raw_sessions]
+            raw_sessions: list[Any] = self.api.cache_auth_sessions
+            excluding: list[str] = ["tls", "x_forwarded_for"]
+            sessions: list[Any] = [{k: v for k, v in session.items() if k not in excluding} for session in raw_sessions]
             return {"sessions": sessions, "note": "Total number of auth sessions."}
 
         match self.entity_description.key:
