@@ -52,7 +52,9 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
         """Initialize Pi-hole API Client object with an API URL and an optional logger.
 
         Args:
+          session (client.ClientSession): The aiohttp client session used to perform HTTP requests.
           url (str): Represents the URL of API endpoint. Defaults to "http://pi.hole".
+          password (str): The password used to authenticate against the Pi-hole API. Defaults to "".
           logger (Logger | None): Expects an object of type `Logger` or `None` which will be used to display debug message.
 
         """
@@ -349,10 +351,7 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
         }
 
     async def call_login(self) -> dict[str, Any]:
-        """Authenticate a user with a password.
-
-        Args:
-          password (str): Represents tne password used to authenticate the user during the login process.
+        """Authenticate against the Pi-hole API using the configured password.
 
         Returns:
           result (dict[str, Any]): A dictionary with the keys "code", "reason", and "data".
@@ -439,6 +438,9 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
 
     async def call_padd(self, full: bool = True) -> dict[str, Any]:
         """Retrieve the Pi-hole API Dashboard information.
+
+        Args:
+          full (bool): If True, retrieves the full dashboard data. Defaults to True.
 
         Returns:
           result (dict[str, Any]): A dictionary with the keys "code", "reason", and "data".
@@ -538,7 +540,7 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
         """Disable blocking for DNS requests.
 
         Args:
-          duration (int | None): Represents the time duration in seconds for which the blocking feature will be disabled. Defaults to 120
+          duration (int | None): The time duration in seconds for which blocking will be disabled. Pass None to disable indefinitely.
 
         Returns:
           result (dict[str, Any]): A dictionary with the keys "code", "reason", and "data".
@@ -568,7 +570,7 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
         }
 
     async def call_get_ftl_info_messages(self) -> dict[str, Any]:
-        """Get FTL information messages.
+        """Retrieve the list of FTL diagnosis messages.
 
         Returns:
           result (dict[str, Any]): A dictionary with the keys "code", "reason", and "data".
@@ -593,7 +595,7 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
         }
 
     async def call_get_ftl_info_messages_count(self) -> dict[str, Any]:
-        """Get FTL information messages.
+        """Retrieve the count of FTL diagnosis messages.
 
         Returns:
           result (dict[str, Any]): A dictionary with the keys "code", "reason", and "data".
@@ -697,7 +699,10 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
         }
 
     async def call_group_disable(self, group: str) -> dict[str, Any]:
-        """Disable Pi-hole group.
+        """Disable a Pi-hole group.
+
+        Args:
+          group (str): The name of the group to disable.
 
         Returns:
           result (dict[str, Any]): A dictionary with the keys "code", "reason", and "data".
@@ -724,7 +729,10 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
         }
 
     async def call_group_enable(self, group: str) -> dict[str, Any]:
-        """Enable Pi-hole group.
+        """Enable a Pi-hole group.
+
+        Args:
+          group (str): The name of the group to enable.
 
         Returns:
           result (dict[str, Any]): A dictionary with the keys "code", "reason", and "data".
@@ -797,7 +805,7 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
         return await self._call_action("restartdns")
 
     async def call_action_ftl_purge_diagnosis_messages(self) -> dict[str, Any]:
-        """Purge FTP diagnosis messages.
+        """Purge all FTL diagnosis messages.
 
         Returns:
           result (dict[str, Any]): A dictionary with the keys "code", "reason", and "data".
