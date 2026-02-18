@@ -63,7 +63,7 @@ async def async_setup_entry(
     entry: PiHoleV6ConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """..."""
+    """Set up the Pi-hole V6 button entities."""
 
     hole_data = entry.runtime_data
 
