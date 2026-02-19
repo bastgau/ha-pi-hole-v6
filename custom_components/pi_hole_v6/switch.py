@@ -283,7 +283,7 @@ class PiHoleV6Group(PiHoleV6Entity, SwitchEntity):
     async def async_service_enable(self) -> None:
         """Enable the Pi-hole group blocking via the service call."""
         _LOGGER.debug("Enabling Pi-hole '%s'", self.name)
-        await self.async_turn_switch(action="enable")
+        await self.async_turn_service(action="enable")
 
     async def async_service_disable(self, duration: Any = None) -> None:
         """Disable the Pi-hole group blocking via the service call.
@@ -294,9 +294,9 @@ class PiHoleV6Group(PiHoleV6Entity, SwitchEntity):
 
         """
         duration_seconds: int | None = calculate_duration(duration, f"group/{self.group_name}")
-        await self.async_turn_switch(action="disable", duration=duration_seconds)
+        await self.async_turn_service(action="disable", duration=duration_seconds)
 
-    async def async_turn_switch(self, action: str, duration: Any = None, with_update: bool = True) -> None:
+    async def async_turn_service(self, action: str, duration: Any = None, with_update: bool = True) -> None:
         """Turn on/off the service."""
 
         if action == "enable":
