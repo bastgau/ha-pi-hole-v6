@@ -27,7 +27,7 @@ _LOGGER = logging.getLogger(__name__)
 class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attributes
     """Pi-hole API Client."""
 
-    def __init__(  # noqa: D417
+    def __init__(
         self,
         session: client.ClientSession,
         url: str = "http://pi.hole",
