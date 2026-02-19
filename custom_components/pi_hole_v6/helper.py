@@ -1,4 +1,4 @@
-"""..."""
+"""Helper utility functions for the Pi-hole V6 integration."""
 
 from homeassistant.util import slugify
 

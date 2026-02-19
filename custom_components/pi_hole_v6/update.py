@@ -121,7 +121,15 @@ class PiHoleV6UpdateEntity(PiHoleV6Entity, UpdateEntity):
             self._attr_title = description.title + " (only for information, please check other update entities)"
 
     def get_entity_registry_enabled_value(self) -> bool:
-        """..."""
+        """Determine whether the entity should be enabled in the registry by default.
+
+        Returns True if the entity matches the Docker context (Docker installed/not installed),
+        False otherwise.
+
+        Returns:
+            bool: True if the entity should be enabled by default, False otherwise.
+
+        """
 
         try:
             if (

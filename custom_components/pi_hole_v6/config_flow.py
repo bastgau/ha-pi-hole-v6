@@ -46,6 +46,15 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def _get_data_config_schema(user_input: Any) -> vol.Schema:
+    """Build and return the voluptuous schema for the main config flow form.
+
+    Args:
+        user_input (Any): Previously entered user input used to pre-fill default values.
+
+    Returns:
+        vol.Schema: The schema to be used in the config flow form.
+
+    """
     return vol.Schema(
         {
             vol.Required(
@@ -150,6 +159,13 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         return OptionsFlowHandler()
 
     async def _async_try_connect(self) -> dict[str, str]:
+        """Attempt to connect to the Pi-hole API using the current config.
+
+        Returns:
+            dict[str, str]: An empty dict on success, or a dict mapping a field key
+            to an error string on failure.
+
+        """
         session: client.ClientSession = async_get_clientsession(self.hass, verify_ssl=False)
 
         api_client: ClientAPI = ClientAPI(
@@ -177,6 +193,12 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
 
 
 def _get_data_option_schema() -> vol.Schema:
+    """Build and return the voluptuous schema for the options flow form.
+
+    Returns:
+        vol.Schema: The schema to be used in the options flow form.
+
+    """
     return vol.Schema(
         {
             vol.Required(
@@ -205,6 +227,15 @@ def _get_data_option_schema() -> vol.Schema:
 async def _async_validate_input(
     user_input: dict[str, Any],
 ) -> Any:
+    """Validate the user input from the options flow form.
+
+    Args:
+        user_input (dict[str, Any]): The input submitted by the user in the options form.
+
+    Returns:
+        Any: An empty dict if the input is valid, or a dict mapping a field key to an error string.
+
+    """
     if user_input[CONF_UPDATE_INTERVAL] == 1:
         return {CONF_UPDATE_INTERVAL: "invalid_update_interval"}
 
@@ -215,7 +246,18 @@ class OptionsFlowHandler(OptionsFlow):
     """Options flow used to change configuration (options) of existing instance of integration."""
 
     async def async_step_init(self, user_input: Any) -> ConfigFlowResult:
-        """..."""
+        """Handle the initial step of the options flow.
+
+        Validates the user input if provided, updates the config entry and
+        returns the form pre-filled with current values otherwise.
+
+        Args:
+            user_input (Any): The input submitted by the user, or None when displaying the form.
+
+        Returns:
+            ConfigFlowResult: The result of the options flow step.
+
+        """
         if user_input is not None:  # we asked to validate values entered by user
             errors = await _async_validate_input(user_input)
 

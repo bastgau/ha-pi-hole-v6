@@ -51,7 +51,15 @@ class PiHoleV6Data:
 
 
 async def check_result(result: dict[str, Any], api_client: PiholeAPI) -> None:
-    """..."""
+    """Check that the API result is a valid dictionary.
+
+    If the result is not a dict, logs an error, calls logout and raises DataStructureError.
+
+    Args:
+        result (dict[str, Any]): The result returned by the API call.
+        api_client (PiholeAPI): The Pi-hole API client instance used to call logout.
+
+    """
 
     if not isinstance(result, dict):
         await api_client.call_logout()
@@ -60,7 +68,14 @@ async def check_result(result: dict[str, Any], api_client: PiholeAPI) -> None:
 
 
 async def async_get_all_data(api_client: PiholeAPI) -> None:
-    """..."""
+    """Fetch all required data from the Pi-hole API.
+
+    Sequentially calls each API endpoint and validates the result structure.
+
+    Args:
+        api_client (PiholeAPI): The Pi-hole API client instance used to perform the calls.
+
+    """
 
     result = await api_client.call_summary()
     await check_result(result, api_client)
