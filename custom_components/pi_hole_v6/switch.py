@@ -22,7 +22,7 @@ from .exceptions import (
     GatewayTimeoutError,
     NotFoundError,
     RequestFailedError,
-    ServerErrorError,
+    ServerError,
     ServiceUnavailableError,
     TooManyRequestsError,
     UnauthorizedError,
@@ -180,7 +180,7 @@ class PiHoleV6Switch(PiHoleV6Entity, SwitchEntity):
             ForbiddenError,
             NotFoundError,
             TooManyRequestsError,
-            ServerErrorError,
+            ServerError,
             BadGatewayError,
             ServiceUnavailableError,
             GatewayTimeoutError,
@@ -273,7 +273,7 @@ class PiHoleV6Group(PiHoleV6Entity, SwitchEntity):
             ForbiddenError,
             NotFoundError,
             TooManyRequestsError,
-            ServerErrorError,
+            ServerError,
             BadGatewayError,
             ServiceUnavailableError,
             GatewayTimeoutError,
@@ -359,7 +359,7 @@ def calculate_duration(duration: Any, name: str) -> int | None:
     duration_seconds: int | None = None
 
     if isinstance(duration, timedelta):
-        duration_seconds = duration.total_seconds()
+        duration_seconds = int(duration.total_seconds())
 
     if isinstance(duration, int):
         duration_seconds = duration

@@ -111,8 +111,8 @@ class RequestFailedError(APIError):
     message: str = "The parameters were valid but the request failed. Please check HA logs or Pi-hole logs."
 
 
-class ServerErrorError(APIError):
-    """The class `ServerErrorError` defines an exception for internal server errors."""
+class ServerError(APIError):
+    """The class `ServerError` defines an exception for internal server errors."""
 
     message: str = "An internal server error occurred. Please check HA logs or Pi-hole logs."
 
@@ -166,7 +166,7 @@ def handle_status(status_code: int) -> None:
         404: NotFoundError,
         405: MethodNotAllowedError,
         429: TooManyRequestsError,
-        500: ServerErrorError,
+        500: ServerError,
         502: BadGatewayError,
         503: ServiceUnavailableError,
         504: GatewayTimeoutError,
