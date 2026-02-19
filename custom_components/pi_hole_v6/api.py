@@ -120,11 +120,11 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
             _LOGGER.exception(log_message)
             raise
 
-        result_data: dict[str, Any] = {}
+        result_data: str | None = None
 
         if request.status < 400 and request.text != "":
             try:
-                result_data: str = await self._try_to_retrieve_json_result(request, privacy=False)
+                result_data = await self._try_to_retrieve_json_result(request, privacy=False)
                 message: str = await self._create_log_message_on_api_result(request, method, url)
 
                 if "password incorrect" not in message:
