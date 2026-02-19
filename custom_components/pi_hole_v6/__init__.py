@@ -102,7 +102,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: PiHoleV6ConfigEntry) -> 
         session=session,
         url=url,
         password=password,
-        logger=_LOGGER,
     )
 
     async def async_logout(_: Event) -> None:

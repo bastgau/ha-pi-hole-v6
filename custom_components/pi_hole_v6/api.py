@@ -1,11 +1,10 @@
 """The above class represents Pi-hole API Client with methods for authentication, retrieving summary data, managing blocking status, and logging requests."""
 
 import asyncio
-from datetime import datetime
 import json
 import logging
 from socket import gaierror
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from aiohttp import ClientError, ContentTypeError, client
 import requests
@@ -18,63 +17,46 @@ from .exceptions import (
     handle_status,
 )
 
+if TYPE_CHECKING:
+    from datetime import datetime
+
+
+_LOGGER = logging.getLogger(__name__)
+
 
 class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attributes
     """Pi-hole API Client."""
-
-    _logger: logging.Logger | None
-    _password: str = ""
-    _session: client.ClientSession = None
-    _sid: str | None = None
-
-    cache_auth_sessions: dict[str, Any] = {}
-    cache_blocking: dict[str, Any] = {}
-    cache_configured_clients: dict[str, dict[str, Any]] = {}
-    cache_dhcp_leases: dict[str, dict[str, Any]] = {}
-    cache_ftl_info: dict[str, dict[str, Any]] = {}
-    cache_groups: dict[str, dict[str, Any]] = {}
-    cache_padd: dict[str, Any] = {}
-    cache_remaining_dates: dict[str, datetime] = {}
-    cache_summary: dict[str, Any] = {}
-
-    just_initialized: bool = False
-    last_refresh: datetime | None = None
-
-    url: str = ""
 
     def __init__(  # noqa: D417
         self,
         session: client.ClientSession,
         url: str = "http://pi.hole",
         password: str = "",
-        logger: logging.Logger | None = None,
     ) -> None:
-        """Initialize Pi-hole API Client object with an API URL and an optional logger.
+        """Initialize Pi-hole API Client object with an API URL.
 
         Args:
           url (str): Represents the URL of API endpoint. Defaults to "http://pi.hole".
-          logger (Logger | None): Expects an object of type `Logger` or `None` which will be used to display debug message.
 
         """
-
-        self.url = url
-        self._logger = logger
-        self._password = password
-        self._session = session
         self._call_lock = asyncio.Lock()
+        self._password: str = password
+        self._session: client.ClientSession = session
+        self._sid: str | None = None
+        self.url: str = url
 
-    def _get_logger(self) -> logging.Logger:
-        """Return a logger if it exists, otherwise it creates a new logger.
+        self.cache_auth_sessions: dict[str, Any] = {}
+        self.cache_blocking: dict[str, Any] = {}
+        self.cache_configured_clients: dict[str, dict[str, Any]] = {}
+        self.cache_dhcp_leases: dict[str, dict[str, Any]] = {}
+        self.cache_ftl_info: dict[str, dict[str, Any]] = {}
+        self.cache_groups: dict[str, dict[str, Any]] = {}
+        self.cache_padd: dict[str, Any] = {}
+        self.cache_remaining_dates: dict[str, datetime] = {}
+        self.cache_summary: dict[str, Any] = {}
 
-        Returns:
-          result (Logger): The logger provided during object initialization, otherwise a new logger is created.
-
-        """
-
-        if self._logger is None:
-            return logging.getLogger()
-
-        return self._logger
+        self.just_initialized: bool = False
+        self.last_refresh: datetime | None = None
 
     async def _call(
         self,
@@ -87,7 +69,7 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
 
         Args:
             route (str): Represents the specific endpoint that you want to call.
-            method (str): Represents the HTTP method to be used. It can be one of the following: "post", "delete", or "get".
+            method (str): Represents the HTTP method to be used. It can be one of the following: "post", "put", "delete", or "get".
             action (str): Represents the action name requested.
             data (dict[str, Any] | None): Used to pass a dictionary containing data to be sent in the request when making a POST request.
 
@@ -122,7 +104,7 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
                     request = await self._session.get(url, headers=headers)
                 else:
                     msg: str = f"Method ({method.lower()}) is not supported/implemented."
-                    self._get_logger().critical(msg)
+                    _LOGGER.critical(msg)
                     raise RuntimeError(msg)
 
         except (TimeoutError, ClientError, gaierror) as err:
@@ -132,7 +114,7 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
             handle_status(request.status)
         except APIError as api_error:
             log_message: str = await self._create_log_message_on_api_exception(api_error, request, method, url)
-            self._get_logger().error(log_message)
+            _LOGGER.exception(log_message)
             raise
 
         result_data: dict[str, Any] = {}
@@ -143,9 +125,9 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
                 message: str = await self._create_log_message_on_api_result(request, method, url)
 
                 if "password incorrect" not in message:
-                    self._get_logger().debug(message)
+                    _LOGGER.debug(message)
                 else:
-                    self._get_logger().error(message)
+                    _LOGGER.error(message)
 
             except ContentTypeError as err:
                 raise ContentTypeError from err
@@ -507,7 +489,7 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
         )
 
         self.cache_ftl_info["message_list"] = result["data"]["messages"]
-        self.cache_ftl_info["status"] = "OK: Messages fetched successfull"
+        self.cache_ftl_info["status"] = "OK: Messages fetched successfully"
 
         return {
             "code": result["code"],
@@ -658,7 +640,7 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
 
         result: dict[str, Any] = await self._call(
             url,
-            action="group-disable",
+            action="group-enable",
             method="PUT",
             data={
                 "name": group,
@@ -729,12 +711,15 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
 
         messages: list[Any] = self.cache_ftl_info["message_list"]
 
-        result: dict[str, Any] = {"code": None, "reason": None, "data": {}}
+        result: dict[str, Any] = {"code": 200, "reason": "No FTL diagnosis message to delete", "data": {}}
+
+        if len(messages) == 0:
+            return result
 
         for message in messages:
             url: str = f"/info/messages/{message['id']}"
 
-            result = await self._call(
+            await self._call(
                 url,
                 action="action_ftl_purge_diagnosis_messages",
                 method="DELETE",
@@ -776,7 +761,6 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
     def remove_cache(self, data_name: str) -> None:
         """..."""
 
-        match data_name:
-            case "ftl_info_messages":
-                self.cache_ftl_info["message_list"] = {}
-                self.cache_ftl_info["status"] = "NOK: Messages fetched unsuccessfully"
+        if data_name == "ftl_info_messages":
+            self.cache_ftl_info["message_list"] = {}
+            self.cache_ftl_info["status"] = "NOK: Messages fetched unsuccessfully"

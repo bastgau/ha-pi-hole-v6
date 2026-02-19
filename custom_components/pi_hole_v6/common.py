@@ -80,8 +80,9 @@ async def sensor_update_timer(hass: HomeAssistant, name: str) -> None:
         request_refresh: bool = False
 
         if new_value > 0:
-            paris_tz: ZoneInfo = ZoneInfo("Europe/Paris")
-            until_date: datetime = entity.api.cache_remaining_dates[f"{name}_sensor/global"].astimezone(paris_tz)
+            until_date: datetime = entity.api.cache_remaining_dates[f"{name}_sensor/global"].astimezone(
+                ZoneInfo(hass.config.time_zone)
+            )
             until_date_attribute = {"until_date": until_date}
         else:
             request_refresh = True
@@ -122,7 +123,7 @@ async def switch_update_timer(hass: HomeAssistant, name: str) -> None:
             remaining_seconds_attribute: dict[str, Any] = {"remaining_seconds": 0}
 
             if new_value > 0:
-                until_date_attribute = {"until_date": remaining_date.astimezone(ZoneInfo("Europe/Paris"))}
+                until_date_attribute = {"until_date": remaining_date.astimezone(ZoneInfo(hass.config.time_zone))}
                 remaining_seconds_attribute = {"remaining_seconds": new_value}
             else:
                 existing_attributes.pop("until_date", None)
