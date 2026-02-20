@@ -50,7 +50,17 @@ async def async_setup_entry(
     entry: PiHoleV6ConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the Pi-hole V6 binary sensor."""
+    """Set up the Pi-hole V6 binary sensor.
+
+    Args:
+        hass (HomeAssistant): The Home Assistant instance (unused).
+        entry (PiHoleV6ConfigEntry): The config entry providing runtime data.
+        async_add_entities (AddConfigEntryEntitiesCallback): Callback to register new entities.
+
+    Returns:
+        None
+
+    """
     hole_data = entry.runtime_data
     binary_sensors = [
         PiHoleV6BinarySensor(
@@ -78,7 +88,18 @@ class PiHoleV6BinarySensor(PiHoleV6Entity, BinarySensorEntity):
         server_unique_id: str,
         description: PiHoleV6BinarySensorEntityDescription,
     ) -> None:
-        """Initialize a Pi-hole V6 sensor."""
+        """Initialize a Pi-hole V6 sensor.
+
+        Args:
+            api (PiholeAPI): The Pi-hole API client instance.
+            coordinator (DataUpdateCoordinator[None]): The data update coordinator.
+            server_unique_id (str): A unique identifier for the server entry.
+            description (PiHoleV6BinarySensorEntityDescription): The entity description.
+
+        Returns:
+            None
+
+        """
 
         name: str = coordinator.name
         super().__init__(api, coordinator, name, server_unique_id)
@@ -90,12 +111,22 @@ class PiHoleV6BinarySensor(PiHoleV6Entity, BinarySensorEntity):
 
     @property
     def is_on(self) -> bool:  # pyright: ignore[reportIncompatibleVariableOverride]
-        """Return if the service is on."""
+        """Return if the service is on.
+
+        Returns:
+            bool: True if the blocking service is enabled, False otherwise.
+
+        """
         return self.entity_description.state_value(self.api)
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:  # pyright: ignore[reportIncompatibleVariableOverride]
-        """Return the state attributes of the Pi-hole V6."""
+        """Return the state attributes of the Pi-hole V6.
+
+        Returns:
+            dict[str, Any] | None: A dictionary of extra attributes, or None if not applicable.
+
+        """
 
         if self.entity_description.key == "status":
             url: str = self.api.url.split("/api")[0] + "/admin"
