@@ -31,7 +31,18 @@ class PiHoleV6Entity(CoordinatorEntity[DataUpdateCoordinator[None]]):
         name: str,
         server_unique_id: str,
     ) -> None:
-        """Initialize a Pi-hole V6 entity."""
+        """Initialize a Pi-hole V6 entity.
+
+        Args:
+            api (PiholeAPI): The Pi-hole API client instance.
+            coordinator (DataUpdateCoordinator[None]): The data update coordinator.
+            name (str): The name of the Pi-hole instance.
+            server_unique_id (str): A unique identifier for the server entry.
+
+        Returns:
+            None
+
+        """
         super().__init__(coordinator)
         self.api = api
         self._name = name
@@ -39,7 +50,12 @@ class PiHoleV6Entity(CoordinatorEntity[DataUpdateCoordinator[None]]):
 
     @cached_property
     def device_info(self) -> DeviceInfo:
-        """Return the device information of the entity."""
+        """Return the device information of the entity.
+
+        Returns:
+            DeviceInfo: The device information object for this entity.
+
+        """
 
         config_url = self.api.url.split("/api")[0] + "/admin"
 
