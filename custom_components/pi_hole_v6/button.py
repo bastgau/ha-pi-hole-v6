@@ -63,7 +63,17 @@ async def async_setup_entry(
     entry: PiHoleV6ConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the Pi-hole V6 button entities."""
+    """Set up the Pi-hole V6 button entities.
+
+    Args:
+        hass (HomeAssistant): The Home Assistant instance (unused).
+        entry (PiHoleV6ConfigEntry): The config entry providing runtime data.
+        async_add_entities (AddConfigEntryEntitiesCallback): Callback to register new entities.
+
+    Returns:
+        None
+
+    """
 
     hole_data = entry.runtime_data
 
@@ -94,7 +104,18 @@ class PiHoleV6Button(PiHoleV6Entity, ButtonEntity):
         server_unique_id: str,
         description: PiholeV6ButtonEntityDescription,
     ) -> None:
-        """Initialize Pi-hole V6 button."""
+        """Initialize Pi-hole V6 button.
+
+        Args:
+            api (PiholeAPI): The Pi-hole API client instance.
+            coordinator (DataUpdateCoordinator[None]): The data update coordinator.
+            server_unique_id (str): A unique identifier for the server entry.
+            description (PiholeV6ButtonEntityDescription): The entity description.
+
+        Returns:
+            None
+
+        """
         name: str = coordinator.name
         super().__init__(api, coordinator, name, server_unique_id)
         self.entity_description = description  # pyright: ignore[reportIncompatibleVariableOverride]
@@ -105,7 +126,12 @@ class PiHoleV6Button(PiHoleV6Entity, ButtonEntity):
         self.entity_id = create_entity_id_name(raw_name)
 
     async def async_press(self) -> None:
-        """Press the button."""
+        """Press the button.
+
+        Returns:
+            None
+
+        """
 
         action: str = self.entity_description.key
         result: dict[str, Any] = {"code": 200}
@@ -146,5 +172,10 @@ class PiHoleV6Button(PiHoleV6Entity, ButtonEntity):
 
     @property
     def is_enabled(self) -> bool:
-        """Return whether the button is enabled."""
+        """Return whether the button is enabled.
+
+        Returns:
+            bool: True if the button is enabled, False otherwise.
+
+        """
         return self._is_enabled

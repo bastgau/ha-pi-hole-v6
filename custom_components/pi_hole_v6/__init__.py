@@ -60,6 +60,12 @@ async def check_result(result: Any, api_client: PiholeAPI) -> None:
         result (Any): The result returned by the API call.
         api_client (PiholeAPI): The Pi-hole API client instance used to call logout.
 
+    Returns:
+        None
+
+    Raises:
+        DataStructureError: If the result is not a dictionary.
+
     """
 
     if not isinstance(result, dict):
@@ -75,6 +81,12 @@ async def async_get_all_data(api_client: PiholeAPI) -> None:
 
     Args:
         api_client (PiholeAPI): The Pi-hole API client instance used to perform the calls.
+
+    Returns:
+        None
+
+    Raises:
+        DataStructureError: If any API call returns an unexpected data structure.
 
     """
 
@@ -104,7 +116,19 @@ async def async_get_all_data(api_client: PiholeAPI) -> None:
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: PiHoleV6ConfigEntry) -> bool:
-    """Set up Pi-hole V6 entry."""
+    """Set up Pi-hole V6 entry.
+
+    Args:
+        hass (HomeAssistant): The Home Assistant instance.
+        entry (PiHoleV6ConfigEntry): The config entry to set up.
+
+    Returns:
+        bool: True if the setup succeeded.
+
+    Raises:
+        ConfigEntryAuthFailed: If the credentials are invalid or expired.
+
+    """
 
     password = entry.data.get(CONF_PASSWORD, "")
     name = entry.data[CONF_NAME]
@@ -121,12 +145,31 @@ async def async_setup_entry(hass: HomeAssistant, entry: PiHoleV6ConfigEntry) -> 
     )
 
     async def async_logout(_: Event) -> None:
+        """Log out from the Pi-hole API when Home Assistant stops.
+
+        Args:
+            _ (Event): The Home Assistant stop event (unused).
+
+        Returns:
+            None
+
+        """
         await api_client.call_logout()
 
     entry.async_on_unload(hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_logout))
 
     async def async_update_data() -> dict[str, Any] | None:
-        """Fetch data from API endpoint."""
+        """Fetch data from API endpoint.
+
+        Returns:
+            dict[str, Any] | None: A dict with the last refresh timestamp, or None
+            on the first call after initialization.
+
+        Raises:
+            ConfigEntryAuthFailed: If the credentials are invalid or expired.
+            DataStructureError: If the API returns an unexpected data structure.
+
+        """
 
         if api_client.just_initialized is True:
             api_client.just_initialized = False
@@ -186,5 +229,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: PiHoleV6ConfigEntry) -> 
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Unload Pi-hole entry."""
+    """Unload Pi-hole entry.
+
+    Args:
+        hass (HomeAssistant): The Home Assistant instance.
+        entry (ConfigEntry): The config entry to unload.
+
+    Returns:
+        bool: True if unloading succeeded.
+
+    """
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

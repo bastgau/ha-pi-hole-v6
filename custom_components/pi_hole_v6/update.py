@@ -78,7 +78,17 @@ async def async_setup_entry(
     entry: PiHoleV6ConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the Pi-hole update entities."""
+    """Set up the Pi-hole update entities.
+
+    Args:
+        hass (HomeAssistant): The Home Assistant instance (unused).
+        entry (PiHoleV6ConfigEntry): The config entry providing runtime data.
+        async_add_entities (AddConfigEntryEntitiesCallback): Callback to register new entities.
+
+    Returns:
+        None
+
+    """
     hole_data = entry.runtime_data
 
     async_add_entities(
@@ -104,7 +114,18 @@ class PiHoleV6UpdateEntity(PiHoleV6Entity, UpdateEntity):
         server_unique_id: str,
         description: PiHoleV6UpdateEntityDescription,
     ) -> None:
-        """Initialize a Pi-hole update entity."""
+        """Initialize a Pi-hole update entity.
+
+        Args:
+            api (ClientAPI): The Pi-hole API client instance.
+            coordinator (DataUpdateCoordinator[Any]): The data update coordinator.
+            server_unique_id (str): A unique identifier for the server entry.
+            description (PiHoleV6UpdateEntityDescription): The entity description.
+
+        Returns:
+            None
+
+        """
 
         name: str = coordinator.name
 
@@ -153,7 +174,12 @@ class PiHoleV6UpdateEntity(PiHoleV6Entity, UpdateEntity):
 
     @property
     def installed_version(self) -> str | None:  # pyright: ignore[reportIncompatibleVariableOverride]
-        """Version installed and in use."""
+        """Version installed and in use.
+
+        Returns:
+            str | None: The installed version string, or None if unavailable.
+
+        """
         versions: dict[str, Any] | None = self.api.cache_padd["version"]
         if isinstance(versions, dict) and self.entity_description.installed_version is not None:
             return self.entity_description.installed_version(versions)
@@ -161,7 +187,12 @@ class PiHoleV6UpdateEntity(PiHoleV6Entity, UpdateEntity):
 
     @property
     def latest_version(self) -> str | None:  # pyright: ignore[reportIncompatibleVariableOverride]
-        """Latest version available for install."""
+        """Latest version available for install.
+
+        Returns:
+            str | None: The latest available version string, or None if unavailable.
+
+        """
         versions: dict[str, Any] | None = self.api.cache_padd["version"]
         if isinstance(versions, dict) and self.entity_description.latest_version is not None:
             return self.entity_description.latest_version(versions)
@@ -169,5 +200,10 @@ class PiHoleV6UpdateEntity(PiHoleV6Entity, UpdateEntity):
 
     @property
     def release_url(self) -> str | None:  # pyright: ignore[reportIncompatibleVariableOverride]
-        """URL to the full release notes of the latest version available."""
+        """URL to the full release notes of the latest version available.
+
+        Returns:
+            str | None: The release URL, or None if no latest version is available.
+
+        """
         return f"{self.entity_description.release_base_url}/{self.latest_version}"

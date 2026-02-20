@@ -79,11 +79,24 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
     VERSION = CONFIG_ENTRY_VERSION
 
     def __init__(self) -> None:
-        """Initialize the config flow."""
+        """Initialize the config flow.
+
+        Returns:
+            None
+
+        """
         self._config: dict[str, Any] = {}
 
     async def async_step_user(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
-        """Handle a flow initiated by the user."""
+        """Handle a flow initiated by the user.
+
+        Args:
+            user_input (dict[str, Any] | None): The input submitted by the user, or None when displaying the form.
+
+        Returns:
+            ConfigFlowResult: The result of the config flow step.
+
+        """
         errors = {}
 
         if user_input is not None:
@@ -118,7 +131,15 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> ConfigFlowResult:
-        """Perform reauth if the user credentials have changed."""
+        """Perform reauth if the user credentials have changed.
+
+        Args:
+            entry_data (Mapping[str, Any]): The existing config entry data.
+
+        Returns:
+            ConfigFlowResult: The result of the reauth flow step.
+
+        """
         self._config = {
             CONF_NAME: entry_data[CONF_NAME],
             CONF_URL: entry_data[CONF_URL],
@@ -126,7 +147,15 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
-        """Handle user's reauth credentials."""
+        """Handle user's reauth credentials.
+
+        Args:
+            user_input (dict[str, Any] | None): The input submitted by the user, or None when displaying the form.
+
+        Returns:
+            ConfigFlowResult: The result of the reauth confirmation step.
+
+        """
         errors: dict[str, str] | None = {}
         if user_input:
             self._config[CONF_PASSWORD] = user_input[CONF_PASSWORD]
@@ -155,7 +184,15 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(config_entry: Any) -> OptionsFlowHandler:  # noqa: ARG004
-        """Get the options flow for this handler."""
+        """Get the options flow for this handler.
+
+        Args:
+            config_entry (Any): The current config entry (unused).
+
+        Returns:
+            OptionsFlowHandler: The options flow handler instance.
+
+        """
         return OptionsFlowHandler()
 
     async def _async_try_connect(self) -> dict[str, str]:
