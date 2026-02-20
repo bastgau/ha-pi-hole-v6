@@ -6,8 +6,7 @@ import logging
 from socket import gaierror
 from typing import TYPE_CHECKING, Any
 
-from aiohttp import ClientError, ContentTypeError, client
-import requests
+from aiohttp import ClientError, ClientResponse, ContentTypeError, client
 
 from .exceptions import (
     AbortLogoutError,
@@ -51,7 +50,7 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
         self.cache_blocking: dict[str, Any] = {}
         self.cache_configured_clients: dict[str, dict[str, Any]] = {}
         self.cache_dhcp_leases: dict[str, dict[str, Any]] = {}
-        self.cache_ftl_info: dict[str, dict[str, Any]] = {}
+        self.cache_ftl_info: dict[str, Any] = {}
         self.cache_groups: dict[str, dict[str, Any]] = {}
         self.cache_padd: dict[str, Any] = {}
         self.cache_remaining_dates: dict[str, datetime] = {}
@@ -64,7 +63,7 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
         self,
         route: str,
         method: str,
-        action: str | None = None,
+        action: str = "",
         data: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Send HTTP requests with specified method, route, and data.
@@ -92,20 +91,22 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
         if self._sid is not None and self._sid != "no password set":
             headers = headers | {"sid": self._sid}
 
-        request: requests.Response
+        request: ClientResponse
 
         try:
+            method = method.lower()
+
             async with asyncio.timeout(60):
-                if method.lower() == "post":
+                if method == "post":
                     request = await self._session.post(url, json=data, headers=headers)
-                elif method.lower() == "put":
+                elif method == "put":
                     request = await self._session.put(url, json=data, headers=headers)
-                elif method.lower() == "delete":
+                elif method == "delete":
                     request = await self._session.delete(url, headers=headers)
-                elif method.lower() == "get":
+                elif method == "get":
                     request = await self._session.get(url, headers=headers)
                 else:
-                    msg: str = f"Method ({method.lower()}) is not supported/implemented."
+                    msg: str = f"Method ({method}) is not supported/implemented."
                     _LOGGER.critical(msg)
                     raise RuntimeError(msg)
 
@@ -119,20 +120,16 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
             _LOGGER.exception(log_message)
             raise
 
-        result_data: str | None = None
+        result_data: dict[str, Any] | None = None
 
         if request.status < 400 and request.text != "":
-            try:
-                result_data = await self._try_to_retrieve_json_result(request, privacy=False)
-                message: str = await self._create_log_message_on_api_result(request, method, url)
+            result_data = await self._try_to_retrieve_json_result(request, privacy=False)
+            message: str = await self._create_log_message_on_api_result(request, method, url)
 
-                if "password incorrect" not in message:
-                    _LOGGER.debug(message)
-                else:
-                    _LOGGER.error(message)
-
-            except ContentTypeError as err:
-                raise ContentTypeError from err
+            if "password incorrect" not in message:
+                _LOGGER.debug(message)
+            else:
+                _LOGGER.error(message)
 
         return {
             "code": request.status,
@@ -140,21 +137,25 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
             "data": result_data,
         }
 
-    async def _try_to_retrieve_json_result(self, request: requests.Response, privacy: bool = True) -> str | None:
+    async def _try_to_retrieve_json_result(
+        self,
+        request: ClientResponse,
+        privacy: bool = True,
+    ) -> dict[str, Any] | None:
         """Attempt to parse the JSON body from an HTTP response.
 
         Handles encoding errors gracefully and optionally redacts the session SID for privacy.
 
         Args:
-            request (requests.Response): The HTTP response object to parse.
+            request (ClientResponse): The HTTP response object to parse.
             privacy (bool): If True, redacts the session SID from the result. Defaults to True.
 
         Returns:
-            str | None: The parsed JSON content, or None if the response has no body.
+            dict[str, Any] | None : The parsed JSON content, or None if the response has no body.
 
         """
 
-        text: str | None = None
+        text: dict[str, Any] | None = None
 
         try:
             if request.status != 204:
@@ -177,11 +178,11 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
 
         return text
 
-    async def _create_log_message_on_api_result(self, request: requests.Response, method: str, url: str) -> str:
+    async def _create_log_message_on_api_result(self, request: ClientResponse, method: str, url: str) -> str:
         """Build a log message string from an HTTP response.
 
         Args:
-            request (requests.Response): The HTTP response object.
+            request (ClientResponse): The HTTP response object.
             method (str): The HTTP method used for the request.
             url (str): The URL of the request.
 
@@ -190,20 +191,20 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
 
         """
 
-        text: str | None = await self._try_to_retrieve_json_result(request)
+        text: dict[str, Any] | None = await self._try_to_retrieve_json_result(request)
         status: str = str(request.status)
         reason: str = str(request.reason)
 
         return f"{status} {reason} # {method.upper()} {url} : {text}"
 
     async def _create_log_message_on_api_exception(
-        self, api_error: APIError, request: requests.Response, method: str, url: str
+        self, api_error: APIError, request: ClientResponse, method: str, url: str
     ) -> str:
         """Build a log message string from an API exception and its associated HTTP response.
 
         Args:
             api_error (APIError): The API exception that was raised.
-            request (requests.Response): The HTTP response object associated with the error.
+            request (ClientResponse): The HTTP response object associated with the error.
             method (str): The HTTP method used for the request.
             url (str): The URL of the request.
 
@@ -852,5 +853,5 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
         """
 
         if data_name == "ftl_info_messages":
-            self.cache_ftl_info["message_list"] = {}
+            self.cache_ftl_info["message_list"] = []
             self.cache_ftl_info["status"] = "NOK: Messages fetched unsuccessfully"
