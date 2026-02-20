@@ -11,7 +11,12 @@ class APIError(Exception):
     message: str = ""
 
     def __init__(self) -> None:
-        """Initialize the APIError exception with the class-level message."""
+        """Initialize the APIError exception with the class-level message.
+
+        Returns:
+            None
+
+        """
         super().__init__(self.message)
 
 
@@ -21,7 +26,12 @@ class ActionExecutionError(Exception):
     message: str = "The action requested has failed. Please check HA logs or Pi-hole logs."
 
     def __init__(self) -> None:
-        """Initialize the ActionExecutionError exception with the class-level message."""
+        """Initialize the ActionExecutionError exception with the class-level message.
+
+        Returns:
+            None
+
+        """
         super().__init__(self.message)
 
 
@@ -33,7 +43,12 @@ class AbortLogoutError(Exception):
     message: str = "Logout call is not relevant. Maybe no session is active. Please check HA logs or Pi-hole logs."
 
     def __init__(self) -> None:
-        """Initialize the AbortLogoutError exception with the class-level message."""
+        """Initialize the AbortLogoutError exception with the class-level message.
+
+        Returns:
+            None
+
+        """
         super().__init__(self.message)
 
 
@@ -63,6 +78,9 @@ class ClientConnectorError(Exception):
             custom_message (str): An optional additional message to append to the default error message.
                 If empty (default), only the default message is used.
 
+        Returns:
+            None
+
         """
         new_message: str = self.message
 
@@ -78,7 +96,12 @@ class ContentTypeError(Exception):
     message: str = "Invalid content type returned by the API. Please check HA logs or Pi-hole logs."
 
     def __init__(self) -> None:
-        """Initialize the ContentTypeError exception with the class-level message."""
+        """Initialize the ContentTypeError exception with the class-level message.
+
+        Returns:
+            None
+
+        """
         super().__init__(self.message)
 
 
@@ -148,11 +171,25 @@ def handle_status(status_code: int) -> None:
     """Raise specific exceptions based on the input status code.
 
     Args:
-      status_code (int): Represents the status code and handles it based on the provided mapping.
+        status_code (int): Represents the status code and handles it based on the provided mapping.
 
     Returns:
-      result (None) : If the status code is less than 400, it returns `None`. If the status code corresponds to a known error code
-      in the mapping, it raises the corresponding exception else the exception `NotImplementedError` is thrown.
+        None: Returns immediately if the status code is less than 400.
+
+    Raises:
+        BadRequestError: If status code is 400.
+        UnauthorizedError: If status code is 401.
+        RequestFailedError: If status code is 402.
+        ForbiddenError: If status code is 403.
+        NotFoundError: If status code is 404.
+        MethodNotAllowedError: If status code is 405.
+        TooManyRequestsError: If status code is 429.
+        ServerError: If status code is 500.
+        BadGatewayError: If status code is 502.
+        ServiceUnavailableError: If status code is 503.
+        GatewayTimeoutError: If status code is 504.
+        AbortLogoutError: If status code is 499.
+        NotImplementedError: If the status code is not mapped.
 
     """
 
