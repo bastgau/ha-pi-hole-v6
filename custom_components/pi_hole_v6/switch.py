@@ -64,7 +64,7 @@ async def async_setup_entry(
     ]
 
     for group in hole_data.api.cache_groups.values():
-        description: SwitchEntityDescription = SwitchEntityDescription(
+        description = SwitchEntityDescription(
             key="group",
             translation_key="group",
             translation_placeholders={

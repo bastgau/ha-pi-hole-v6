@@ -121,12 +121,7 @@ async def sensor_update_timer(hass: HomeAssistant, name: str) -> None:
         if entity_state is None or (entity_state.state == str(0) and new_value < 0):
             return
 
-        state: State | None = hass.states.get(entity.entity_id)
-
-        if state is None:
-            return
-
-        existing_attributes = dict(state.attributes)
+        existing_attributes = dict(entity_state.attributes)
 
         until_date_attribute: dict[str, Any] = {}
 

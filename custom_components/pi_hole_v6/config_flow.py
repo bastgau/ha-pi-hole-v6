@@ -190,7 +190,7 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             _LOGGER.error("Connection failed (%s)", api_client.url)  # noqa: TRY400
             return {CONF_PASSWORD: "invalid_auth"}
 
-        return None
+        return {}
 
 
 def _get_data_option_schema() -> vol.Schema:

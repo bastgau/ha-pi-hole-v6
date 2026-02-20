@@ -162,7 +162,7 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
                 text = await request.json()
         except UnicodeDecodeError:
             raw_data = await request.read()
-            text_data = raw_data.decode(encoding="utf-8", errors="replace")  # ou un autre encodage
+            text_data = raw_data.decode(encoding="utf-8", errors="replace")
             text = json.loads(text_data)
         except ContentTypeError:
             pass
