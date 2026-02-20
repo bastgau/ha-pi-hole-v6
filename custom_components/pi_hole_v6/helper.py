@@ -7,10 +7,10 @@ def create_entity_id_name(input_string: str) -> str:
     """Create a normalized entity ID name from a raw input string.
 
     Args:
-        input_string: The raw input string to transform.
+        input_string (str): The raw input string to transform.
 
     Returns:
-        The normalized entity ID name.
+        str: The normalized entity ID name.
 
     """
 
