@@ -201,7 +201,7 @@ async def switch_update_timer(hass: HomeAssistant, name: str) -> None:
             hass.states.async_set(switch_entity.entity_id, switch_entity.state, new_attributes)
 
             if new_value == 0:
-                await switch_entity.async_turn_switch(action="enable", with_update=True)
+                await switch_entity.async_turn_service(action="enable", with_update=True)
                 need_refresh = True
 
     if need_refresh is True and switch_entity is not None:
