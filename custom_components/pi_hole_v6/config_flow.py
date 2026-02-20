@@ -80,7 +80,7 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize the config flow."""
-        self._config: dict = {}
+        self._config: dict[str, Any] = {}
 
     async def async_step_user(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
@@ -127,7 +127,7 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_step_reauth_confirm(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         """Handle user's reauth credentials."""
-        errors: dict[str, str] = {}
+        errors: dict[str, str] | None = {}
         if user_input:
             self._config[CONF_PASSWORD] = user_input[CONF_PASSWORD]
 
@@ -172,13 +172,12 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             session=session,
             url=self._config[CONF_URL],
             password=self._config[CONF_PASSWORD],
-            logger=_LOGGER,
         )
 
         try:
             await api_client.call_authentification_status()
         except ClientConnectorError:
-            _LOGGER.exception("Connection failed (%s)", api_client.url)
+            _LOGGER.error("Connection failed (%s)", api_client.url)  # noqa: TRY400
             return {CONF_URL: "cannot_connect"}
         except (
             NotFoundError,
@@ -190,6 +189,8 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         except (UnauthorizedError, ForbiddenError):
             _LOGGER.error("Connection failed (%s)", api_client.url)  # noqa: TRY400
             return {CONF_PASSWORD: "invalid_auth"}
+
+        return {}
 
 
 def _get_data_option_schema() -> vol.Schema:
@@ -204,7 +205,7 @@ def _get_data_option_schema() -> vol.Schema:
             vol.Required(
                 CONF_UPDATE_INTERVAL,
             ): vol.All(
-                selector.NumberSelector(
+                selector.NumberSelector(  # pyright: ignore[reportUnknownMemberType]
                     selector.NumberSelectorConfig(
                         min=1,
                         max=3600,
@@ -217,7 +218,7 @@ def _get_data_option_schema() -> vol.Schema:
             vol.Required(
                 CONF_URL,
             ): vol.All(
-                selector.TextSelector(),
+                selector.TextSelector(),  # pyright: ignore[reportUnknownMemberType]
                 vol.Coerce(str),
             ),
         }

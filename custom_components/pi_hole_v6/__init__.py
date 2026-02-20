@@ -7,7 +7,7 @@ from datetime import UTC, datetime, timedelta
 import logging
 from typing import TYPE_CHECKING, Any
 
-from homeassistant.config_entries import ConfigEntry, ConfigEntryAuthFailed
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
@@ -15,6 +15,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -47,16 +48,16 @@ class PiHoleV6Data:
     """Runtime data definition."""
 
     api: PiholeAPI
-    coordinator: DataUpdateCoordinator[None]
+    coordinator: DataUpdateCoordinator[Any]
 
 
-async def check_result(result: dict[str, Any], api_client: PiholeAPI) -> None:
+async def check_result(result: Any, api_client: PiholeAPI) -> None:
     """Check that the API result is a valid dictionary.
 
     If the result is not a dict, logs an error, calls logout and raises DataStructureError.
 
     Args:
-        result (dict[str, Any]): The result returned by the API call.
+        result (Any): The result returned by the API call.
         api_client (PiholeAPI): The Pi-hole API client instance used to call logout.
 
     """
@@ -124,16 +125,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: PiHoleV6ConfigEntry) -> 
 
     entry.async_on_unload(hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_logout))
 
-    async def async_update_data() -> None:
+    async def async_update_data() -> dict[str, Any] | None:
         """Fetch data from API endpoint."""
 
         if api_client.just_initialized is True:
             api_client.just_initialized = False
-            return
+            return None
 
         api_client.last_refresh = datetime.now(UTC)
 
-        result: dict[str, Any] = {}
+        result: Any = {}
 
         try:
             await async_get_all_data(api_client=api_client)
@@ -156,6 +157,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: PiHoleV6ConfigEntry) -> 
 
         api_client.last_refresh = datetime.now(UTC)
 
+        return {"last_refresh": api_client.last_refresh}
+
     conf_update_interval: int | None = entry.data.get(CONF_UPDATE_INTERVAL)
 
     if conf_update_interval is None:
@@ -170,6 +173,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: PiHoleV6ConfigEntry) -> 
         name=name,
         update_method=async_update_data,
         update_interval=update_interval,
+        always_update=False,
     )
 
     await coordinator.async_config_entry_first_refresh()

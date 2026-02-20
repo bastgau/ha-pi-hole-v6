@@ -5,7 +5,7 @@ from datetime import UTC, datetime
 from typing import Any
 from zoneinfo import ZoneInfo
 
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, State
 
 
 def find_entity_switch(current_hass: HomeAssistant, key: str, context_name: str) -> Any:
@@ -116,11 +116,12 @@ async def sensor_update_timer(hass: HomeAssistant, name: str) -> None:
     if entity is not None and hass.states.get(entity.entity_id) is not None:
         new_value = calculate_remaining_until_blocking_mode_until_value(entity, f"{name}_sensor/global")
 
-        if hass.states.get(entity.entity_id).state == str(0) and new_value < 0:
+        entity_state: State | None = hass.states.get(entity.entity_id)
+
+        if entity_state is None or (entity_state.state == str(0) and new_value < 0):
             return
 
-        state = hass.states.get(entity.entity_id)
-        existing_attributes = dict(state.attributes)
+        existing_attributes = dict(entity_state.attributes)
 
         until_date_attribute: dict[str, Any] = {}
 
@@ -136,7 +137,7 @@ async def sensor_update_timer(hass: HomeAssistant, name: str) -> None:
             existing_attributes.pop("until_date", None)
 
         new_attributes = existing_attributes | until_date_attribute
-        hass.states.async_set(entity.entity_id, new_value, new_attributes)
+        hass.states.async_set(entity.entity_id, str(new_value), new_attributes)
 
         if request_refresh is True:
             hass.async_create_task(entity.async_update_ha_state(force_refresh=True))
@@ -163,6 +164,8 @@ async def switch_update_timer(hass: HomeAssistant, name: str) -> None:
 
     need_refresh = False
 
+    switch_entity: Any = None
+
     for remaining_key, remaining_date in remaining_dates_copy.items():
         switch_entity = find_entity_switch(hass, remaining_key, name)
 
@@ -173,6 +176,10 @@ async def switch_update_timer(hass: HomeAssistant, name: str) -> None:
                 return
 
             state = hass.states.get(switch_entity.entity_id)
+
+            if state is None:
+                continue
+
             existing_attributes = dict(state.attributes)
 
             until_date_attribute: dict[str, Any] = {}
@@ -194,7 +201,7 @@ async def switch_update_timer(hass: HomeAssistant, name: str) -> None:
             hass.states.async_set(switch_entity.entity_id, switch_entity.state, new_attributes)
 
             if new_value == 0:
-                await switch_entity.async_turn_switch(action="enable", with_update=True)
+                await switch_entity.async_turn_service(action="enable", with_update=True)
                 need_refresh = True
 
     if need_refresh is True and switch_entity is not None:

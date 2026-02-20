@@ -181,21 +181,21 @@ class PiHoleV6Sensor(PiHoleV6Entity, SensorEntity):
     def __init__(
         self,
         api: ClientAPI,
-        coordinator: DataUpdateCoordinator[None],
+        coordinator: DataUpdateCoordinator[Any],
         server_unique_id: str,
         description: SensorEntityDescription,
     ) -> None:
         """Initialize a Pi-hole V6 sensor."""
         name: str = coordinator.name
         super().__init__(api, coordinator, name, server_unique_id)
-        self.entity_description = description
+        self.entity_description = description  # pyright: ignore[reportIncompatibleVariableOverride]
         self._attr_unique_id = f"{self._server_unique_id}/{description.key}"
 
         raw_name: str = f"sensor.{name}_{description.key}"
         self.entity_id = create_entity_id_name(raw_name)
 
     @property
-    def native_value(self) -> StateType:  # pylint: disable=too-many-return-statements, too-many-branches
+    def native_value(self) -> StateType | datetime:  # pyright: ignore[reportIncompatibleVariableOverride] # pylint: disable=too-many-return-statements, too-many-branches
         """Return the state of the device."""
 
         match self.entity_description.key:
@@ -235,6 +235,8 @@ class PiHoleV6Sensor(PiHoleV6Entity, SensorEntity):
                 return len(self.api.cache_dhcp_leases)
             case "auth_sessions":
                 return len(self.api.cache_auth_sessions)
+            case _:
+                pass
 
         return ""
 
@@ -259,7 +261,7 @@ class PiHoleV6Sensor(PiHoleV6Entity, SensorEntity):
         return value
 
     @property
-    def extra_state_attributes(self) -> dict[str, Any] | None:  # pylint: disable=too-many-return-statements, too-many-branches
+    def extra_state_attributes(self) -> dict[str, Any] | None:  # pyright: ignore[reportIncompatibleVariableOverride] # pylint: disable=too-many-return-statements, too-many-branches
         """Return the state attributes of the Pi-hole V6."""
 
         if self.entity_description.key == "memory_use":
@@ -315,5 +317,7 @@ class PiHoleV6Sensor(PiHoleV6Entity, SensorEntity):
                 return {"note": "Average number of DNS queries per minute."}
             case "remaining_until_blocking_mode":
                 return {"note": "Remaining seconds until blocking mode is automatically changed."}
+            case _:
+                pass
 
         return None
