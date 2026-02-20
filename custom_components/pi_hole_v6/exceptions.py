@@ -1,4 +1,4 @@
-"""The above classes represent the specific exceptions raised during the Pi-hole API calls."""
+"""Custom exceptions raised during Pi-hole V6 API calls."""
 
 from abc import abstractmethod
 from typing import Any
