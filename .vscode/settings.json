@@ -3,6 +3,5 @@
     "files.exclude": {
         ".ruff_cache": true,
         "**/__pycache__": true
-    },
-    "python.analysis.typeCheckingMode": "strict"
+    }
 }

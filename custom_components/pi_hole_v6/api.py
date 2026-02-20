@@ -46,10 +46,10 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
         self._sid: str | None = None
         self.url: str = url
 
-        self.cache_auth_sessions: dict[str, Any] = {}
+        self.cache_auth_sessions: list[dict[str, Any]] = []
         self.cache_blocking: dict[str, Any] = {}
-        self.cache_configured_clients: dict[str, dict[str, Any]] = {}
-        self.cache_dhcp_leases: dict[str, dict[str, Any]] = {}
+        self.cache_configured_clients: list[dict[str, Any]] = []
+        self.cache_dhcp_leases: list[dict[str, Any]] = []
         self.cache_ftl_info: dict[str, Any] = {}
         self.cache_groups: dict[str, dict[str, Any]] = {}
         self.cache_padd: dict[str, Any] = {}

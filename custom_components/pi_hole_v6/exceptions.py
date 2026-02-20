@@ -1,6 +1,7 @@
 """The above classes represent the specific exceptions raised during the Pi-hole API calls."""
 
 from abc import abstractmethod
+from typing import Any
 
 
 @abstractmethod
@@ -158,7 +159,7 @@ def handle_status(status_code: int) -> None:
     if status_code < 400:
         return
 
-    exception_map = {
+    exception_map: dict[int, Any] = {
         400: BadRequestError,
         401: UnauthorizedError,
         402: RequestFailedError,

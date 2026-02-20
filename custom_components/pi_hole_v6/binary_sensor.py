@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import logging
 from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.binary_sensor import (
@@ -24,12 +25,14 @@ if TYPE_CHECKING:
     from . import PiHoleV6ConfigEntry
     from .api import Api as PiholeAPI
 
+_LOGGER = logging.getLogger(__name__)
+
 
 @dataclass(frozen=True, kw_only=True)
 class PiHoleV6BinarySensorEntityDescription(BinarySensorEntityDescription):
     """Describes PiHole binary sensor entity."""
 
-    state_value: Callable[[PiholeAPI]]
+    state_value: Callable[[PiholeAPI], Any]
 
 
 BINARY_SENSOR_TYPES: tuple[PiHoleV6BinarySensorEntityDescription, ...] = (
@@ -64,6 +67,8 @@ async def async_setup_entry(
 class PiHoleV6BinarySensor(PiHoleV6Entity, BinarySensorEntity):
     """Representation of a Pi-hole V6 binary sensor."""
 
+    _attr_always_update = True
+
     entity_description: PiHoleV6BinarySensorEntityDescription
 
     def __init__(
@@ -74,21 +79,22 @@ class PiHoleV6BinarySensor(PiHoleV6Entity, BinarySensorEntity):
         description: PiHoleV6BinarySensorEntityDescription,
     ) -> None:
         """Initialize a Pi-hole V6 sensor."""
+
         name: str = coordinator.name
         super().__init__(api, coordinator, name, server_unique_id)
-        self.entity_description = description
+        self.entity_description = description  # pyright: ignore[reportIncompatibleVariableOverride]
         self._attr_unique_id = f"{self._server_unique_id}/{description.key}"
 
         raw_name: str = f"binary_sensor.{name}_{description.key}"
         self.entity_id = create_entity_id_name(raw_name)
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool:  # pyright: ignore[reportIncompatibleVariableOverride]
         """Return if the service is on."""
         return self.entity_description.state_value(self.api)
 
     @property
-    def extra_state_attributes(self) -> dict[str, Any] | None:
+    def extra_state_attributes(self) -> dict[str, Any] | None:  # pyright: ignore[reportIncompatibleVariableOverride]
         """Return the state attributes of the Pi-hole V6."""
 
         if self.entity_description.key == "status":

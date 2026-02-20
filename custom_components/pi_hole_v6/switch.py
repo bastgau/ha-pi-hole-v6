@@ -54,7 +54,7 @@ async def async_setup_entry(
 
     name: str = hole_data.coordinator.name
 
-    switches = [
+    switches: list[PiHoleV6Switch | PiHoleV6Group] = [
         PiHoleV6Switch(
             hole_data.api,
             hole_data.coordinator,
@@ -116,7 +116,7 @@ class PiHoleV6Switch(PiHoleV6Entity, SwitchEntity):
     def __init__(
         self,
         api: PiholeAPI,
-        coordinator: DataUpdateCoordinator,
+        coordinator: DataUpdateCoordinator[None],
         server_unique_id: str,
         description: SwitchEntityDescription,
     ) -> None:
@@ -126,17 +126,17 @@ class PiHoleV6Switch(PiHoleV6Entity, SwitchEntity):
         self.entity_description = description
 
     @property
-    def name(self) -> str:
+    def name(self) -> str:  # pyright: ignore[reportIncompatibleVariableOverride]
         """Return the name of the switch."""
         return self._name
 
     @property
-    def unique_id(self) -> str:
+    def unique_id(self) -> str:  # pyright: ignore[reportIncompatibleVariableOverride]
         """Return the unique id of the switch."""
         return f"{self._server_unique_id}/Switch"
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool:  # pyright: ignore[reportIncompatibleVariableOverride]
         """Return if the service is on."""
         return bool(self.api.cache_blocking.get("blocking", None) == "enabled")
 
@@ -221,11 +221,11 @@ class PiHoleV6Group(PiHoleV6Entity, SwitchEntity):
     ) -> None:
         """Initialize a Pi-hole V6 group switch."""
         api: PiholeAPI = hole_data.api
-        coordinator: DataUpdateCoordinator = hole_data.coordinator
+        coordinator: DataUpdateCoordinator[Any] = hole_data.coordinator
 
         name: str = coordinator.name
         super().__init__(api, coordinator, name, server_unique_id)
-        self.entity_description = description
+        self.entity_description = description  # pyright: ignore[reportIncompatibleVariableOverride]
 
         group_name: str = group["name"]
 
@@ -236,7 +236,7 @@ class PiHoleV6Group(PiHoleV6Entity, SwitchEntity):
         self.entity_id = create_entity_id_name(raw_name)
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool:  # pyright: ignore[reportIncompatibleVariableOverride]
         """Return if the group is on."""
         return self.api.cache_groups[self.group_name]["enabled"]
 
@@ -315,7 +315,7 @@ class PiHoleV6Group(PiHoleV6Entity, SwitchEntity):
             await self.async_turn_group(action="disable", with_update=with_update)
 
     @property
-    def extra_state_attributes(self) -> dict[str, Any] | None:
+    def extra_state_attributes(self) -> dict[str, Any] | None:  # pyright: ignore[reportIncompatibleVariableOverride]
         """Return the state attributes of the switch Pi-hole V6."""
 
         if self.entity_description.key == "group":

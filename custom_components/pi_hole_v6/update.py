@@ -12,6 +12,8 @@ from .entity import PiHoleV6Entity
 from .helper import create_entity_id_name
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from homeassistant.core import HomeAssistant
     from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
     from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -24,8 +26,8 @@ if TYPE_CHECKING:
 class PiHoleV6UpdateEntityDescription(UpdateEntityDescription):
     """Describes PiHoleV6 update entity."""
 
-    installed_version: str | None = None
-    latest_version: str | None = None
+    installed_version: Callable[[dict[str, Any]], str] | None = None
+    latest_version: Callable[[dict[str, Any]], str] | None = None
 
     release_base_url: str | None = None
     title: str | None = None
@@ -37,8 +39,8 @@ UPDATE_ENTITY_TYPES: tuple[PiHoleV6UpdateEntityDescription, ...] = (
         translation_key="core_update_available",
         title="Pi-hole Core",
         entity_category=EntityCategory.DIAGNOSTIC,
-        installed_version=lambda versions: versions.get("core").get("local", {}).get("version", None),
-        latest_version=lambda versions: versions.get("core").get("remote", {}).get("version", None),
+        installed_version=lambda versions: versions.get("core", {}).get("local", {}).get("version", None),
+        latest_version=lambda versions: versions.get("core", {}).get("remote", {}).get("version", None),
         release_base_url="https://github.com/pi-hole/pi-hole/releases/tag",
     ),
     PiHoleV6UpdateEntityDescription(
@@ -46,8 +48,8 @@ UPDATE_ENTITY_TYPES: tuple[PiHoleV6UpdateEntityDescription, ...] = (
         translation_key="web_update_available",
         title="Pi-hole Web interface",
         entity_category=EntityCategory.DIAGNOSTIC,
-        installed_version=lambda versions: versions.get("web").get("local", {}).get("version", None),
-        latest_version=lambda versions: versions.get("web").get("remote", {}).get("version", None),
+        installed_version=lambda versions: versions.get("web", {}).get("local", {}).get("version", None),
+        latest_version=lambda versions: versions.get("web", {}).get("remote", {}).get("version", None),
         release_base_url="https://github.com/pi-hole/AdminLTE/releases/tag",
     ),
     PiHoleV6UpdateEntityDescription(
@@ -55,8 +57,8 @@ UPDATE_ENTITY_TYPES: tuple[PiHoleV6UpdateEntityDescription, ...] = (
         translation_key="ftl_update_available",
         title="Pi-hole FTL",
         entity_category=EntityCategory.DIAGNOSTIC,
-        installed_version=lambda versions: versions.get("ftl").get("local", {}).get("version", None),
-        latest_version=lambda versions: versions.get("ftl").get("remote", {}).get("version", None),
+        installed_version=lambda versions: versions.get("ftl", {}).get("local", {}).get("version", None),
+        latest_version=lambda versions: versions.get("ftl", {}).get("remote", {}).get("version", None),
         release_base_url="https://github.com/pi-hole/FTL/releases/tag",
     ),
     PiHoleV6UpdateEntityDescription(
@@ -64,8 +66,8 @@ UPDATE_ENTITY_TYPES: tuple[PiHoleV6UpdateEntityDescription, ...] = (
         translation_key="docker_update_available",
         title="Pi-hole Docker",
         entity_category=EntityCategory.DIAGNOSTIC,
-        installed_version=lambda versions: versions.get("docker").get("local", None),
-        latest_version=lambda versions: versions.get("docker").get("remote", None),
+        installed_version=lambda versions: versions.get("docker", {}).get("local", None),
+        latest_version=lambda versions: versions.get("docker", {}).get("remote", None),
         release_base_url="https://github.com/pi-hole/docker-pi-hole/releases/tag",
     ),
 )
@@ -98,7 +100,7 @@ class PiHoleV6UpdateEntity(PiHoleV6Entity, UpdateEntity):
     def __init__(
         self,
         api: ClientAPI,
-        coordinator: DataUpdateCoordinator[None],
+        coordinator: DataUpdateCoordinator[Any],
         server_unique_id: str,
         description: PiHoleV6UpdateEntityDescription,
     ) -> None:
@@ -107,7 +109,7 @@ class PiHoleV6UpdateEntity(PiHoleV6Entity, UpdateEntity):
         name: str = coordinator.name
 
         super().__init__(api, coordinator, coordinator.name, server_unique_id)
-        self.entity_description = description
+        self.entity_description = description  # pyright: ignore[reportIncompatibleVariableOverride]
         self._attr_unique_id = f"{self._server_unique_id}/{description.key}"
 
         raw_name: str = f"update.{name}_{description.key}"
@@ -118,7 +120,7 @@ class PiHoleV6UpdateEntity(PiHoleV6Entity, UpdateEntity):
         self._attr_title = description.title
 
         if enabled_value is False:
-            self._attr_title = description.title + " (only for information, please check other update entities)"
+            self._attr_title = str(description.title) + " (only for information, please check other update entities)"
 
     def get_entity_registry_enabled_value(self) -> bool:
         """Determine whether the entity should be enabled in the registry by default.
@@ -150,22 +152,22 @@ class PiHoleV6UpdateEntity(PiHoleV6Entity, UpdateEntity):
         return False
 
     @property
-    def installed_version(self) -> str | None:
+    def installed_version(self) -> str | None:  # pyright: ignore[reportIncompatibleVariableOverride]
         """Version installed and in use."""
-        versions: dict[str, Any] = self.api.cache_padd["version"]
-        if isinstance(versions, dict):
+        versions: dict[str, Any] | None = self.api.cache_padd["version"]
+        if isinstance(versions, dict) and self.entity_description.installed_version is not None:
             return self.entity_description.installed_version(versions)
         return None
 
     @property
-    def latest_version(self) -> str | None:
+    def latest_version(self) -> str | None:  # pyright: ignore[reportIncompatibleVariableOverride]
         """Latest version available for install."""
-        versions: dict[str, Any] = self.api.cache_padd["version"]
-        if isinstance(versions, dict):
+        versions: dict[str, Any] | None = self.api.cache_padd["version"]
+        if isinstance(versions, dict) and self.entity_description.latest_version is not None:
             return self.entity_description.latest_version(versions)
         return None
 
     @property
-    def release_url(self) -> str | None:
+    def release_url(self) -> str | None:  # pyright: ignore[reportIncompatibleVariableOverride]
         """URL to the full release notes of the latest version available."""
         return f"{self.entity_description.release_base_url}/{self.latest_version}"

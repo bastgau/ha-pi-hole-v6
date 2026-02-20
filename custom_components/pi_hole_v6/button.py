@@ -90,14 +90,14 @@ class PiHoleV6Button(PiHoleV6Entity, ButtonEntity):
     def __init__(
         self,
         api: PiholeAPI,
-        coordinator: DataUpdateCoordinator,
+        coordinator: DataUpdateCoordinator[None],
         server_unique_id: str,
         description: PiholeV6ButtonEntityDescription,
     ) -> None:
         """Initialize Pi-hole V6 button."""
         name: str = coordinator.name
         super().__init__(api, coordinator, name, server_unique_id)
-        self.entity_description = description
+        self.entity_description = description  # pyright: ignore[reportIncompatibleVariableOverride]
         self._attr_unique_id = f"{self._server_unique_id}/{description.key}"
         self._is_enabled = True  # Initial state is enabled
 
@@ -108,10 +108,9 @@ class PiHoleV6Button(PiHoleV6Entity, ButtonEntity):
         """Press the button."""
 
         action: str = self.entity_description.key
+        result: dict[str, Any] = {"code": 200}
 
         try:
-            result: dict[str, Any] = {"code": 200}
-
             match action:
                 case "action_flush_arp":
                     result = await self.api.call_action_flush_arp()
@@ -128,6 +127,8 @@ class PiHoleV6Button(PiHoleV6Entity, ButtonEntity):
                 case "action_ftl_purge_diagnosis_messages":
                     await self.api.call_action_ftl_purge_diagnosis_messages()
                     self.schedule_update_ha_state(force_refresh=True)
+                case _:
+                    pass
 
             if result["code"] != 200:
                 raise ActionExecutionError  # noqa: TRY301
