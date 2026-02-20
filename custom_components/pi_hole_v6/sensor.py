@@ -149,7 +149,17 @@ async def async_setup_entry(
     entry: PiHoleV6ConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the Pi-hole V6 sensor."""
+    """Set up the Pi-hole V6 sensor.
+
+    Args:
+        hass (HomeAssistant): The Home Assistant instance.
+        entry (PiHoleV6ConfigEntry): The config entry providing runtime data.
+        async_add_entities (AddConfigEntryEntitiesCallback): Callback to register new entities.
+
+    Returns:
+        None
+
+    """
     name = entry.data[CONF_NAME]
     hole_data = entry.runtime_data
     sensors = [
@@ -167,7 +177,15 @@ async def async_setup_entry(
     hass.data[f"pi_hole_entities_sensor_{name}"].extend(sensors)
 
     async def update_timer(_: Any) -> None:
-        """Trigger sensor state update on a time interval basis."""
+        """Trigger sensor state update on a time interval basis.
+
+        Args:
+            _ (Any): The time event (unused).
+
+        Returns:
+            None
+
+        """
         await sensor_update_timer(hass, name)
 
     async_track_time_interval(hass, update_timer, timedelta(seconds=1))
@@ -185,7 +203,18 @@ class PiHoleV6Sensor(PiHoleV6Entity, SensorEntity):
         server_unique_id: str,
         description: SensorEntityDescription,
     ) -> None:
-        """Initialize a Pi-hole V6 sensor."""
+        """Initialize a Pi-hole V6 sensor.
+
+        Args:
+            api (ClientAPI): The Pi-hole API client instance.
+            coordinator (DataUpdateCoordinator[Any]): The data update coordinator.
+            server_unique_id (str): A unique identifier for the server entry.
+            description (SensorEntityDescription): The entity description.
+
+        Returns:
+            None
+
+        """
         name: str = coordinator.name
         super().__init__(api, coordinator, name, server_unique_id)
         self.entity_description = description  # pyright: ignore[reportIncompatibleVariableOverride]
@@ -196,7 +225,12 @@ class PiHoleV6Sensor(PiHoleV6Entity, SensorEntity):
 
     @property
     def native_value(self) -> StateType | datetime:  # pyright: ignore[reportIncompatibleVariableOverride] # pylint: disable=too-many-return-statements, too-many-branches
-        """Return the state of the device."""
+        """Return the state of the device.
+
+        Returns:
+            StateType | datetime: The current state value of the sensor.
+
+        """
 
         match self.entity_description.key:
             case "latest_data_refresh":
@@ -262,7 +296,12 @@ class PiHoleV6Sensor(PiHoleV6Entity, SensorEntity):
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:  # pyright: ignore[reportIncompatibleVariableOverride] # pylint: disable=too-many-return-statements, too-many-branches
-        """Return the state attributes of the Pi-hole V6."""
+        """Return the state attributes of the Pi-hole V6.
+
+        Returns:
+            dict[str, Any] | None: A dictionary of extra attributes, or None if not applicable.
+
+        """
 
         if self.entity_description.key == "memory_use":
             return self.api.cache_padd["system"]["memory"]
