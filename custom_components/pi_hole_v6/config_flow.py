@@ -158,7 +158,7 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         """Get the options flow for this handler."""
         return OptionsFlowHandler()
 
-    async def _async_try_connect(self) -> dict[str, str] | None:
+    async def _async_try_connect(self) -> dict[str, str]:
         """Attempt to connect to the Pi-hole API using the current config.
 
         Returns:
