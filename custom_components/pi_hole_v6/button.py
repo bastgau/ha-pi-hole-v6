@@ -26,7 +26,7 @@ _LOGGER = logging.getLogger(__name__)
 
 @dataclass(frozen=True, kw_only=True)
 class PiholeV6ButtonEntityDescription(ButtonEntityDescription):
-    """Class describing Pi-hole V6 button entities."""
+    """Description of a Pi-hole V6 button entity used to trigger actions on the Pi-hole instance."""
 
 
 BUTTON_TYPES: tuple[PiholeV6ButtonEntityDescription, ...] = (
@@ -130,6 +130,10 @@ class PiHoleV6Button(PiHoleV6Entity, ButtonEntity):
 
         Returns:
             None
+
+        Raises:
+            ClientConnectorError: If the server is unreachable during the action execution.
+            APIError: If the API returns an error status code during the action execution.
 
         """
 

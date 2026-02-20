@@ -30,7 +30,13 @@ _LOGGER = logging.getLogger(__name__)
 
 @dataclass(frozen=True, kw_only=True)
 class PiHoleV6BinarySensorEntityDescription(BinarySensorEntityDescription):
-    """Describes PiHole binary sensor entity."""
+    """Describes PiHole binary sensor entity.
+
+    Attributes:
+        state_value (Callable[[PiholeAPI], Any]): A callable that takes the API client
+            and returns the current state value of the sensor.
+
+    """
 
     state_value: Callable[[PiholeAPI], Any]
 

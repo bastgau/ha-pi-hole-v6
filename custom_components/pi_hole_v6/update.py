@@ -24,7 +24,15 @@ if TYPE_CHECKING:
 
 @dataclass(frozen=True)
 class PiHoleV6UpdateEntityDescription(UpdateEntityDescription):
-    """Describes PiHoleV6 update entity."""
+    """Describes PiHoleV6 update entity.
+
+    Attributes:
+        installed_version (Callable[[dict[str, Any]], str] | None): A callable that takes the versions dict and returns the currently installed version string.
+        latest_version (Callable[[dict[str, Any]], str] | None): A callable that takes the versions dict and returns the latest available version string.
+        release_base_url (str | None): The base URL used to build the release notes URL.
+        title (str | None): The display title of the update entity.
+
+    """
 
     installed_version: Callable[[dict[str, Any]], str] | None = None
     latest_version: Callable[[dict[str, Any]], str] | None = None
@@ -89,6 +97,7 @@ async def async_setup_entry(
         None
 
     """
+
     hole_data = entry.runtime_data
 
     async_add_entities(
@@ -174,12 +183,13 @@ class PiHoleV6UpdateEntity(PiHoleV6Entity, UpdateEntity):
 
     @property
     def installed_version(self) -> str | None:  # pyright: ignore[reportIncompatibleVariableOverride]
-        """Version installed and in use.
+        """Return the currently installed version by delegating to the entity description callable.
 
         Returns:
-            str | None: The installed version string, or None if unavailable.
+            str | None: The installed version string extracted from the padd cache, or None if unavailable.
 
         """
+
         versions: dict[str, Any] | None = self.api.cache_padd["version"]
         if isinstance(versions, dict) and self.entity_description.installed_version is not None:
             return self.entity_description.installed_version(versions)
@@ -187,12 +197,13 @@ class PiHoleV6UpdateEntity(PiHoleV6Entity, UpdateEntity):
 
     @property
     def latest_version(self) -> str | None:  # pyright: ignore[reportIncompatibleVariableOverride]
-        """Latest version available for install.
+        """Return the latest available version by delegating to the entity description callable.
 
         Returns:
-            str | None: The latest available version string, or None if unavailable.
+            str | None: The latest version string extracted from the padd cache, or None if unavailable.
 
         """
+
         versions: dict[str, Any] | None = self.api.cache_padd["version"]
         if isinstance(versions, dict) and self.entity_description.latest_version is not None:
             return self.entity_description.latest_version(versions)
@@ -200,10 +211,12 @@ class PiHoleV6UpdateEntity(PiHoleV6Entity, UpdateEntity):
 
     @property
     def release_url(self) -> str | None:  # pyright: ignore[reportIncompatibleVariableOverride]
-        """URL to the full release notes of the latest version available.
+        """Return the release notes URL built from the base URL and the latest version.
 
         Returns:
-            str | None: The release URL, or None if no latest version is available.
+            str | None: The full release URL combining release_base_url and latest_version,
+                or None if no latest version is available.
 
         """
+
         return f"{self.entity_description.release_base_url}/{self.latest_version}"

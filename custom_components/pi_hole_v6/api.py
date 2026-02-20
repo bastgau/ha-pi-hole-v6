@@ -1,4 +1,4 @@
-"""The above class represents Pi-hole API Client with methods for authentication, retrieving summary data, managing blocking status, and logging requests."""
+"""Pi-hole V6 API client for authentication, data retrieval, and blocking management."""
 
 import asyncio
 import json
@@ -159,6 +159,9 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
 
         Returns:
             dict[str, Any] | None: The parsed JSON content, or None if the response has no body.
+
+        Raises:
+            json.JSONDecodeError: If the response body cannot be parsed as valid JSON after decoding.
 
         """
 
@@ -893,6 +896,9 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
 
     async def call_action_ftl_purge_diagnosis_messages(self) -> dict[str, Any]:
         """Purge all FTL diagnosis messages.
+
+        Iterates over cached messages and deletes each one via the API.
+        Clears the local message cache after deletion.
 
         Returns:
             dict[str, Any]: A dictionary with the keys "code", "reason", and "data".

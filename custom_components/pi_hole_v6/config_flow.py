@@ -202,6 +202,9 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             dict[str, str]: An empty dict on success, or a dict mapping a field key
             to an error string on failure.
 
+        Raises:
+            APIError: If the API returns an unexpected error status code.
+
         """
         session: client.ClientSession = async_get_clientsession(self.hass, verify_ssl=False)
 
