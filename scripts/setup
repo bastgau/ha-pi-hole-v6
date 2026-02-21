@@ -1,13 +1,179 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
-set -e
+# Colors
+BLUE='\033[34m'
+GREEN='\033[32m'
+RED='\033[31m'
+YELLOW='\033[33m'
+NC='\033[0m' # No Color
+
+echo -e "\n${YELLOW}> CONFIGURE REQUIREMENTS FOR HA INTEGRATION:${NC}\n"
 
 cd "$(dirname "$0")/.."
-
 python3 -m pip install --requirement requirements.txt
 
-npm install -g orcommit
+if [ $? -ne 0 ]; then
+    echo -e "\n${BLUE}[pip]${NC} ${RED}✗ Pip failed to install dependencies.${NC}\n"
+    exit 1
+fi
 
-cp /workspaces/ha-pi-hole-v6/orcommit.json-example /workspaces/ha-pi-hole-v6/orcommit.json
+echo -e "\n${BLUE}[pip]${NC} ${GREEN}✓ Done."
+
+echo -e "\n${YELLOW}> INSTALL ORCOMMIT:${NC}\n"
+
+PACKAGE_NAME="orcommit"
+
+# Check if orcommit is already installed globally
+if npm list -g --depth=0 | grep -q "$PACKAGE_NAME" 2>/dev/null; then
+    echo -e "orcommit is already installed globally."
+else
+    echo -e "Installing orcommit globally..."
+    npm install -g $PACKAGE_NAME
+    if [ $? -eq 0 ]; then
+        echo -e "orcommit installed successfully."
+    else
+        echo -e "\n${BLUE}[config]${NC} ${RED}✗ Installation failed. Check npm permissions or network.${NC}\n"
+        exit 1
+    fi
+fi
+
+echo -e "\n${BLUE}[config]${NC} ${GREEN}✓ Done. Test with: orc --version${NC}"
+
+echo -e "\n${YELLOW}> SETUP ORCOMMIT:${NC}\n"
+
+
+# Script to copy orcommit.json-example to orcommit.json if target doesn't exist
+EXAMPLE_FILE="/workspaces/ha-pi-hole-v6/orcommit.json-example"
+TARGET_FILE="/workspaces/ha-pi-hole-v6/orcommit.json"
+
+if [ -f "$TARGET_FILE" ]; then
+    echo -e "File orcommit.json already exists. Skipping copy."
+else
+    if [ -f "$EXAMPLE_FILE" ]; then
+        cp "$EXAMPLE_FILE" "$TARGET_FILE"
+        if [ $? -eq 0 ]; then
+            echo -e "Copied $EXAMPLE_FILE to $TARGET_FILE successfully."
+        else
+            echo -e "\n${BLUE}[config]${NC} ${RED}✗ Copy failed. Check permissions.${NC}\n"
+            exit 1
+        fi
+    else
+        echo -e "\n${BLUE}[config]${NC} ${RED}✗ Example file $EXAMPLE_FILE not found.${NC}\n"
+        exit 1
+    fi
+fi
+
+echo -e "\n${BLUE}[config]${NC} ${GREEN}✓ Done. Check: ls -la $TARGET_FILE${NC}"
+
+echo -e "\n${YELLOW}> CONFIGURE OPENROUTER FOR ORCOMMIT: \n"
+
 orc config set openrouter $OPENROUTER_API_KEY
-ln -s /workspaces/ha-pi-hole-v6/orcommit.json ~/.config/orcommit.json
+
+echo -e "\n${YELLOW}> FINALIZE ORCOMMIT CONFIGURATION FOR CURRENT USER:${NC}\n"
+
+# Script to create symlink ~/.config/orcommit.json if it doesn't exist
+TARGET_DIR="$HOME/.config"
+TARGET_FILE="$TARGET_DIR/orcommit.json"
+SOURCE_FILE="/workspaces/ha-pi-hole-v6/orcommit.json"
+
+# Create config dir if needed
+if [ ! -d "$TARGET_DIR" ]; then
+    mkdir -p "$TARGET_DIR"
+    echo -e "Created $TARGET_DIR."
+fi
+
+# Check if symlink already exists and points correctly
+if [ -L "$TARGET_FILE" ] && [ "$(readlink "$TARGET_FILE")" = "$SOURCE_FILE" ]; then
+    echo -e "Symlink $TARGET_FILE already exists and points to $SOURCE_FILE."
+elif [ -e "$TARGET_FILE" ]; then
+    echo -e "\n${BLUE}[config]${NC} ${RED}✗ $TARGET_FILE exists but is not a symlink to $SOURCE_FILE. Remove manually first.${NC}\n"
+    exit 1
+else
+    if [ -f "$SOURCE_FILE" ]; then
+        ln -s "$SOURCE_FILE" "$TARGET_FILE"
+        if [ $? -eq 0 ]; then
+            echo -e "Created symlink: $TARGET_FILE -> $SOURCE_FILE."
+        else
+            echo -e "\n${BLUE}[config]${NC} ${RED}✗ Symlink creation failed. Check permissions.${NC}\n"
+            exit 1
+        fi
+    else
+        echo -e "\n${BLUE}[config]${NC} ${RED}✗ Source file $SOURCE_FILE not found.${NC}\n"
+        exit 1
+    fi
+fi
+
+echo -e "\n${BLUE}[config]${NC} ${GREEN}✓ Done. Check: ls -la $TARGET_FILE${NC}"
+
+echo -e "\n${YELLOW}> CONFIGURE ENVIRONMENT FOR USING ORCOMMIT:${NC}\n"
+
+# Script to install orc-commit alias without duplicates
+
+ALIAS_NAME='orc-commit'
+ALIAS_CMD='orc commit --verbose --one-line --ignore-generated --ignore-whitespace --description-length=0'
+
+BASHRC="$HOME/.bashrc"
+BASH_ALIASES="$HOME/.bash_aliases"
+
+# Create .bash_aliases if it doesn't exist
+if [ ! -f "$BASH_ALIASES" ]; then
+    touch "$BASH_ALIASES"
+fi
+
+# Check if alias already exists
+if grep -q "^alias $ALIAS_NAME=" "$BASH_ALIASES" 2>/dev/null || grep -q "^alias $ALIAS_NAME=" "$BASHRC" 2>/dev/null; then
+    echo -e "Alias '$ALIAS_NAME' already exists."
+else
+    echo "alias $ALIAS_NAME='$ALIAS_CMD'" >> "$BASH_ALIASES"
+    echo -e "Alias '$ALIAS_NAME' added to $BASH_ALIASES."
+fi
+
+# Add sourcing .bash_aliases to .bashrc if missing
+if ! grep -q ". $BASH_ALIASES" "$BASHRC" 2>/dev/null; then
+    echo "" >> "$BASHRC"
+    echo "# Source bash_aliases" >> "$BASHRC"
+    echo "if [ -f $BASH_ALIASES ]; then" >> "$BASHRC"
+    echo "    . $BASH_ALIASES" >> "$BASHRC"
+    echo "fi" >> "$BASHRC"
+    echo -e "Sourcing .bash_aliases added to $BASHRC."
+fi
+
+echo -e "\n${BLUE}[config]${NC} ${GREEN}✓ Installation complete. Reload with: source ~/.bashrc${NC}"
+
+echo -e "\n${YELLOW}> CONFIGURE ENVIRONMENT FOR USING VIM:${NC}\n"
+
+# Create .vimrc with Python-friendly config if it doesn't exist
+
+VIMRC="$HOME/.vimrc"
+
+if [ -f "$VIMRC" ]; then
+    echo -e "File .vimrc already exists. Skipping."
+else
+    echo -e "Creating the file .vimrc"
+    cat > "$VIMRC" << 'EOF'
+filetype on          " Détection du type de fichier
+syntax on            " Coloration syntaxique
+set background=dark  " Adapte les couleurs pour un fond noir (idéeal dans PuTTY)
+set linebreak        " Coupe les lignes au dernier mot et pas au caractère (requier Wrap lines, actif par défaut)
+set visualbell       " Utilisation du clignotement à la place du "beep"
+set showmatch        " Surligne le mots recherchés dans le texte
+set hlsearch         " Surligne tous les résultats de la recherche
+set autoindent       " Auto-indentation des nouvelles lignes
+set expandtab        " Remplace les "Tabulation" par des espaces
+set shiftwidth=4     " (auto) Indentation de 2 espaces
+set smartindent      " Active "smart-indent" (améliore l'auto-indentation, notamment en collant du texte déjà indenté)
+set smarttab         " Active "smart-tabs" (améliore l'auto-indentation, Gestion des espaces en début de ligne pour l'auto-indentation)
+set softtabstop=4    " Tabulation = 2 espaces
+set mouse-=a
+set backspace=indent,eol,start
+EOF
+
+    if [ $? -eq 0 ]; then
+        echo -e "File .vimrc created successfully."
+    else
+        echo -e "\n${BLUE}[vimrc]${NC} ${RED}✗ Failed to create the file .vimrc.${NC}\n"
+        exit 1
+    fi
+fi
+
+echo -e "\n${BLUE}[vimrc]${NC} ${GREEN}✓ Done.${NC}\n"
