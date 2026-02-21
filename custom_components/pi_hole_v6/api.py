@@ -24,7 +24,23 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attributes
-    """Pi-hole API Client."""
+    """Pi-hole API Client.
+
+    Attributes:
+        url (str): The URL of the Pi-hole API endpoint.
+        just_initialized (bool): Flag indicating the client was just initialized, used to skip the first data fetch.
+        last_refresh (datetime | None): Timestamp of the last successful data refresh, or None if never refreshed.
+        cache_auth_sessions (list[dict[str, Any]]): Cached list of active authentication sessions.
+        cache_blocking (dict[str, Any]): Cached blocking status data.
+        cache_configured_clients (list[dict[str, Any]]): Cached list of configured clients.
+        cache_dhcp_leases (list[dict[str, Any]]): Cached list of active DHCP leases.
+        cache_ftl_info (dict[str, Any]): Cached FTL diagnosis messages and status.
+        cache_groups (dict[str, dict[str, Any]]): Cached Pi-hole groups indexed by group name.
+        cache_padd (dict[str, Any]): Cached Pi-hole dashboard data.
+        cache_remaining_dates (dict[str, datetime]): Cached expiration dates for blocking timers.
+        cache_summary (dict[str, Any]): Cached Pi-hole activity summary.
+
+    """
 
     def __init__(
         self,
