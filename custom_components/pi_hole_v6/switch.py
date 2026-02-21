@@ -425,7 +425,7 @@ class PiHoleV6Group(PiHoleV6Entity, SwitchEntity):
         await self.async_turn_service(action="disable", duration=duration_seconds)
 
     async def async_turn_service(self, action: str, duration: Any = None, with_update: bool = True) -> None:
-        """Turn on/off the service.
+        """Turn on/off the Pi-hole group blocking when triggered via a service call.
 
         Args:
             action (str): The action to perform, either "enable" or "disable".
