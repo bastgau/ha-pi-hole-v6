@@ -40,6 +40,11 @@
                 "eamodio.gitlens"
             ],
             "settings": {
+                "files.insertFinalNewline": true,
+                "files.exclude": {
+                    ".ruff_cache": true,
+                    "**/__pycache__": true
+                },
                 "files.eol": "\n",
                 "editor.tabSize": 4,
                 "python.pythonPath": "/usr/bin/python3",

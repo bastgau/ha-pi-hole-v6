@@ -5,3 +5,9 @@ set -e
 cd "$(dirname "$0")/.."
 
 python3 -m pip install --requirement requirements.txt
+
+npm install -g orcommit
+
+cp /workspaces/ha-pi-hole-v6/orcommit.json-example /workspaces/ha-pi-hole-v6/orcommit.json
+orc config set openrouter $OPENROUTER_API_KEY
+ln -s /workspaces/ha-pi-hole-v6/orcommit.json ~/.config/orcommit.json

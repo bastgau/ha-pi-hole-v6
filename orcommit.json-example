@@ -1,0 +1,7 @@
+{
+    "preferences": {
+        "defaultProvider": "openrouter",
+        "commitFormat": "conventional",
+        "temperature": 0.6
+    }
+}
