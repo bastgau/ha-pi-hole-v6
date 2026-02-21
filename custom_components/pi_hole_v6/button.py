@@ -131,10 +131,6 @@ class PiHoleV6Button(PiHoleV6Entity, ButtonEntity):
         Returns:
             None
 
-        Raises:
-            ClientConnectorError: If the server is unreachable during the action execution.
-            APIError: If the API returns an error status code during the action execution.
-
         """
 
         action: str = self.entity_description.key
