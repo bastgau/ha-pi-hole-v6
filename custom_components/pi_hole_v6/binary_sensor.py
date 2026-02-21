@@ -83,8 +83,6 @@ async def async_setup_entry(
 class PiHoleV6BinarySensor(PiHoleV6Entity, BinarySensorEntity):
     """Representation of a Pi-hole V6 binary sensor."""
 
-    _attr_always_update = True
-
     entity_description: PiHoleV6BinarySensorEntityDescription
 
     def __init__(
