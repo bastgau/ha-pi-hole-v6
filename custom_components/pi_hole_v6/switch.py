@@ -284,7 +284,12 @@ class PiHoleV6Switch(PiHoleV6Entity, SwitchEntity):
 
 
 class PiHoleV6Group(PiHoleV6Entity, SwitchEntity):
-    """Representation of a Pi-hole V6 group."""
+    """Representation of a Pi-hole V6 group.
+
+    Attributes:
+        group_name (str): The name of the Pi-hole group managed by this entity.
+
+    """
 
     entity_description: SwitchEntityDescription
     _attr_has_entity_name = True
