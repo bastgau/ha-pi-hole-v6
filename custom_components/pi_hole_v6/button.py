@@ -117,8 +117,6 @@ class PiHoleV6Button(PiHoleV6Entity, ButtonEntity):
 
         """
 
-        self.api = PiholeAPI
-
         name: str = coordinator.name
         super().__init__(api, coordinator, name, server_unique_id)
         self.entity_description = description  # pyright: ignore[reportIncompatibleVariableOverride]
