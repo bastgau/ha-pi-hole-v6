@@ -145,7 +145,7 @@ dmypy.json
 cython_debug/
 
 # Developper settings (vscode)
-.vscode/settings.json
+.vsode/settings.json
 orcommit.json
 
 # Home Assistant configuration
