@@ -19,7 +19,12 @@ if TYPE_CHECKING:
 
 
 class PiHoleV6Entity(CoordinatorEntity[DataUpdateCoordinator[None]]):
-    """Representation of a Pi-hole V6 entity."""
+    """Representation of a Pi-hole V6 entity.
+
+    Attributes:
+        api (PiholeAPI): The Pi-hole API client instance.
+
+    """
 
     _attr_attribution = ATTRIBUTION
     _attr_has_entity_name = True
