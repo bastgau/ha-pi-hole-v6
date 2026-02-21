@@ -45,7 +45,13 @@ type PiHoleV6ConfigEntry = ConfigEntry[PiHoleV6Data]
 
 @dataclass
 class PiHoleV6Data:
-    """Runtime data definition."""
+    """Runtime data definition.
+
+    Attributes:
+        api (PiholeAPI): The Pi-hole API client instance.
+        coordinator (DataUpdateCoordinator[Any]): The data update coordinator managing scheduled updates.
+
+    """
 
     api: PiholeAPI
     coordinator: DataUpdateCoordinator[Any]
