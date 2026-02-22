@@ -1,4 +1,4 @@
-OCO_API_URL=http://127.0.0.1:11434/api/chat
+OCO_API_URL=http://host.docker.internal:11434/api/chat
 OCO_MODEL=hf.co/LiquidAI/LFM2-2.6B-Exp-GGUF:F16
 OCO_API_KEY=undefined
 OCO_API_CUSTOM_HEADERS=undefined

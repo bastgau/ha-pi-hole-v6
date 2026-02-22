@@ -5,9 +5,12 @@ BLUE='\033[34m'
 GRAY='\033[0;90m'
 GREEN='\033[32m'
 MAGENTA='\033[0;35m'
+PURPLE='\033[1;35m'
 RED='\033[31m'
 YELLOW='\033[33m'
 NC='\033[0m' # No Color
+
+PROJECT="ha-pi-hole-v6"
 
 echo -e "\n${YELLOW}> Install requirements.txt for HA Integration:${NC}\n"
 
@@ -87,8 +90,8 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
     echo -e "\n${YELLOW}> Setup ORCommit :${NC}\n"
 
     # Script to copy orcommit.json-example to orcommit.json if target doesn't exist
-    EXAMPLE_FILE="/workspaces/ha-pi-hole-v6/orcommit.json-example"
-    TARGET_FILE="/workspaces/ha-pi-hole-v6/orcommit.json"
+    EXAMPLE_FILE="/workspaces/${PROJECT}/orcommit.json-example"
+    TARGET_FILE="/workspaces/${PROJECT}/orcommit.json"
 
     if [ -f "$TARGET_FILE" ]; then
         echo -e "File orcommit.json already exists. Skipping copy."
@@ -111,14 +114,14 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
 
     echo -e "\n${YELLOW}> Configure OpenRouter for ORCommit : \n"
 
-    orc config set openrouter $OPENROUTER_API_KEY
+    orc config set openrouter "$OPENROUTER_API_KEY"
 
     echo -e "\n${YELLOW}> Finalize ORCommit configurationfor current user :${NC}\n"
 
     # Script to create symlink ~/.config/orcommit.json if it doesn't exist
     TARGET_DIR="$HOME/.config"
     TARGET_FILE="$TARGET_DIR/orcommit.json"
-    SOURCE_FILE="/workspaces/ha-pi-hole-v6/orcommit.json"
+    SOURCE_FILE="/workspaces/${PROJECT}/orcommit.json"
 
     # Create config dir if needed
     if [ ! -d "$TARGET_DIR" ]; then
@@ -215,8 +218,8 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
     echo -e "\n${YELLOW}> Setup OpenCommit :${NC}\n"
 
     # Script to copy orcommit.json-example to orcommit.json if target doesn't exist
-    EXAMPLE_FILE="/workspaces/ha-pi-hole-v6/.opencommit-example"
-    TARGET_FILE="/workspaces/ha-pi-hole-v6/.opencommit"
+    EXAMPLE_FILE="/workspaces/${PROJECT}/.opencommit-example"
+    TARGET_FILE="/workspaces/${PROJECT}/.opencommit"
 
     if [ -f "$TARGET_FILE" ]; then
         echo -e "File .opencommit already exists. Skipping copy."

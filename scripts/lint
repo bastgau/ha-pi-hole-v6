@@ -1,32 +1,55 @@
 #!/bin/bash
-# Execute lint to spot code mistakes.
+
+# Colors
+BLUE='\033[34m'
+GRAY='\033[0;90m'
+GREEN='\033[32m'
+MAGENTA='\033[0;35m'
+PURPLE='\033[1;35m'
+RED='\033[31m'
+YELLOW='\033[33m'
+NC='\033[0m' # No Color
+
+PROJECT='ha-pi-hole-v6'
 
 cd "$(dirname "$0")/.."
 
-export files="$(find /workspaces/ha-pi-hole-v6/custom_components -name '*.py')"
-echo '================================================='
-echo '=                FILES CHANGED                  ='
-echo '================================================='
+echo -e "\n${YELLOW}> Determinate files changed :${NC}\n"
+
+export files="$(find /workspaces/${PROJECT}/custom_components -name '*.py')"
+
 if [ -z "$files" ] ; then
   echo "No python file changed.\n"
   exit
 fi
+
 printf "%s\n" $files
-echo "=============="
-echo "LINT with ruff"
-echo "=============="
+
+echo -e "\n${YELLOW}> Lint with Ruff :${NC}\n"
 prek run ruff-check --files $files
-echo "================"
-echo "LINT with pylint"
-echo "================"
+echo -e "\n${BLUE}[ruff]${NC} ${GREEN}✓ Done.${NC}"
+
+echo -e "\n${YELLOW}> Lint with Pylint :${NC}"
+
 pylint_files=$(echo "$files" | grep -v '^tests.*')
+
 if [ -z "$pylint_files" ] ; then
-  echo "Only test files changed. Skipping\n"
+  echo -e "\n${BLUE}[config]${NC} ${PURPLE}✗ Only test files changed. End.${NC}\n"
   exit
+else
+  pylint_output=$(pylint $pylint_files 2>&1)
+  pylint_exit=$?
+  echo "$pylint_output" | grep -v "^-\{10,\}$"
+  rating=$(echo "$pylint_output" | grep "Your code has been rated")
+  if [ -n "$rating" ]; then
+    score=$(echo "$rating" | grep -oP '\d+\.\d+/\d+' | head -1)
+    echo -e "\n${BLUE}[pylint]${NC} Score: ${score} ${GREEN}✓ Done.${NC}"
+  else
+    echo -e "${BLUE}[pylint]${NC} ${GREEN}✓ Done.${NC}"
+  fi
 fi
-pylint $pylint_files
-echo "================="
-echo "LINT with pyright"
-echo "================="
+
+echo -e "\n${YELLOW}> Lint with Pyright :${NC}\n"
+
 pyright $pylint_files
-echo
+echo -e "\n${BLUE}[pyright]${NC} ${GREEN}✓ Done.${NC}\n"
