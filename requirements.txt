@@ -1,4 +1,5 @@
 homeassistant==2026.2.2
-ruff==0.15.1
-prek==0.2.28
+pyright
 pylint==4.0.4
+prek==0.2.28
+ruff==0.15.1
