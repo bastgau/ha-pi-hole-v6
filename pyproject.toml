@@ -24,6 +24,7 @@ homeassistant = "2026.2.1"
 python = ">=3.13,<3.14"
 
 [tool.poetry.group.dev.dependencies]
+pyright = "*"
 ruff = "0.15.1"
 
 [tool.poetry.urls]
