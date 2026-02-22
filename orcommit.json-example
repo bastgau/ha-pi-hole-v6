@@ -18,7 +18,8 @@
         "autoConfirm": false,
         "language": "en",
         "commitFormat": "conventional",
-        "maxCommitLength": 800
+        "maxCommitLength": 800,
+        "push": false
     },
     "version": "1.0.0"
 }
