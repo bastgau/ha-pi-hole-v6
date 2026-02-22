@@ -30,4 +30,5 @@ RUN \
             uuid-dev \
             webp \
             xz-utils \
-            zlib1g-dev
+            zlib1g-dev \
+            vim

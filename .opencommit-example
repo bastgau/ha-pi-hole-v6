@@ -1,0 +1,23 @@
+OCO_API_URL=http://host.docker.internal:11434/api/chat
+OCO_MODEL=deepseek-r1:7b
+OCO_API_KEY=undefined
+OCO_API_CUSTOM_HEADERS=undefined
+OCO_AI_PROVIDER=ollama
+OCO_TOKENS_MAX_INPUT=4096
+OCO_TOKENS_MAX_OUTPUT=500
+OCO_DESCRIPTION=false
+OCO_EMOJI=false
+OCO_LANGUAGE=en
+OCO_MESSAGE_TEMPLATE_PLACEHOLDER=$msg
+OCO_PROMPT_MODULE=conventional-commit
+OCO_ONE_LINE_COMMIT=true
+OCO_TEST_MOCK_TYPE=commit-message
+OCO_OMIT_SCOPE=true
+OCO_GITPUSH=false
+OCO_WHY=false
+OCO_HOOK_AUTO_UNCOMMENT=false
+
+# OCO_AI_PROVIDER=openai
+# OCO_API_URL=https://openrouter.ai/api/v1/
+# OCO_MODEL=arcee-ai/trinity-large-preview:free
+# OCO_API_KEY="xxxxxx"
