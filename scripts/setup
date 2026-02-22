@@ -33,19 +33,19 @@ if [ -f "$VIMRC" ]; then
 else
     echo -e "Creating the file .vimrc"
     cat > "$VIMRC" << 'EOF'
-filetype on          " Détection du type de fichier
-syntax on            " Coloration syntaxique
-set background=dark  " Adapte les couleurs pour un fond noir (idéeal dans PuTTY)
-set linebreak        " Coupe les lignes au dernier mot et pas au caractère (requier Wrap lines, actif par défaut)
-set visualbell       " Utilisation du clignotement à la place du "beep"
-set showmatch        " Surligne le mots recherchés dans le texte
-set hlsearch         " Surligne tous les résultats de la recherche
-set autoindent       " Auto-indentation des nouvelles lignes
-set expandtab        " Remplace les "Tabulation" par des espaces
-set shiftwidth=4     " (auto) Indentation de 2 espaces
-set smartindent      " Active "smart-indent" (améliore l'auto-indentation, notamment en collant du texte déjà indenté)
-set smarttab         " Active "smart-tabs" (améliore l'auto-indentation, Gestion des espaces en début de ligne pour l'auto-indentation)
-set softtabstop=4    " Tabulation = 2 espaces
+filetype on          " Enable file type detection
+syntax on            " Enable syntax highlighting
+set background=dark  " Adapt colors for dark background (ideal in PuTTY)
+set linebreak        " Wrap lines at word boundaries instead of characters (requires Wrap lines, enabled by default)
+set visualbell       " Use visual bell instead of audible beep
+set showmatch        " Highlight searched words in text
+set hlsearch         " Highlight all search results
+set autoindent       " Auto-indent new lines
+set expandtab        " Replace tabs with spaces
+set shiftwidth=4     " (auto) Indentation of 4 spaces
+set smartindent      " Enable smart-indent (improves auto-indentation, especially when pasting already indented text)
+set smarttab         " Enable smart-tabs (improves auto-indentation, manages spaces at the beginning of lines)
+set softtabstop=4    " Tab = 4 spaces
 set mouse-=a
 set backspace=indent,eol,start
 EOF
