@@ -157,7 +157,7 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
     # Script to install orc-commit alias without duplicates
 
     ALIAS_NAME='orc-commit'
-    ALIAS_CMD='orc commit --verbose --one-line --ignore-generated --ignore-whitespace --description-length=5 --context "Output only the commit message on only one unique line (no body, no bullet points, no additional information, no several lines)"'
+    ALIAS_CMD='orc commit --verbose --one-line --ignore-generated --ignore-whitespace --description-length 100 --context "Output only the commit message on only one unique line (no body, no bullet points, no additional information, no several lines)"'
     BASHRC="$HOME/.bashrc"
     BASH_ALIASES="$HOME/.bash_aliases"
 
