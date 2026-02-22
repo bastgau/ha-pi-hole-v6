@@ -4,7 +4,7 @@
             "baseUrl": "https://openrouter.ai/api/v1",
             "timeout": 60000,
             "apiKey": "xxxxx",
-            "model": "arcee-ai/trinity-large-preview:free"hf.co/LiquidAI/LFM2-2.6B-Exp-GGUF:F1
+            "model": "arcee-ai/trinity-large-preview:free"
         },
         "openai": {
             "baseUrl": "https://api.openai.com/v1",
