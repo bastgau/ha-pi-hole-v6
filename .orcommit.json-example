@@ -14,12 +14,11 @@
     "preferences": {
         "defaultProvider": "openrouter",
         "maxTokens": 500,
-        "temperature": 0.6,
+        "temperature": 0.8,
         "autoConfirm": false,
         "language": "en",
         "commitFormat": "conventional",
-        "maxCommitLength": 800,
-        "push": false
+        "maxCommitLength": 800
     },
     "version": "1.0.0"
 }

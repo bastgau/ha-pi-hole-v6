@@ -146,7 +146,7 @@ cython_debug/
 
 # Developper settings (vscode)
 **/.vscode/settings.json
-orcommit.json
+.orcommit.json
 .opencommit
 
 # Home Assistant configuration

@@ -90,8 +90,8 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
     echo -e "\n${YELLOW}> Setup ORCommit :${NC}\n"
 
     # Script to copy orcommit.json-example to orcommit.json if target doesn't exist
-    EXAMPLE_FILE="/workspaces/${PROJECT}/orcommit.json-example"
-    TARGET_FILE="/workspaces/${PROJECT}/orcommit.json"
+    EXAMPLE_FILE="/workspaces/${PROJECT}/.orcommit.json-example"
+    TARGET_FILE="/workspaces/${PROJECT}/.orcommit.json"
 
     if [ -f "$TARGET_FILE" ]; then
         echo -e "File orcommit.json already exists. Skipping copy."
@@ -112,16 +112,12 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
 
     echo -e "\n${BLUE}[config]${NC} ${GREEN}✓ Done. Check: ls -la $TARGET_FILE${NC}"
 
-    echo -e "\n${YELLOW}> Configure OpenRouter for ORCommit : \n"
-
-    orc config set openrouter "$OPENROUTER_API_KEY"
-
-    echo -e "\n${YELLOW}> Finalize ORCommit configurationfor current user :${NC}\n"
+    echo -e "\n${YELLOW}> Finalize ORCommit configuration for current user :${NC}\n"
 
     # Script to create symlink ~/.config/orcommit.json if it doesn't exist
     TARGET_DIR="$HOME/.config"
     TARGET_FILE="$TARGET_DIR/orcommit.json"
-    SOURCE_FILE="/workspaces/${PROJECT}/orcommit.json"
+    SOURCE_FILE="/workspaces/${PROJECT}/.orcommit.json"
 
     # Create config dir if needed
     if [ ! -d "$TARGET_DIR" ]; then
@@ -133,7 +129,7 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
     if [ -L "$TARGET_FILE" ] && [ "$(readlink "$TARGET_FILE")" = "$SOURCE_FILE" ]; then
         echo -e "Symlink $TARGET_FILE already exists and points to $SOURCE_FILE."
     elif [ -e "$TARGET_FILE" ]; then
-        echo -e "\n${BLUE}[config]${NC} ${RED}✗ $TARGET_FILE exists but is not a symlink to $SOURCE_FILE. Remove manually first.${NC}\n"
+        echo -e "${BLUE}[config]${NC} ${RED}✗ $TARGET_FILE exists but is not a symlink to $SOURCE_FILE. Remove manually first.${NC}\n"
         exit 1
     else
         if [ -f "$SOURCE_FILE" ]; then
@@ -152,12 +148,16 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
 
     echo -e "\n${BLUE}[config]${NC} ${GREEN}✓ Done. Check: ls -la $TARGET_FILE${NC}"
 
+    echo -e "\n${YELLOW}> Configure OpenRouter for ORCommit : \n"
+
+    orc config set openrouter "$OPENROUTER_API_KEY"
+
     echo -e "\n${YELLOW}> Configure environment for using ORCommit :${NC}\n"
 
     # Script to install orc-commit alias without duplicates
 
     ALIAS_NAME='orc-commit'
-    ALIAS_CMD='orc commit --verbose --one-line --ignore-generated --ignore-whitespace --description-length=0'
+    ALIAS_CMD='orc commit --verbose --one-line --ignore-generated --ignore-whitespace --description-length=0 "Generate only a single conventional commit title line. No description, no body, no bullet points, no additional information. Output only the commit message."'
 
     BASHRC="$HOME/.bashrc"
     BASH_ALIASES="$HOME/.bash_aliases"
