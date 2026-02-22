@@ -1,5 +1,5 @@
 OCO_API_URL=http://127.0.0.1:11434/api/chat
-OCO_MODEL=gemma2:2b
+OCO_MODEL=qwen2.5-coder:3b
 OCO_API_KEY=undefined
 OCO_API_CUSTOM_HEADERS=undefined
 OCO_AI_PROVIDER=ollama
@@ -16,3 +16,8 @@ OCO_OMIT_SCOPE=true
 OCO_GITPUSH=true
 OCO_WHY=false
 OCO_HOOK_AUTO_UNCOMMENT=false
+
+# OCO_AI_PROVIDER=openai
+# OCO_API_URL=https://openrouter.ai/api/v1/
+# OCO_MODEL=arcee-ai/trinity-large-preview:free
+# OCO_API_KEY="xxxxxx"
