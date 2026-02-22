@@ -25,4 +25,8 @@ if [ -z "$pylint_files" ] ; then
   exit
 fi
 pylint $pylint_files
+echo "================="
+echo "LINT with pyright"
+echo "================="
+pyright $pylint_files
 echo
