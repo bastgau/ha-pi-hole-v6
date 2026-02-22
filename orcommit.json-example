@@ -18,7 +18,8 @@
         "autoConfirm": false,
         "language": "en",
         "commitFormat": "conventional",
-        "maxCommitLength": 800
+        "maxCommitLength": 800,
+        "customPrompt": "Generate only a single conventional commit title line. No description, no body, no bullet points. Output only the commit message."
     },
     "version": "1.0.0"
 }
