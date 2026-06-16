@@ -35,6 +35,7 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
+    Platform.DEVICE_TRACKER,
     Platform.SENSOR,
     Platform.SWITCH,
     Platform.UPDATE,
@@ -115,6 +116,9 @@ async def async_get_all_data(api_client: PiholeAPI) -> None:
     await check_result(result, api_client)
 
     result = await api_client.call_get_dhcp_leases()
+    await check_result(result, api_client)
+
+    result = await api_client.call_get_network_devices()
     await check_result(result, api_client)
 
     result = await api_client.call_get_auth_sessions()

@@ -53,6 +53,11 @@
                 "name": "Status"
             }
         },
+        "device_tracker": {
+            "network_device": {
+                "name": "Network device"
+            }
+        },
         "sensor": {
             "ads_blocked_today": {
                 "name": "Ads blocked today",

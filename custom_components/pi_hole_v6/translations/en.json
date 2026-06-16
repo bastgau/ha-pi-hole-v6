@@ -56,6 +56,11 @@
                 "name": "Status"
             }
         },
+        "device_tracker": {
+            "network_device": {
+                "name": "Network device"
+            }
+        },
         "button": {
             "action_flush_arp": {
                 "name": "Flush the network table"
