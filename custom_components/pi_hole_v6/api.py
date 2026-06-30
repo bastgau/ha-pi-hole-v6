@@ -35,6 +35,7 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
         cache_configured_clients (list[dict[str, Any]]): Cached list of configured clients.
         cache_dhcp_leases (list[dict[str, Any]]): Cached list of active DHCP leases.
         cache_ftl_info (dict[str, Any]): Cached FTL diagnosis messages and status.
+        cache_network_devices (list[dict[str, Any]]): Cached list of known network devices.
         cache_groups (dict[str, dict[str, Any]]): Cached Pi-hole groups indexed by group name.
         cache_padd (dict[str, Any]): Cached Pi-hole dashboard data.
         cache_remaining_dates (dict[str, datetime]): Cached expiration dates for blocking timers.
@@ -70,6 +71,7 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
         self.cache_configured_clients: list[dict[str, Any]] = []
         self.cache_dhcp_leases: list[dict[str, Any]] = []
         self.cache_ftl_info: dict[str, Any] = {}
+        self.cache_network_devices: list[dict[str, Any]] = []
         self.cache_groups: dict[str, dict[str, Any]] = {}
         self.cache_padd: dict[str, Any] = {}
         self.cache_remaining_dates: dict[str, datetime] = {}
@@ -773,6 +775,37 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
         )
 
         self.cache_dhcp_leases = result["data"]["leases"]
+
+        return {
+            "code": result["code"],
+            "reason": result["reason"],
+            "data": result["data"],
+        }
+
+    async def call_get_network_devices(self, max_devices: int = 50) -> dict[str, Any]:
+        """Retrieve the list of known network devices.
+
+        Args:
+            max_devices (int): The maximum number of devices to retrieve. Defaults to 50.
+
+        Returns:
+            dict[str, Any]: A dictionary with the keys "code", "reason", and "data".
+
+        Raises:
+            APIError: If the API returns an error status code.
+            ClientConnectorError: If the server is unreachable.
+
+        """
+
+        url: str = f"/network/devices?max_devices={max_devices}"
+
+        result: dict[str, Any] = await self._call(
+            url,
+            action="network_devices",
+            method="GET",
+        )
+
+        self.cache_network_devices = result["data"]["devices"]
 
         return {
             "code": result["code"],

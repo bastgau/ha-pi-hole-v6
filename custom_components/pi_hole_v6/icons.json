@@ -5,6 +5,11 @@
                 "default": "mdi:pi-hole"
             }
         },
+        "device_tracker": {
+            "network_device": {
+                "default": "mdi:lan"
+            }
+        },
         "sensor": {
             "ads_blocked_today": {
                 "default": "mdi:close-octagon-outline"
