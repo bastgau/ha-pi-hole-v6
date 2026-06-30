@@ -1,0 +1,24 @@
+{
+  "features": {
+    "ghcr.io/devcontainers-extra/features/poetry:2": {
+      "version": "2.0.18",
+      "resolved": "ghcr.io/devcontainers-extra/features/poetry@sha256:7b5f2c66d25d8b3cc5d601af6b81b720c77dd315f24d5e6f84b342cccc3c9228",
+      "integrity": "sha256:7b5f2c66d25d8b3cc5d601af6b81b720c77dd315f24d5e6f84b342cccc3c9228"
+    },
+    "ghcr.io/devcontainers/features/github-cli:1": {
+      "version": "1.1.0",
+      "resolved": "ghcr.io/devcontainers/features/github-cli@sha256:d22f50b70ed75339b4eed1ba9ecde3a1791f90e88d37936517e3bace0bbad671",
+      "integrity": "sha256:d22f50b70ed75339b4eed1ba9ecde3a1791f90e88d37936517e3bace0bbad671"
+    },
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "1.7.1",
+      "resolved": "ghcr.io/devcontainers/features/node@sha256:8c0de46939b61958041700ee89e3493f3b2e4131a06dc46b4d9423427d06e5f6",
+      "integrity": "sha256:8c0de46939b61958041700ee89e3493f3b2e4131a06dc46b4d9423427d06e5f6"
+    },
+    "ghcr.io/devcontainers/features/rust:1": {
+      "version": "1.5.0",
+      "resolved": "ghcr.io/devcontainers/features/rust@sha256:0c55e65f2e3df736e478f26ee4d5ed41bae6b54dac1318c443e31444c8ed283c",
+      "integrity": "sha256:0c55e65f2e3df736e478f26ee4d5ed41bae6b54dac1318c443e31444c8ed283c"
+    }
+  }
+}

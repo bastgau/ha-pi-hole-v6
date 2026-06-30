@@ -1,5 +1,5 @@
 {
-    "name": "Cudy Router Integration",
+    "name": "Pi-hole V6 Integration",
     "dockerFile": "./Dockerfile",
     "features": {
         "ghcr.io/devcontainers/features/github-cli:1": {
@@ -16,8 +16,13 @@
         "ghcr.io/devcontainers/features/rust:1": {}
     },
     "postCreateCommand": "scripts/setup",
+    "mounts": [
+        "type=bind,source=${localEnv:HOME}${localEnv:USERPROFILE}/.ssh,target=/home/vscode/.ssh,readonly",
+        "type=volume,source=claude-config-pi-hole,target=/home/vscode/.claude"
+    ],
     "runArgs": [
-        "--network=host"
+        "--network=host",
+        "--env-file=${localWorkspaceFolder}/.devcontainer/.env"
     ],
     "forwardPorts": [
         8123
@@ -32,12 +37,12 @@
         "vscode": {
             "extensions": [
                 "ms-python.python",
-                "github.vscode-pull-request-github",
                 "ms-python.vscode-pylance",
                 "charliermarsh.ruff",
                 "ms-python.black-formatter",
                 "tamasfe.even-better-toml",
-                "eamodio.gitlens"
+                "mohsen1.prettify-json",
+                "ms-python.pylint"
             ],
             "settings": {
                 "files.insertFinalNewline": true,

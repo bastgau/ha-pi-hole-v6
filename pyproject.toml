@@ -5,7 +5,7 @@ classifiers = [
   "Framework :: AsyncIO",
   "Intended Audience :: Developers",
   "Natural Language :: English",
-  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
   "Programming Language :: Python :: 3",
 ]
 description = "This custom integration restores compatibility between Home Assistant and Pi-hole, which is no longer supported by the native integration due to API changes. "
@@ -19,6 +19,10 @@ readme = "README.md"
 repository = "https://github.com/bastgau/ha-pi-hole-v6"
 version = "0.0.0"
 
+[tool.poetry.urls]
+"Bug Tracker" = "https://github.com/bastgau/ha-pi-hole-v6/issues"
+Changelog = "https://github.com/bastgau/ha-pi-hole-v6/releases"
+
 [tool.poetry.dependencies]
 homeassistant = "2026.2.1"
 python = ">=3.13,<3.14"
@@ -28,10 +32,6 @@ prek = "0.2.28"
 pylint = "4.0.4"
 pyright = "1.1.408"
 ruff = "0.15.1"
-
-[tool.poetry.urls]
-"Bug Tracker" = "https://github.com/bastgau/ha-pi-hole-v6/issues"
-Changelog = "https://github.com/bastgau/ha-pi-hole-v6/releases"
 
 [build-system]
 build-backend = "poetry.core.masonry.api"
@@ -102,6 +102,8 @@ disable = [
   "unexpected-keyword-arg",
   "used-before-assignment",
 ]
+max-args = 6
+max-positional-arguments = 6
 
 [tool.mypy]
 # Specify the target platform details in config, so your developers are

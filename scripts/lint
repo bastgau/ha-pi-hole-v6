@@ -10,7 +10,7 @@ RED='\033[31m'
 YELLOW='\033[33m'
 NC='\033[0m' # No Color
 
-PROJECT='ha-pi-hole-v6'
+PROJECT="$PROJECT_NAME"
 
 cd "$(dirname "$0")/.."
 
