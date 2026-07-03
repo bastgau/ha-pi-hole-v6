@@ -25,9 +25,17 @@ fi
 
 printf "%s\n" $files
 
+exit_code=0
+
 echo -e "\n${YELLOW}> Lint with Ruff :${NC}\n"
 prek run ruff-check --files $files
-echo -e "\n${BLUE}[ruff]${NC} ${GREEN}✓ Done.${NC}"
+ruff_exit=$?
+if [ $ruff_exit -eq 0 ]; then
+  echo -e "\n${BLUE}[ruff]${NC} ${GREEN}✓ Done.${NC}"
+else
+  echo -e "\n${BLUE}[ruff]${NC} ${RED}✗ Failed.${NC}"
+  exit_code=1
+fi
 
 echo -e "\n${YELLOW}> Lint with Pylint :${NC}"
 
@@ -35,21 +43,33 @@ pylint_files=$(echo "$files" | grep -v '^tests.*')
 
 if [ -z "$pylint_files" ] ; then
   echo -e "\n${BLUE}[config]${NC} ${PURPLE}✗ Only test files changed. End.${NC}\n"
-  exit
+  exit $exit_code
 else
   pylint_output=$(pylint $pylint_files 2>&1)
   pylint_exit=$?
   echo "$pylint_output" | grep -v "^-\{10,\}$"
   rating=$(echo "$pylint_output" | grep "Your code has been rated")
+  score=""
   if [ -n "$rating" ]; then
     score=$(echo "$rating" | grep -oP '\d+\.\d+/\d+' | head -1)
+  fi
+  if [ $pylint_exit -eq 0 ]; then
     echo -e "\n${BLUE}[pylint]${NC} Score: ${score} ${GREEN}✓ Done.${NC}"
   else
-    echo -e "${BLUE}[pylint]${NC} ${GREEN}✓ Done.${NC}"
+    echo -e "\n${BLUE}[pylint]${NC} Score: ${score} ${RED}✗ Failed.${NC}"
+    exit_code=1
   fi
 fi
 
 echo -e "\n${YELLOW}> Lint with Pyright :${NC}\n"
 
 pyright $pylint_files
-echo -e "\n${BLUE}[pyright]${NC} ${GREEN}✓ Done.${NC}\n"
+pyright_exit=$?
+if [ $pyright_exit -eq 0 ]; then
+  echo -e "\n${BLUE}[pyright]${NC} ${GREEN}✓ Done.${NC}\n"
+else
+  echo -e "\n${BLUE}[pyright]${NC} ${RED}✗ Failed.${NC}\n"
+  exit_code=1
+fi
+
+exit $exit_code
