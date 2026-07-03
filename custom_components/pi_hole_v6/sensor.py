@@ -211,10 +211,8 @@ class PiHoleV6Sensor(PiHoleV6Entity, SensorEntity):
             server_unique_id (str): A unique identifier for the server entry.
             description (SensorEntityDescription): The entity description.
 
-        Returns:
-            None
-
         """
+
         name: str = coordinator.name
         super().__init__(api, coordinator, name, server_unique_id)
         self.entity_description = description  # pyright: ignore[reportIncompatibleVariableOverride]

@@ -11,12 +11,7 @@ class APIError(Exception):
     message: str = ""
 
     def __init__(self) -> None:
-        """Initialize the APIError exception with the class-level message.
-
-        Returns:
-            None
-
-        """
+        """Initialize the APIError exception with the class-level message."""
         super().__init__(self.message)
 
 
@@ -26,12 +21,7 @@ class ActionExecutionError(Exception):
     message: str = "The action requested has failed. Please check HA logs or Pi-hole logs."
 
     def __init__(self) -> None:
-        """Initialize the ActionExecutionError exception with the class-level message.
-
-        Returns:
-            None
-
-        """
+        """Initialize the ActionExecutionError exception with the class-level message."""
         super().__init__(self.message)
 
 
@@ -43,12 +33,7 @@ class AbortLogoutError(Exception):
     message: str = "Logout call is not relevant. Maybe no session is active. Please check HA logs or Pi-hole logs."
 
     def __init__(self) -> None:
-        """Initialize the AbortLogoutError exception with the class-level message.
-
-        Returns:
-            None
-
-        """
+        """Initialize the AbortLogoutError exception with the class-level message."""
         super().__init__(self.message)
 
 
@@ -78,9 +63,6 @@ class ClientConnectorError(Exception):
             custom_message (str): An optional additional message to append to the default error message.
                 If empty (default), only the default message is used.
 
-        Returns:
-            None
-
         """
         new_message: str = self.message
 
@@ -96,12 +78,7 @@ class ContentTypeError(Exception):
     message: str = "Invalid content type returned by the API. Please check HA logs or Pi-hole logs."
 
     def __init__(self) -> None:
-        """Initialize the ContentTypeError exception with the class-level message.
-
-        Returns:
-            None
-
-        """
+        """Initialize the ContentTypeError exception with the class-level message."""
         super().__init__(self.message)
 
 

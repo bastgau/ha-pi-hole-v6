@@ -131,9 +131,6 @@ class PiHoleV6UpdateEntity(PiHoleV6Entity, UpdateEntity):
             server_unique_id (str): A unique identifier for the server entry.
             description (PiHoleV6UpdateEntityDescription): The entity description.
 
-        Returns:
-            None
-
         """
 
         name: str = coordinator.name

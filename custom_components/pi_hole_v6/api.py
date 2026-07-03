@@ -56,9 +56,6 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
             url (str): Represents the URL of API endpoint. Defaults to "http://pi.hole".
             password (str): The password used to authenticate against the Pi-hole API. Defaults to "".
 
-        Returns:
-            None
-
         """
         self._call_lock = asyncio.Lock()
         self._password: str = password

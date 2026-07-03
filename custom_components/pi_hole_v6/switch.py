@@ -146,10 +146,8 @@ class PiHoleV6Switch(PiHoleV6Entity, SwitchEntity):
             server_unique_id (str): A unique identifier for the server entry.
             description (SwitchEntityDescription): The entity description.
 
-        Returns:
-            None
-
         """
+
         name: str = coordinator.name
         super().__init__(api, coordinator, name, server_unique_id)
         self.entity_description = description
@@ -310,9 +308,6 @@ class PiHoleV6Group(PiHoleV6Entity, SwitchEntity):
             server_unique_id (str): A unique identifier for the server entry.
             description (SwitchEntityDescription): The entity description.
             group (dict[str, Any]): The group data dictionary containing name, id, and other metadata.
-
-        Returns:
-            None
 
         """
         api: PiholeAPI = hole_data.api

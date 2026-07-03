@@ -100,9 +100,6 @@ class PiHoleV6BinarySensor(PiHoleV6Entity, BinarySensorEntity):
             server_unique_id (str): A unique identifier for the server entry.
             description (PiHoleV6BinarySensorEntityDescription): The entity description.
 
-        Returns:
-            None
-
         """
 
         name: str = coordinator.name

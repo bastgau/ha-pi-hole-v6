@@ -44,9 +44,6 @@ class PiHoleV6Entity(CoordinatorEntity[DataUpdateCoordinator[None]]):
             name (str): The name of the Pi-hole instance.
             server_unique_id (str): A unique identifier for the server entry.
 
-        Returns:
-            None
-
         """
         super().__init__(coordinator)
         self.api = api

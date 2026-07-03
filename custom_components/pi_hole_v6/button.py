@@ -112,9 +112,6 @@ class PiHoleV6Button(PiHoleV6Entity, ButtonEntity):
             server_unique_id (str): A unique identifier for the server entry.
             description (PiholeV6ButtonEntityDescription): The entity description.
 
-        Returns:
-            None
-
         """
 
         name: str = coordinator.name
