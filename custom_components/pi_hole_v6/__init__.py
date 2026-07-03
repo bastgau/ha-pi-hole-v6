@@ -16,6 +16,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -247,6 +248,29 @@ async def async_setup_entry(hass: HomeAssistant, entry: PiHoleV6ConfigEntry) -> 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant,  # noqa: ARG001 # pylint: disable=unused-argument
+    entry: PiHoleV6ConfigEntry,  # noqa: ARG001 # pylint: disable=unused-argument
+    device_entry: dr.DeviceEntry,
+) -> bool:
+    """Allow manual removal of a network device from the UI.
+
+    Only network devices (identified by a MAC connection) created by the
+    device_tracker platform may be removed this way. The main Pi-hole device,
+    identified by its DOMAIN identifier, is never removable through this hook.
+
+    Args:
+        hass (HomeAssistant): The Home Assistant instance (unused).
+        entry (PiHoleV6ConfigEntry): The config entry owning the device (unused).
+        device_entry (dr.DeviceEntry): The device the user is attempting to remove.
+
+    Returns:
+        bool: True if the device may be removed.
+
+    """
+    return any(conn_type == dr.CONNECTION_NETWORK_MAC for conn_type, _ in device_entry.connections)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

@@ -28,7 +28,8 @@ from .helper import create_entity_id_name, parse_mac_list
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-    from homeassistant.core import HomeAssistant
+    from homeassistant.core import Event, HomeAssistant
+    from homeassistant.helpers.device_registry import EventDeviceRegistryUpdatedData
     from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
     from . import PiHoleV6ConfigEntry
@@ -223,6 +224,32 @@ async def async_setup_entry(
         hass.async_create_task(_async_add_remove_trackers())
 
     entry.async_on_unload(hole_data.coordinator.async_add_listener(_schedule_add_remove_trackers))
+
+    @callback
+    def _forget_manually_removed_device(event: Event[EventDeviceRegistryUpdatedData]) -> None:
+        """Forget a manually removed network device so it can be recreated later.
+
+        When the user removes a network device from the UI, it disappears from
+        `tracked_macs`/`tracked_entities` bookkeeping so that, if Pi-hole reports it
+        again on a later refresh, a fresh entity is created for it instead of the
+        removal being silently undone by the next tracker cycle.
+
+        Args:
+            event (Event[EventDeviceRegistryUpdatedData]): The device registry update event.
+
+        Returns:
+            None
+
+        """
+        if event.data["action"] != "remove":
+            return
+
+        for conn_type, mac in event.data["device"]["connections"]:
+            if conn_type == dr.CONNECTION_NETWORK_MAC:
+                tracked_macs.discard(mac)
+                tracked_entities.pop(mac, None)
+
+    entry.async_on_unload(hass.bus.async_listen(dr.EVENT_DEVICE_REGISTRY_UPDATED, _forget_manually_removed_device))
 
 
 class PiHoleV6DeviceTracker(  # pyright: ignore[reportIncompatibleVariableOverride]
