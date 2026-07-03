@@ -66,6 +66,6 @@ class PiHoleV6Entity(CoordinatorEntity[DataUpdateCoordinator[None]]):
             name=self._name,
             manufacturer="Pi-hole",
             configuration_url=config_url,
-            model="Pi-hole ",
+            model="Pi-hole",
             sw_version="v6",
         )

@@ -185,6 +185,7 @@ async def async_setup_entry(
                         config_entry_id=entry.entry_id,
                         connections={(dr.CONNECTION_NETWORK_MAC, mac)},
                         manufacturer=device.get("macVendor") or None,
+                        model="Network device",
                         name=_device_display_name(device),
                         via_device=(DOMAIN, server_unique_id),
                     )
