@@ -92,7 +92,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class PiHoleV6Button(PiHoleV6Entity, ButtonEntity):
+class PiHoleV6Button(PiHoleV6Entity, ButtonEntity):  # pyright: ignore[reportIncompatibleVariableOverride]
     """Representation of a Pi-hole V6 button."""
 
     entity_description: PiholeV6ButtonEntityDescription

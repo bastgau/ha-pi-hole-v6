@@ -6,9 +6,10 @@ import asyncio
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Any
 
-from homeassistant.components.device_tracker import ScannerEntity, SourceType
+from homeassistant.components.device_tracker.const import SourceType
+from homeassistant.components.device_tracker.entity import ScannerEntity
 from homeassistant.core import callback
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import CoordinatorEntity, DataUpdateCoordinator
 
 from .const import ATTRIBUTION, DOMAIN, MIN_TIME_BETWEEN_UPDATES
@@ -20,6 +21,27 @@ if TYPE_CHECKING:
 
     from . import PiHoleV6ConfigEntry
     from .api import Api as PiholeAPI
+
+
+def _device_display_name(device: dict[str, Any]) -> str:
+    """Return the best display name for a network device.
+
+    Picks the first non-null hostname from the device's IP list, falling
+    back to the MAC address when no hostname is known.
+
+    Args:
+        device (dict[str, Any]): The network device data dict.
+
+    Returns:
+        str: The hostname if found, otherwise the MAC address.
+
+    """
+    for ip_info in device["ips"]:
+        name: str | None = ip_info.get("name")
+        if name:
+            return name
+    return device["hwaddr"].lower()
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -43,6 +65,8 @@ async def async_setup_entry(
     hole_data = entry.runtime_data
     server_unique_id = entry.entry_id
 
+    device_registry = dr.async_get(hass)
+
     tracked_macs: set[str] = set()
     tracked_entities: dict[str, PiHoleV6DeviceTracker] = {}
     _add_lock = asyncio.Lock()
@@ -65,6 +89,15 @@ async def async_setup_entry(
 
                 if mac not in tracked_macs:
                     tracked_macs.add(mac)
+
+                    device_registry.async_get_or_create(
+                        config_entry_id=entry.entry_id,
+                        connections={(dr.CONNECTION_NETWORK_MAC, mac)},
+                        manufacturer=device.get("macVendor") or None,
+                        name=_device_display_name(device),
+                        via_device=(DOMAIN, server_unique_id),
+                    )
+
                     entity = PiHoleV6DeviceTracker(
                         hole_data.api,
                         hole_data.coordinator,
@@ -100,11 +133,15 @@ async def async_setup_entry(
     entry.async_on_unload(hole_data.coordinator.async_add_listener(_schedule_add_remove_trackers))
 
 
-class PiHoleV6DeviceTracker(CoordinatorEntity[DataUpdateCoordinator[None]], ScannerEntity):
+class PiHoleV6DeviceTracker(  # pyright: ignore[reportIncompatibleVariableOverride]
+    CoordinatorEntity[DataUpdateCoordinator[None]],
+    ScannerEntity,
+):
     """Representation of a device tracked via Pi-hole network data.
 
-    Each instance creates its own device in the Home Assistant device registry,
-    identified by the MAC address from the network device.
+    Each tracked device gets its own entry in the Home Assistant device registry,
+    identified by its MAC address and created by `async_setup_entry`. This entity
+    auto-attaches to that device registry entry via its `mac_address` property.
 
     Attributes:
         api (PiholeAPI): The Pi-hole API client instance.
@@ -139,11 +176,8 @@ class PiHoleV6DeviceTracker(CoordinatorEntity[DataUpdateCoordinator[None]], Scan
         self.api = api
 
         self._mac: str = device["hwaddr"].lower()
-        self._server_unique_id: str = server_unique_id
-
         self._hostname: str | None = None
         self._ip_address: str | None = None
-        self._manufacturer: str | None = None
 
         self._attr_unique_id = f"{server_unique_id}/{self._mac}"
 
@@ -154,7 +188,7 @@ class PiHoleV6DeviceTracker(CoordinatorEntity[DataUpdateCoordinator[None]], Scan
     def _find_device(self) -> dict[str, Any] | None:
         """Find the current network device entry for this MAC address.
 
-        Updates cached hostname, IP address, and manufacturer when found.
+        Updates cached hostname and IP address when found.
 
         Returns:
             dict[str, Any] | None: The device dict if found, None otherwise.
@@ -179,32 +213,8 @@ class PiHoleV6DeviceTracker(CoordinatorEntity[DataUpdateCoordinator[None]], Scan
                         best_ip = ip_info["ip"]
                 self._ip_address = best_ip
 
-                self._manufacturer = device.get("macVendor") or None
-
                 return device
         return None
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device information for this tracked device.
-
-        Creates a unique device in the HA device registry per MAC address,
-        linked to the Pi-hole server device via `via_device`.
-
-        Returns:
-            DeviceInfo: The device information for this tracked client.
-
-        """
-        self._find_device()
-        device_name: str = self._hostname or self._mac
-
-        return DeviceInfo(
-            connections={(CONNECTION_NETWORK_MAC, self._mac)},
-            identifiers={(DOMAIN, self._mac)},
-            manufacturer=self._manufacturer,
-            name=device_name,
-            via_device=(DOMAIN, self._server_unique_id),
-        )
 
     @property
     def name(self) -> str | None:  # pyright: ignore[reportIncompatibleVariableOverride]
@@ -247,7 +257,7 @@ class PiHoleV6DeviceTracker(CoordinatorEntity[DataUpdateCoordinator[None]], Scan
         return (datetime.now(UTC) - last_query).total_seconds() <= 2 * MIN_TIME_BETWEEN_UPDATES.total_seconds()
 
     @property
-    def ip_address(self) -> str | None:
+    def ip_address(self) -> str | None:  # pyright: ignore[reportIncompatibleVariableOverride]
         """Return the most recently seen IP address from the network device data.
 
         Returns:
@@ -258,7 +268,7 @@ class PiHoleV6DeviceTracker(CoordinatorEntity[DataUpdateCoordinator[None]], Scan
         return self._ip_address
 
     @property
-    def mac_address(self) -> str:
+    def mac_address(self) -> str:  # pyright: ignore[reportIncompatibleVariableOverride]
         """Return the MAC address of the tracked device.
 
         Returns:
@@ -268,7 +278,7 @@ class PiHoleV6DeviceTracker(CoordinatorEntity[DataUpdateCoordinator[None]], Scan
         return self._mac
 
     @property
-    def hostname(self) -> str | None:
+    def hostname(self) -> str | None:  # pyright: ignore[reportIncompatibleVariableOverride]
         """Return the hostname of the tracked device.
 
         Returns:
@@ -295,8 +305,8 @@ class PiHoleV6DeviceTracker(CoordinatorEntity[DataUpdateCoordinator[None]], Scan
             return None
 
         attrs: dict[str, Any] = {}
-        if self._manufacturer:
-            attrs["manufacturer"] = self._manufacturer
+        if device.get("macVendor"):
+            attrs["manufacturer"] = device["macVendor"]
         if device.get("interface"):
             attrs["interface"] = device["interface"]
         if device.get("numQueries"):

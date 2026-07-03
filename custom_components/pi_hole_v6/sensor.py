@@ -191,7 +191,7 @@ async def async_setup_entry(
     async_track_time_interval(hass, update_timer, timedelta(seconds=1))
 
 
-class PiHoleV6Sensor(PiHoleV6Entity, SensorEntity):
+class PiHoleV6Sensor(PiHoleV6Entity, SensorEntity):  # pyright: ignore[reportIncompatibleVariableOverride]
     """Representation of a Pi-hole V6 sensor."""
 
     entity_description: SensorEntityDescription

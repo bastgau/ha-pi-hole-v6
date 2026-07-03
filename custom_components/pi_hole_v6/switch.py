@@ -125,7 +125,7 @@ async def async_setup_entry(
     )
 
 
-class PiHoleV6Switch(PiHoleV6Entity, SwitchEntity):
+class PiHoleV6Switch(PiHoleV6Entity, SwitchEntity):  # pyright: ignore[reportIncompatibleVariableOverride]
     """Representation of a Pi-hole V6 switch."""
 
     _attr_icon = "mdi:pi-hole"
@@ -281,7 +281,7 @@ class PiHoleV6Switch(PiHoleV6Entity, SwitchEntity):
         await self.async_turn_switch(action="enable")
 
 
-class PiHoleV6Group(PiHoleV6Entity, SwitchEntity):
+class PiHoleV6Group(PiHoleV6Entity, SwitchEntity):  # pyright: ignore[reportIncompatibleVariableOverride]
     """Representation of a Pi-hole V6 group.
 
     Attributes:

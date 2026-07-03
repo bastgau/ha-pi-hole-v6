@@ -111,7 +111,7 @@ async def async_setup_entry(
     )
 
 
-class PiHoleV6UpdateEntity(PiHoleV6Entity, UpdateEntity):
+class PiHoleV6UpdateEntity(PiHoleV6Entity, UpdateEntity):  # pyright: ignore[reportIncompatibleVariableOverride]
     """Representation of a Pi-hole update entity."""
 
     entity_description: PiHoleV6UpdateEntityDescription

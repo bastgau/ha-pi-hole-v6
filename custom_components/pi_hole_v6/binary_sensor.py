@@ -80,7 +80,7 @@ async def async_setup_entry(
     async_add_entities(binary_sensors, update_before_add=True)
 
 
-class PiHoleV6BinarySensor(PiHoleV6Entity, BinarySensorEntity):
+class PiHoleV6BinarySensor(PiHoleV6Entity, BinarySensorEntity):  # pyright: ignore[reportIncompatibleVariableOverride]
     """Representation of a Pi-hole V6 binary sensor."""
 
     entity_description: PiHoleV6BinarySensorEntityDescription
