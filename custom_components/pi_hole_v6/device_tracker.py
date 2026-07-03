@@ -65,7 +65,7 @@ def _build_mac_filter(entry: PiHoleV6ConfigEntry) -> Callable[[str], bool]:
 def _purge_network_devices(
     hass: HomeAssistant,
     entry: PiHoleV6ConfigEntry,
-    is_mac_allowed: Callable[[str], bool] = lambda _mac: False,
+    is_mac_allowed: Callable[[str], bool] = lambda _mac: False,  # pyright: ignore[reportUnknownLambdaType]
 ) -> None:
     """Remove device_tracker entities and their network devices from the registries.
 
