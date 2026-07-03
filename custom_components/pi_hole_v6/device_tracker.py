@@ -14,19 +14,88 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity, DataUpda
 
 from .const import (
     ATTRIBUTION,
+    CONF_DEVICE_TRACKER_MAC_LIST,
+    CONF_DEVICE_TRACKER_WHITELIST,
     CONF_ENABLE_DEVICE_TRACKER,
+    DEFAULT_DEVICE_TRACKER_MAC_LIST,
+    DEFAULT_DEVICE_TRACKER_WHITELIST,
     DEFAULT_ENABLE_DEVICE_TRACKER,
     DOMAIN,
     MIN_TIME_BETWEEN_UPDATES,
 )
-from .helper import create_entity_id_name
+from .helper import create_entity_id_name, parse_mac_list
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from homeassistant.core import HomeAssistant
     from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
     from . import PiHoleV6ConfigEntry
     from .api import Api as PiholeAPI
+
+
+def _build_mac_filter(entry: PiHoleV6ConfigEntry) -> Callable[[str], bool]:
+    """Build a predicate that decides whether a MAC address should be tracked.
+
+    Reads the whitelist/blacklist mode and MAC list from the config entry options.
+    An empty list disables filtering entirely, regardless of the selected mode.
+
+    Args:
+        entry (PiHoleV6ConfigEntry): The config entry providing the filter options.
+
+    Returns:
+        Callable[[str], bool]: A predicate returning True if the given (lowercase)
+            MAC address should be tracked.
+
+    """
+    mac_list = parse_mac_list(entry.data.get(CONF_DEVICE_TRACKER_MAC_LIST, DEFAULT_DEVICE_TRACKER_MAC_LIST))
+
+    if not mac_list:
+        return lambda _mac: True
+
+    is_whitelist = entry.data.get(CONF_DEVICE_TRACKER_WHITELIST, DEFAULT_DEVICE_TRACKER_WHITELIST)
+
+    if is_whitelist:
+        return lambda mac: mac in mac_list
+    return lambda mac: mac not in mac_list
+
+
+def _purge_network_devices(
+    hass: HomeAssistant,
+    entry: PiHoleV6ConfigEntry,
+    is_mac_allowed: Callable[[str], bool] = lambda _mac: False,
+) -> None:
+    """Remove device_tracker entities and their network devices from the registries.
+
+    Removes any network device (and its device_tracker entity) already present in the
+    registries for this config entry whose MAC address is rejected by `is_mac_allowed`.
+    This also catches devices that are no longer part of the current Pi-hole cache.
+
+    Args:
+        hass (HomeAssistant): The Home Assistant instance.
+        entry (PiHoleV6ConfigEntry): The config entry owning the entities and devices.
+        is_mac_allowed (Callable[[str], bool]): Predicate deciding whether a MAC address
+            should still be tracked. Defaults to always False, removing every network
+            device (used when device tracking is fully disabled).
+
+    Returns:
+        None
+
+    """
+    entity_registry = er.async_get(hass)
+    for entity_entry in er.async_entries_for_config_entry(entity_registry, entry.entry_id):
+        if entity_entry.domain != "device_tracker":
+            continue
+        mac = entity_entry.unique_id.rsplit("/", 1)[-1]
+        if not is_mac_allowed(mac):
+            entity_registry.async_remove(entity_entry.entity_id)
+
+    device_registry = dr.async_get(hass)
+    for device_entry in dr.async_entries_for_config_entry(device_registry, entry.entry_id):
+        device_macs = {mac for conn_type, mac in device_entry.connections if conn_type == dr.CONNECTION_NETWORK_MAC}
+        if device_macs and not any(is_mac_allowed(mac) for mac in device_macs):
+            device_registry.async_update_device(device_entry.id, remove_config_entry_id=entry.entry_id)
 
 
 def _device_display_name(device: dict[str, Any]) -> str:
@@ -72,15 +141,7 @@ async def async_setup_entry(
 
     """
     if not entry.data.get(CONF_ENABLE_DEVICE_TRACKER, DEFAULT_ENABLE_DEVICE_TRACKER):
-        entity_registry = er.async_get(hass)
-        for entity_entry in er.async_entries_for_config_entry(entity_registry, entry.entry_id):
-            if entity_entry.domain == "device_tracker":
-                entity_registry.async_remove(entity_entry.entity_id)
-
-        device_registry = dr.async_get(hass)
-        for device_entry in dr.async_entries_for_config_entry(device_registry, entry.entry_id):
-            if any(conn_type == dr.CONNECTION_NETWORK_MAC for conn_type, _ in device_entry.connections):
-                device_registry.async_update_device(device_entry.id, remove_config_entry_id=entry.entry_id)
+        _purge_network_devices(hass, entry)
         return
 
     hole_data = entry.runtime_data
@@ -88,25 +149,33 @@ async def async_setup_entry(
 
     device_registry = dr.async_get(hass)
 
+    _purge_network_devices(hass, entry, _build_mac_filter(entry))
+
     tracked_macs: set[str] = set()
     tracked_entities: dict[str, PiHoleV6DeviceTracker] = {}
     _add_lock = asyncio.Lock()
 
     async def _async_add_remove_trackers() -> None:
-        """Add new and remove stale device tracker entities.
+        """Add new devices and remove entities excluded by the current MAC filter.
+
+        Devices that Pi-hole simply stops reporting keep their entity, which then
+        naturally reports as not_home. Only devices rejected by the whitelist or
+        blacklist filter are actively removed.
 
         Returns:
             None
 
         """
         async with _add_lock:
+            is_mac_allowed = _build_mac_filter(entry)
+
             new_entities: list[PiHoleV6DeviceTracker] = []
-            stale: list[str] = []
-            seen_macs: set[str] = set()
 
             for device in hole_data.api.cache_network_devices:
                 mac: str = device["hwaddr"].lower()
-                seen_macs.add(mac)
+
+                if not is_mac_allowed(mac):
+                    continue
 
                 if mac not in tracked_macs:
                     tracked_macs.add(mac)
@@ -128,10 +197,12 @@ async def async_setup_entry(
                     new_entities.append(entity)
                     tracked_entities[mac] = entity
 
-            # Remove entities for devices no longer in the cache
-            stale.extend(mac for mac in tracked_macs if mac not in seen_macs)
+            # A device excluded by the current filter is removed even if Pi-hole still
+            # reports it. A device simply absent from Pi-hole's response keeps its
+            # entity, which naturally reports as not_home via ScannerEntity.
+            excluded: list[str] = [mac for mac in tracked_macs if not is_mac_allowed(mac)]
 
-            for mac in stale:
+            for mac in excluded:
                 if mac in tracked_entities:
                     await tracked_entities.pop(mac).async_remove()
                 tracked_macs.discard(mac)

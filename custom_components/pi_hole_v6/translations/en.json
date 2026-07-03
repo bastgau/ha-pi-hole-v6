@@ -41,10 +41,14 @@
             "init": {
                 "data": {
                     "update_interval": "Data refresh frequency (seconds)",
-                    "enable_device_tracker": "Enable network device tracking"
+                    "enable_device_tracker": "Enable network device tracking",
+                    "device_tracker_whitelist": "Use MAC list as a whitelist",
+                    "device_tracker_mac_list": "Filtered MAC addresses"
                 },
                 "data_description": {
-                    "enable_device_tracker": "Disabled by default. When enabled, retrieves the list of network devices from Pi-hole to create device_tracker entities."
+                    "enable_device_tracker": "Disabled by default. When enabled, retrieves the list of network devices from Pi-hole to create device_tracker entities.",
+                    "device_tracker_whitelist": "When enabled, only the listed MAC addresses are tracked. When disabled, the listed MAC addresses are excluded and all others are tracked.",
+                    "device_tracker_mac_list": "One MAC address per line, or separated by commas. Leave empty to disable filtering."
                 },
                 "description": "After modifying one of these options, it is necessary to reload the service or restart Home Assistant.",
                 "title": "Pi-hole V6"

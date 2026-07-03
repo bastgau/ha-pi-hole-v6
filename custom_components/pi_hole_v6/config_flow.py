@@ -19,9 +19,13 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .api import Api as ClientAPI
 from .const import (
+    CONF_DEVICE_TRACKER_MAC_LIST,
+    CONF_DEVICE_TRACKER_WHITELIST,
     CONF_ENABLE_DEVICE_TRACKER,
     CONF_UPDATE_INTERVAL,
     CONFIG_ENTRY_VERSION,
+    DEFAULT_DEVICE_TRACKER_MAC_LIST,
+    DEFAULT_DEVICE_TRACKER_WHITELIST,
     DEFAULT_ENABLE_DEVICE_TRACKER,
     DEFAULT_NAME,
     DEFAULT_PASSWORD,
@@ -258,6 +262,17 @@ def _get_data_option_schema() -> vol.Schema:
             vol.Required(
                 CONF_ENABLE_DEVICE_TRACKER,
             ): selector.BooleanSelector(),  # pyright: ignore[reportUnknownMemberType]
+            vol.Required(
+                CONF_DEVICE_TRACKER_WHITELIST,
+            ): selector.BooleanSelector(),  # pyright: ignore[reportUnknownMemberType]
+            vol.Optional(
+                CONF_DEVICE_TRACKER_MAC_LIST,
+            ): vol.All(
+                selector.TextSelector(  # pyright: ignore[reportUnknownMemberType]
+                    selector.TextSelectorConfig(multiline=True)
+                ),
+                vol.Coerce(str),
+            ),
         }
     )
 
@@ -315,8 +330,15 @@ class OptionsFlowHandler(OptionsFlow):
 
         update_interval = self.config_entry.data.get(CONF_UPDATE_INTERVAL, None)
         enable_device_tracker = self.config_entry.data.get(CONF_ENABLE_DEVICE_TRACKER, None)
+        device_tracker_whitelist = self.config_entry.data.get(CONF_DEVICE_TRACKER_WHITELIST, None)
+        device_tracker_mac_list = self.config_entry.data.get(CONF_DEVICE_TRACKER_MAC_LIST, None)
 
-        if update_interval is None or enable_device_tracker is None:
+        if (
+            update_interval is None
+            or enable_device_tracker is None
+            or device_tracker_whitelist is None
+            or device_tracker_mac_list is None
+        ):
             self.hass.config_entries.async_update_entry(
                 self.config_entry,
                 data={
@@ -324,6 +346,14 @@ class OptionsFlowHandler(OptionsFlow):
                     CONF_UPDATE_INTERVAL: update_interval or MIN_TIME_BETWEEN_UPDATES.seconds,
                     CONF_ENABLE_DEVICE_TRACKER: (
                         DEFAULT_ENABLE_DEVICE_TRACKER if enable_device_tracker is None else enable_device_tracker
+                    ),
+                    CONF_DEVICE_TRACKER_WHITELIST: (
+                        DEFAULT_DEVICE_TRACKER_WHITELIST
+                        if device_tracker_whitelist is None
+                        else device_tracker_whitelist
+                    ),
+                    CONF_DEVICE_TRACKER_MAC_LIST: (
+                        DEFAULT_DEVICE_TRACKER_MAC_LIST if device_tracker_mac_list is None else device_tracker_mac_list
                     ),
                 },
             )
