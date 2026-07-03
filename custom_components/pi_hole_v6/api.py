@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Any
 
 from aiohttp import ClientError, ClientResponse, ContentTypeError, client
 
+from .const import MAX_NETWORK_DEVICES
 from .exceptions import (
     AbortLogoutError,
     APIError,
@@ -779,11 +780,11 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
             "data": result["data"],
         }
 
-    async def call_get_network_devices(self, max_devices: int = 50) -> dict[str, Any]:
+    async def call_get_network_devices(self, max_devices: int = MAX_NETWORK_DEVICES) -> dict[str, Any]:
         """Retrieve the list of known network devices.
 
         Args:
-            max_devices (int): The maximum number of devices to retrieve. Defaults to 50.
+            max_devices (int): The maximum number of devices to retrieve. Defaults to MAX_NETWORK_DEVICES.
 
         Returns:
             dict[str, Any]: A dictionary with the keys "code", "reason", and "data".

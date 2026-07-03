@@ -19,5 +19,6 @@ SERVICE_ENABLE = "enable"
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=300)
 DEFAULT_ENABLE_DEVICE_TRACKER = False
+MAX_NETWORK_DEVICES = 2048
 
 ATTRIBUTION = "Data provided by your Pi-hole instance API"
