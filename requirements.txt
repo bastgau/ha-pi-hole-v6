@@ -1,4 +1,4 @@
-homeassistant==2026.2.2
+homeassistant==2026.7.0
 prek==0.2.28
 pylint==4.0.4
 pyright==1.1.411
