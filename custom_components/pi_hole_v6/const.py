@@ -5,6 +5,7 @@ from datetime import timedelta
 CONFIG_ENTRY_VERSION = 1
 
 CONF_UPDATE_INTERVAL = "update_interval"
+CONF_ENABLE_DEVICE_TRACKER = "enable_device_tracker"
 
 DOMAIN = "pi_hole_v6"
 DEFAULT_NAME = "Pi-hole"
@@ -17,5 +18,6 @@ SERVICE_DISABLE_ATTR_DURATION = "duration"
 SERVICE_ENABLE = "enable"
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=300)
+DEFAULT_ENABLE_DEVICE_TRACKER = False
 
 ATTRIBUTION = "Data provided by your Pi-hole instance API"

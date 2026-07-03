@@ -9,10 +9,16 @@ from typing import TYPE_CHECKING, Any
 from homeassistant.components.device_tracker.const import SourceType
 from homeassistant.components.device_tracker.entity import ScannerEntity
 from homeassistant.core import callback
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.update_coordinator import CoordinatorEntity, DataUpdateCoordinator
 
-from .const import ATTRIBUTION, DOMAIN, MIN_TIME_BETWEEN_UPDATES
+from .const import (
+    ATTRIBUTION,
+    CONF_ENABLE_DEVICE_TRACKER,
+    DEFAULT_ENABLE_DEVICE_TRACKER,
+    DOMAIN,
+    MIN_TIME_BETWEEN_UPDATES,
+)
 from .helper import create_entity_id_name
 
 if TYPE_CHECKING:
@@ -52,6 +58,9 @@ async def async_setup_entry(
 
     Creates a device tracker entity for each network device known to Pi-hole.
     New devices appearing in subsequent coordinator updates are automatically added.
+    If network device tracking is disabled, any previously created device tracker
+    entities and their associated network device entries are removed from their
+    respective registries.
 
     Args:
         hass (HomeAssistant): The Home Assistant instance.
@@ -62,6 +71,18 @@ async def async_setup_entry(
         None
 
     """
+    if not entry.data.get(CONF_ENABLE_DEVICE_TRACKER, DEFAULT_ENABLE_DEVICE_TRACKER):
+        entity_registry = er.async_get(hass)
+        for entity_entry in er.async_entries_for_config_entry(entity_registry, entry.entry_id):
+            if entity_entry.domain == "device_tracker":
+                entity_registry.async_remove(entity_entry.entity_id)
+
+        device_registry = dr.async_get(hass)
+        for device_entry in dr.async_entries_for_config_entry(device_registry, entry.entry_id):
+            if any(conn_type == dr.CONNECTION_NETWORK_MAC for conn_type, _ in device_entry.connections):
+                device_registry.async_update_device(device_entry.id, remove_config_entry_id=entry.entry_id)
+        return
+
     hole_data = entry.runtime_data
     server_unique_id = entry.entry_id
 

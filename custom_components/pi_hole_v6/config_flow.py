@@ -19,8 +19,10 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .api import Api as ClientAPI
 from .const import (
+    CONF_ENABLE_DEVICE_TRACKER,
     CONF_UPDATE_INTERVAL,
     CONFIG_ENTRY_VERSION,
+    DEFAULT_ENABLE_DEVICE_TRACKER,
     DEFAULT_NAME,
     DEFAULT_PASSWORD,
     DEFAULT_URL,
@@ -253,6 +255,9 @@ def _get_data_option_schema() -> vol.Schema:
                 selector.TextSelector(),  # pyright: ignore[reportUnknownMemberType]
                 vol.Coerce(str),
             ),
+            vol.Required(
+                CONF_ENABLE_DEVICE_TRACKER,
+            ): selector.BooleanSelector(),  # pyright: ignore[reportUnknownMemberType]
         }
     )
 
@@ -309,13 +314,17 @@ class OptionsFlowHandler(OptionsFlow):
             )
 
         update_interval = self.config_entry.data.get(CONF_UPDATE_INTERVAL, None)
+        enable_device_tracker = self.config_entry.data.get(CONF_ENABLE_DEVICE_TRACKER, None)
 
-        if update_interval is None:
+        if update_interval is None or enable_device_tracker is None:
             self.hass.config_entries.async_update_entry(
                 self.config_entry,
                 data={
                     **self.config_entry.data,
-                    CONF_UPDATE_INTERVAL: MIN_TIME_BETWEEN_UPDATES.seconds,
+                    CONF_UPDATE_INTERVAL: update_interval or MIN_TIME_BETWEEN_UPDATES.seconds,
+                    CONF_ENABLE_DEVICE_TRACKER: (
+                        DEFAULT_ENABLE_DEVICE_TRACKER if enable_device_tracker is None else enable_device_tracker
+                    ),
                 },
             )
 

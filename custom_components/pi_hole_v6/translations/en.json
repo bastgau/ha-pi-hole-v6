@@ -40,7 +40,11 @@
         "step": {
             "init": {
                 "data": {
-                    "update_interval": "Data refresh frequency (seconds)"
+                    "update_interval": "Data refresh frequency (seconds)",
+                    "enable_device_tracker": "Enable network device tracking"
+                },
+                "data_description": {
+                    "enable_device_tracker": "Disabled by default. When enabled, retrieves the list of network devices from Pi-hole to create device_tracker entities."
                 },
                 "description": "After modifying one of these options, it is necessary to reload the service or restart Home Assistant.",
                 "title": "Pi-hole V6"

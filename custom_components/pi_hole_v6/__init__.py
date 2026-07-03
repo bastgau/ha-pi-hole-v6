@@ -20,7 +20,13 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .api import Api as PiholeAPI
-from .const import CONF_UPDATE_INTERVAL, DOMAIN, MIN_TIME_BETWEEN_UPDATES
+from .const import (
+    CONF_ENABLE_DEVICE_TRACKER,
+    CONF_UPDATE_INTERVAL,
+    DEFAULT_ENABLE_DEVICE_TRACKER,
+    DOMAIN,
+    MIN_TIME_BETWEEN_UPDATES,
+)
 from .exceptions import APIError, DataStructureError, UnauthorizedError
 
 if TYPE_CHECKING:
@@ -81,13 +87,15 @@ async def check_result(result: Any, api_client: PiholeAPI) -> None:
         raise DataStructureError
 
 
-async def async_get_all_data(api_client: PiholeAPI) -> None:
+async def async_get_all_data(api_client: PiholeAPI, *, enable_device_tracker: bool) -> None:
     """Fetch all required data from the Pi-hole API.
 
     Sequentially calls each API endpoint and validates the result structure.
 
     Args:
         api_client (PiholeAPI): The Pi-hole API client instance used to perform the calls.
+        enable_device_tracker (bool): Whether to also fetch network devices for the
+            device_tracker platform.
 
     Returns:
         None
@@ -118,8 +126,9 @@ async def async_get_all_data(api_client: PiholeAPI) -> None:
     result = await api_client.call_get_dhcp_leases()
     await check_result(result, api_client)
 
-    result = await api_client.call_get_network_devices()
-    await check_result(result, api_client)
+    if enable_device_tracker:
+        result = await api_client.call_get_network_devices()
+        await check_result(result, api_client)
 
     result = await api_client.call_get_auth_sessions()
     await check_result(result, api_client)
@@ -189,8 +198,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: PiHoleV6ConfigEntry) -> 
 
         result: Any = {}
 
+        enable_device_tracker: bool = entry.data.get(CONF_ENABLE_DEVICE_TRACKER, DEFAULT_ENABLE_DEVICE_TRACKER)
+
         try:
-            await async_get_all_data(api_client=api_client)
+            await async_get_all_data(api_client=api_client, enable_device_tracker=enable_device_tracker)
 
         except UnauthorizedError as err:
             msg: str = "Credentials must be updated."
