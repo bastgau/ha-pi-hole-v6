@@ -39,8 +39,11 @@ if TYPE_CHECKING:
 def _build_mac_filter(entry: PiHoleV6ConfigEntry) -> Callable[[str], bool]:
     """Build a predicate that decides whether a MAC address should be tracked.
 
-    Reads the whitelist/blacklist mode and MAC list from the config entry options.
-    An empty list disables filtering entirely, regardless of the selected mode.
+    Reads the whitelist/blacklist mode and address list from the config entry options.
+    An empty list disables filtering entirely, regardless of the selected mode. The list
+    may contain MAC addresses (including Pi-hole's "ip-x.x.x.x" pseudo-MACs) and/or IP
+    addresses, but this predicate only ever matches against the MAC address itself. It is
+    used where only a MAC is known, such as when purging the registries at startup.
 
     Args:
         entry (PiHoleV6ConfigEntry): The config entry providing the filter options.
@@ -50,16 +53,47 @@ def _build_mac_filter(entry: PiHoleV6ConfigEntry) -> Callable[[str], bool]:
             MAC address should be tracked.
 
     """
-    mac_list = parse_mac_list(entry.data.get(CONF_DEVICE_TRACKER_MAC_LIST, DEFAULT_DEVICE_TRACKER_MAC_LIST))
+    address_list = parse_mac_list(entry.data.get(CONF_DEVICE_TRACKER_MAC_LIST, DEFAULT_DEVICE_TRACKER_MAC_LIST))
 
-    if not mac_list:
+    if not address_list:
         return lambda _mac: True
 
     is_whitelist = entry.data.get(CONF_DEVICE_TRACKER_WHITELIST, DEFAULT_DEVICE_TRACKER_WHITELIST)
 
     if is_whitelist:
-        return lambda mac: mac in mac_list
-    return lambda mac: mac not in mac_list
+        return lambda mac: mac in address_list
+    return lambda mac: mac not in address_list
+
+
+def _build_device_filter(entry: PiHoleV6ConfigEntry) -> Callable[[dict[str, Any]], bool]:
+    """Build a predicate that decides whether a network device should be tracked.
+
+    Like `_build_mac_filter`, but also matches the device's current IP addresses
+    against the list, so devices can be filtered by IP as well as by MAC address.
+    This requires the full Pi-hole device dict and can therefore only be used where
+    the current cache is available, not when only a stored MAC is known.
+
+    Args:
+        entry (PiHoleV6ConfigEntry): The config entry providing the filter options.
+
+    Returns:
+        Callable[[dict[str, Any]], bool]: A predicate returning True if the given
+            device should be tracked.
+
+    """
+    address_list = parse_mac_list(entry.data.get(CONF_DEVICE_TRACKER_MAC_LIST, DEFAULT_DEVICE_TRACKER_MAC_LIST))
+
+    if not address_list:
+        return lambda _device: True
+
+    is_whitelist = entry.data.get(CONF_DEVICE_TRACKER_WHITELIST, DEFAULT_DEVICE_TRACKER_WHITELIST)
+
+    def _device_addresses(device: dict[str, Any]) -> set[str]:
+        return {device["hwaddr"].lower()} | {ip_info["ip"] for ip_info in device["ips"]}
+
+    if is_whitelist:
+        return lambda device: bool(_device_addresses(device) & address_list)
+    return lambda device: not _device_addresses(device) & address_list
 
 
 def _purge_network_devices(
@@ -157,25 +191,28 @@ async def async_setup_entry(
     _add_lock = asyncio.Lock()
 
     async def _async_add_remove_trackers() -> None:
-        """Add new devices and remove entities excluded by the current MAC filter.
+        """Add new devices and remove entities excluded by the current filter.
 
         Devices that Pi-hole simply stops reporting keep their entity, which then
         naturally reports as not_home. Only devices rejected by the whitelist or
-        blacklist filter are actively removed.
+        blacklist filter (matched against MAC and current IP addresses) are actively
+        removed.
 
         Returns:
             None
 
         """
         async with _add_lock:
-            is_mac_allowed = _build_mac_filter(entry)
+            is_device_allowed = _build_device_filter(entry)
 
             new_entities: list[PiHoleV6DeviceTracker] = []
+            current_devices: dict[str, dict[str, Any]] = {}
 
             for device in hole_data.api.cache_network_devices:
                 mac: str = device["hwaddr"].lower()
+                current_devices[mac] = device
 
-                if not is_mac_allowed(mac):
+                if not is_device_allowed(device):
                     continue
 
                 if mac not in tracked_macs:
@@ -199,10 +236,12 @@ async def async_setup_entry(
                     new_entities.append(entity)
                     tracked_entities[mac] = entity
 
-            # A device excluded by the current filter is removed even if Pi-hole still
-            # reports it. A device simply absent from Pi-hole's response keeps its
-            # entity, which naturally reports as not_home via ScannerEntity.
-            excluded: list[str] = [mac for mac in tracked_macs if not is_mac_allowed(mac)]
+            # A tracked device currently reported by Pi-hole and rejected by the filter
+            # is actively removed. A device simply absent from Pi-hole's response keeps
+            # its entity, which naturally reports as not_home via ScannerEntity.
+            excluded: list[str] = [
+                mac for mac in tracked_macs if mac in current_devices and not is_device_allowed(current_devices[mac])
+            ]
 
             for mac in excluded:
                 if mac in tracked_entities:
