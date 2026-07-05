@@ -2,38 +2,40 @@
 
 from __future__ import annotations
 
+from datetime import UTC, datetime, timedelta
 import logging
-from datetime import datetime, timedelta
-from typing import Any, Dict, List
+from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
-from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
-from homeassistant.const import CONF_NAME
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers import entity_platform
-from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from . import PiHoleV6ConfigEntry
-from .api import API as PiholeAPI
+from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
+from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.helpers.event import async_track_time_interval
+
 from .common import switch_update_timer
 from .const import SERVICE_DISABLE, SERVICE_DISABLE_ATTR_DURATION, SERVICE_ENABLE
 from .entity import PiHoleV6Entity
 from .exceptions import (
-    BadGatewayException,
-    BadRequestException,
-    ForbiddenException,
-    GatewayTimeoutException,
-    NotFoundException,
-    RequestFailedException,
-    ServerErrorException,
-    ServiceUnavailableException,
-    TooManyRequestsException,
-    UnauthorizedException,
+    BadGatewayError,
+    BadRequestError,
+    ForbiddenError,
+    GatewayTimeoutError,
+    NotFoundError,
+    RequestFailedError,
+    ServerError,
+    ServiceUnavailableError,
+    TooManyRequestsError,
+    UnauthorizedError,
 )
 from .helper import create_entity_id_name
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+    from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+
+    from . import PiHoleV6ConfigEntry, PiHoleV6Data
+    from .api import Api as PiholeAPI
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,26 +45,36 @@ async def async_setup_entry(
     entry: PiHoleV6ConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the Pi-hole V6 switch."""
-    name = entry.data[CONF_NAME]
+    """Set up the Pi-hole V6 switch.
+
+    Args:
+        hass (HomeAssistant): The Home Assistant instance.
+        entry (PiHoleV6ConfigEntry): The config entry providing runtime data.
+        async_add_entities (AddConfigEntryEntitiesCallback): Callback to register new entities.
+
+    Returns:
+        None
+
+    """
     hole_data = entry.runtime_data
 
     description: SwitchEntityDescription = SwitchEntityDescription(
-        key=f"{name}_sensor/global",
+        key=f"{hole_data.coordinator.name}_sensor/global",
     )
 
-    switches = [
+    name: str = hole_data.coordinator.name
+
+    switches: list[PiHoleV6Switch | PiHoleV6Group] = [
         PiHoleV6Switch(
             hole_data.api,
             hole_data.coordinator,
-            name,
             entry.entry_id,
             description,
         )
     ]
 
     for group in hole_data.api.cache_groups.values():
-        description: SwitchEntityDescription = SwitchEntityDescription(
+        description = SwitchEntityDescription(
             key="group",
             translation_key="group",
             translation_placeholders={
@@ -72,22 +84,28 @@ async def async_setup_entry(
 
         switches.append(
             PiHoleV6Group(
-                hole_data.api,
-                hole_data.coordinator,
-                name,
+                hole_data,
                 entry.entry_id,
                 description,
                 group,
             )
         )
 
-    async_add_entities(switches, True)
+    async_add_entities(switches, update_before_add=True)
     hass.data[f"pi_hole_entities_switch_{name}"] = []
     hass.data[f"pi_hole_entities_switch_{name}"].extend(switches)
 
-    async def update_timer(now: Any) -> None:
-        """..."""
-        await switch_update_timer(hass, now, name)
+    async def update_timer(_: Any) -> None:
+        """Trigger switch state update on a time interval basis.
+
+        Args:
+            _ (Any): The time event (unused).
+
+        Returns:
+            None
+
+        """
+        await switch_update_timer(hass, name)
 
     async_track_time_interval(hass, update_timer, timedelta(seconds=1))
 
@@ -107,7 +125,7 @@ async def async_setup_entry(
     )
 
 
-class PiHoleV6Switch(PiHoleV6Entity, SwitchEntity):
+class PiHoleV6Switch(PiHoleV6Entity, SwitchEntity):  # pyright: ignore[reportIncompatibleVariableOverride]
     """Representation of a Pi-hole V6 switch."""
 
     _attr_icon = "mdi:pi-hole"
@@ -116,39 +134,91 @@ class PiHoleV6Switch(PiHoleV6Entity, SwitchEntity):
     def __init__(
         self,
         api: PiholeAPI,
-        coordinator: DataUpdateCoordinator,
-        name: str,
+        coordinator: DataUpdateCoordinator[None],
         server_unique_id: str,
         description: SwitchEntityDescription,
     ) -> None:
+        """Initialize a Pi-hole V6 switch.
+
+        Args:
+            api (PiholeAPI): The Pi-hole API client instance.
+            coordinator (DataUpdateCoordinator[None]): The data update coordinator.
+            server_unique_id (str): A unique identifier for the server entry.
+            description (SwitchEntityDescription): The entity description.
+
+        """
+
+        name: str = coordinator.name
         super().__init__(api, coordinator, name, server_unique_id)
         self.entity_description = description
 
     @property
-    def name(self) -> str:
-        """Return the name of the switch."""
+    def name(self) -> str:  # pyright: ignore[reportIncompatibleVariableOverride]
+        """Return the name of the switch.
+
+        Returns:
+            str: The name of the switch.
+
+        """
         return self._name
 
     @property
-    def unique_id(self) -> str:
-        """Return the unique id of the switch."""
+    def unique_id(self) -> str:  # pyright: ignore[reportIncompatibleVariableOverride]
+        """Return the unique id of the switch.
+
+        Returns:
+            str: The unique identifier for this switch entity.
+
+        """
         return f"{self._server_unique_id}/Switch"
 
     @property
-    def is_on(self) -> bool:
-        """Return if the service is on."""
+    def is_on(self) -> bool:  # pyright: ignore[reportIncompatibleVariableOverride]
+        """Return if the service is on.
+
+        Returns:
+            bool: True if blocking is enabled, False otherwise.
+
+        """
         return bool(self.api.cache_blocking.get("blocking", None) == "enabled")
 
     async def async_turn_on(self, **kwargs: Any) -> None:
-        """Turn on the service."""
+        """Turn on the service.
+
+        Args:
+            **kwargs (Any): Additional keyword arguments (unused).
+
+        Returns:
+            None
+
+        """
         await self.async_turn_switch(action="enable")
 
     async def async_turn_off(self, **kwargs: Any) -> None:
-        """Turn off the service."""
+        """Turn off the service.
+
+        Args:
+            **kwargs (Any): Additional keyword arguments (unused).
+
+        Returns:
+            None
+
+        """
         await self.async_turn_switch(action="disable")
 
     async def async_turn_switch(self, action: str, duration: Any = None, with_update: bool = True) -> None:
-        """Turn on/off the service."""
+        """Turn on/off the service.
+
+        Args:
+            action (str): The action to perform, either "enable" or "disable".
+            duration (Any): Optional duration in seconds for which blocking should be disabled.
+                If None, disables indefinitely. Only relevant when action is "disable".
+            with_update (bool): If True, triggers a state update after the action. Defaults to True.
+
+        Returns:
+            None
+
+        """
 
         try:
             if action == "enable":
@@ -158,7 +228,7 @@ class PiHoleV6Switch(PiHoleV6Entity, SwitchEntity):
 
             if action == "disable":
                 if duration is not None and duration != 0:
-                    until_date: datetime = datetime.now() + timedelta(seconds=duration)
+                    until_date: datetime = datetime.now(UTC) + timedelta(seconds=duration)
                     self.api.cache_remaining_dates[f"{self._name}_sensor/global"] = until_date
                 else:
                     duration = 0
@@ -173,32 +243,51 @@ class PiHoleV6Switch(PiHoleV6Entity, SwitchEntity):
                 self.schedule_update_ha_state(force_refresh=True)
 
         except (
-            BadRequestException,
-            UnauthorizedException,
-            RequestFailedException,
-            ForbiddenException,
-            NotFoundException,
-            TooManyRequestsException,
-            ServerErrorException,
-            BadGatewayException,
-            ServiceUnavailableException,
-            GatewayTimeoutException,
-        ) as err:
-            _LOGGER.error("Unable to %s Pi-hole V6: %s", action, err)
+            BadRequestError,
+            UnauthorizedError,
+            RequestFailedError,
+            ForbiddenError,
+            NotFoundError,
+            TooManyRequestsError,
+            ServerError,
+            BadGatewayError,
+            ServiceUnavailableError,
+            GatewayTimeoutError,
+        ):
+            _LOGGER.exception("Unable to %s Pi-hole V6", action)
 
     async def async_service_disable(self, duration: Any = None) -> None:
-        """..."""
+        """Disable the Pi-hole blocking via the service call.
+
+        Args:
+            duration (Any): Optional duration as a timedelta or int (seconds) for which
+            blocking should be disabled. If None, disables indefinitely.
+
+        Returns:
+            None
+
+        """
         duration_seconds: int | None = calculate_duration(duration, self._name)
         await self.async_turn_switch(action="disable", duration=duration_seconds)
 
     async def async_service_enable(self) -> None:
-        """..."""
+        """Enable the Pi-hole blocking via the service call.
+
+        Returns:
+            None
+
+        """
         _LOGGER.debug("Enabling Pi-hole '%s'", self.name)
         await self.async_turn_switch(action="enable")
 
 
-class PiHoleV6Group(PiHoleV6Entity, SwitchEntity):
-    """Representation of a Pi-hole V6 group."""
+class PiHoleV6Group(PiHoleV6Entity, SwitchEntity):  # pyright: ignore[reportIncompatibleVariableOverride]
+    """Representation of a Pi-hole V6 group.
+
+    Attributes:
+        group_name (str): The name of the Pi-hole group managed by this entity.
+
+    """
 
     entity_description: SwitchEntityDescription
     _attr_has_entity_name = True
@@ -207,15 +296,26 @@ class PiHoleV6Group(PiHoleV6Entity, SwitchEntity):
 
     def __init__(
         self,
-        api: PiholeAPI,
-        coordinator: DataUpdateCoordinator,
-        name: str,
+        hole_data: PiHoleV6Data,
         server_unique_id: str,
         description: SwitchEntityDescription,
-        group: Dict[str, Any],
+        group: dict[str, Any],
     ) -> None:
+        """Initialize a Pi-hole V6 group switch.
+
+        Args:
+            hole_data (PiHoleV6Data): The runtime data containing the API client and coordinator.
+            server_unique_id (str): A unique identifier for the server entry.
+            description (SwitchEntityDescription): The entity description.
+            group (dict[str, Any]): The group data dictionary containing name, id, and other metadata.
+
+        """
+        api: PiholeAPI = hole_data.api
+        coordinator: DataUpdateCoordinator[Any] = hole_data.coordinator
+
+        name: str = coordinator.name
         super().__init__(api, coordinator, name, server_unique_id)
-        self.entity_description = description
+        self.entity_description = description  # pyright: ignore[reportIncompatibleVariableOverride]
 
         group_name: str = group["name"]
 
@@ -226,20 +326,50 @@ class PiHoleV6Group(PiHoleV6Entity, SwitchEntity):
         self.entity_id = create_entity_id_name(raw_name)
 
     @property
-    def is_on(self) -> bool:
-        """Return if the group is on."""
+    def is_on(self) -> bool:  # pyright: ignore[reportIncompatibleVariableOverride]
+        """Return if the group is on.
+
+        Returns:
+            bool: True if the group is enabled, False otherwise.
+
+        """
         return self.api.cache_groups[self.group_name]["enabled"]
 
     async def async_turn_on(self, **kwargs: Any) -> None:
-        """Turn on the group."""
+        """Turn on the group.
+
+        Args:
+            **kwargs (Any): Additional keyword arguments (unused).
+
+        Returns:
+            None
+
+        """
         await self.async_turn_group(action="enable")
 
     async def async_turn_off(self, **kwargs: Any) -> None:
-        """Turn off the group."""
+        """Turn off the group.
+
+        Args:
+            **kwargs (Any): Additional keyword arguments (unused).
+
+        Returns:
+            None
+
+        """
         await self.async_turn_group(action="disable")
 
     async def async_turn_group(self, action: str, with_update: bool = True) -> None:
-        """Turn on/off the group."""
+        """Turn on/off the group.
+
+        Args:
+            action (str): The action to perform, either "enable" or "disable".
+            with_update (bool): If True, triggers a state update after the action. Defaults to True.
+
+        Returns:
+            None
+
+        """
 
         try:
             if action == "enable":
@@ -257,32 +387,56 @@ class PiHoleV6Group(PiHoleV6Entity, SwitchEntity):
                 self.schedule_update_ha_state(force_refresh=True)
 
         except (
-            BadRequestException,
-            UnauthorizedException,
-            RequestFailedException,
-            ForbiddenException,
-            NotFoundException,
-            TooManyRequestsException,
-            ServerErrorException,
-            BadGatewayException,
-            ServiceUnavailableException,
-            GatewayTimeoutException,
-        ) as err:
-            _LOGGER.error("Unable to %s Pi-hole V6 group %s: %s", action, self.group_name, err)
+            BadRequestError,
+            UnauthorizedError,
+            RequestFailedError,
+            ForbiddenError,
+            NotFoundError,
+            TooManyRequestsError,
+            ServerError,
+            BadGatewayError,
+            ServiceUnavailableError,
+            GatewayTimeoutError,
+        ):
+            _LOGGER.exception("Unable to %s Pi-hole V6 group %s", action, self.group_name)
 
     async def async_service_enable(self) -> None:
-        """..."""
+        """Enable the Pi-hole group blocking via the service call.
 
+        Returns:
+            None
+
+        """
         _LOGGER.debug("Enabling Pi-hole '%s'", self.name)
-        await self.async_turn_switch(action="enable")
+        await self.async_turn_service(action="enable")
 
     async def async_service_disable(self, duration: Any = None) -> None:
-        """..."""
-        duration_seconds: int | None = calculate_duration(duration, f"group/{self.group_name}")
-        await self.async_turn_switch(action="disable", duration=duration_seconds)
+        """Disable the Pi-hole group blocking via the service call.
 
-    async def async_turn_switch(self, action: str, duration: Any = None, with_update: bool = True) -> None:
-        """Turn on/off the service."""
+        Args:
+            duration (Any): Optional duration as a timedelta or int (seconds) for which
+            the group should be disabled. If None, disables indefinitely.
+
+        Returns:
+            None
+
+        """
+        duration_seconds: int | None = calculate_duration(duration, f"group/{self.group_name}")
+        await self.async_turn_service(action="disable", duration=duration_seconds)
+
+    async def async_turn_service(self, action: str, duration: Any = None, with_update: bool = True) -> None:
+        """Turn on/off the Pi-hole group blocking when triggered via a service call.
+
+        Args:
+            action (str): The action to perform, either "enable" or "disable".
+            duration (Any): Optional duration in seconds for which the group should be disabled.
+                Only relevant when action is "disable". Defaults to None.
+            with_update (bool): If True, triggers a state update after the action. Defaults to True.
+
+        Returns:
+            None
+
+        """
 
         if action == "enable":
             if f"{self._name}/{self.group_name}" in self.api.cache_remaining_dates:
@@ -292,7 +446,7 @@ class PiHoleV6Group(PiHoleV6Entity, SwitchEntity):
 
         if action == "disable":
             if duration is not None and duration != 0:
-                until_date: datetime = datetime.now() + timedelta(seconds=duration)
+                until_date: datetime = datetime.now(UTC) + timedelta(seconds=duration)
                 self.api.cache_remaining_dates[f"{self._name}/{self.group_name}"] = until_date
             elif f"{self._name}/{self.group_name}" in self.api.cache_remaining_dates:
                 del self.api.cache_remaining_dates[f"{self._name}/{self.group_name}"]
@@ -300,22 +454,27 @@ class PiHoleV6Group(PiHoleV6Entity, SwitchEntity):
             await self.async_turn_group(action="disable", with_update=with_update)
 
     @property
-    def extra_state_attributes(self) -> dict[str, Any] | None:
-        """Return the state attributes of the switch Pi-hole V6."""
+    def extra_state_attributes(self) -> dict[str, Any] | None:  # pyright: ignore[reportIncompatibleVariableOverride]
+        """Return the state attributes of the switch Pi-hole V6.
+
+        Returns:
+            dict[str, Any] | None: A dictionary of extra attributes, or None if not applicable.
+
+        """
 
         if self.entity_description.key == "group":
-            clients_group: List[Any] = []
+            clients_group: list[Any] = []
             group_id: int = self.api.cache_groups[self.group_name]["id"]
 
-            for client in self.api.cache_configured_clients:
-                if group_id in client["groups"]:
-                    clients_group.append(
-                        {
-                            "client": client["client"],
-                            "id": client["id"],
-                            "name": client["name"],
-                        }
-                    )
+            clients_group = [
+                {
+                    "client": client["client"],
+                    "id": client["id"],
+                    "name": client["name"],
+                }
+                for client in self.api.cache_configured_clients
+                if group_id in client["groups"]
+            ]
 
             return {
                 "info": {
@@ -326,14 +485,25 @@ class PiHoleV6Group(PiHoleV6Entity, SwitchEntity):
                 "clients": clients_group,
             }
 
+        return None
+
 
 def calculate_duration(duration: Any, name: str) -> int | None:
-    """..."""
+    """Calculate the duration in seconds from a timedelta or integer value.
+
+    Args:
+        duration (Any): The duration to convert. Can be a timedelta, an int (seconds), or None.
+        name (str): The name of the Pi-hole instance, used for logging purposes.
+
+    Returns:
+        int | None: The duration in seconds, or None if no duration was provided.
+
+    """
 
     duration_seconds: int | None = None
 
     if isinstance(duration, timedelta):
-        duration_seconds = duration.total_seconds()
+        duration_seconds = int(duration.total_seconds())
 
     if isinstance(duration, int):
         duration_seconds = duration

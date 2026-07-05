@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
+from datetime import UTC, datetime, timedelta
 import logging
-from datetime import datetime, timedelta
-from typing import Any, List
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -13,17 +13,20 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import CONF_NAME, PERCENTAGE, EntityCategory, UnitOfTime
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.helpers.typing import StateType
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from . import PiHoleV6ConfigEntry
-from .api import API as ClientAPI
 from .common import sensor_update_timer
 from .entity import PiHoleV6Entity
 from .helper import create_entity_id_name
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+    from homeassistant.helpers.typing import StateType
+    from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+
+    from . import PiHoleV6ConfigEntry
+    from .api import Api as ClientAPI
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -140,40 +143,55 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     ),
 )
 
-context_name: str = ""
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: PiHoleV6ConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the Pi-hole V6 sensor."""
+    """Set up the Pi-hole V6 sensor.
+
+    Args:
+        hass (HomeAssistant): The Home Assistant instance.
+        entry (PiHoleV6ConfigEntry): The config entry providing runtime data.
+        async_add_entities (AddConfigEntryEntitiesCallback): Callback to register new entities.
+
+    Returns:
+        None
+
+    """
     name = entry.data[CONF_NAME]
     hole_data = entry.runtime_data
     sensors = [
         PiHoleV6Sensor(
             hole_data.api,
             hole_data.coordinator,
-            name,
             entry.entry_id,
             description,
         )
         for description in SENSOR_TYPES
     ]
-    async_add_entities(sensors, True)
+    async_add_entities(sensors, update_before_add=True)
 
     hass.data[f"pi_hole_entities_sensor_{name}"] = []
     hass.data[f"pi_hole_entities_sensor_{name}"].extend(sensors)
 
-    async def update_timer(now: Any) -> None:
-        """..."""
-        await sensor_update_timer(hass, now, name)
+    async def update_timer(_: Any) -> None:
+        """Trigger sensor state update on a time interval basis.
+
+        Args:
+            _ (Any): The time event (unused).
+
+        Returns:
+            None
+
+        """
+        await sensor_update_timer(hass, name)
 
     async_track_time_interval(hass, update_timer, timedelta(seconds=1))
 
 
-class PiHoleV6Sensor(PiHoleV6Entity, SensorEntity):
+class PiHoleV6Sensor(PiHoleV6Entity, SensorEntity):  # pyright: ignore[reportIncompatibleVariableOverride]
     """Representation of a Pi-hole V6 sensor."""
 
     entity_description: SensorEntityDescription
@@ -181,22 +199,36 @@ class PiHoleV6Sensor(PiHoleV6Entity, SensorEntity):
     def __init__(
         self,
         api: ClientAPI,
-        coordinator: DataUpdateCoordinator[None],
-        name: str,
+        coordinator: DataUpdateCoordinator[Any],
         server_unique_id: str,
         description: SensorEntityDescription,
     ) -> None:
-        """Initialize a Pi-hole V6 sensor."""
+        """Initialize a Pi-hole V6 sensor.
+
+        Args:
+            api (ClientAPI): The Pi-hole API client instance.
+            coordinator (DataUpdateCoordinator[Any]): The data update coordinator.
+            server_unique_id (str): A unique identifier for the server entry.
+            description (SensorEntityDescription): The entity description.
+
+        """
+
+        name: str = coordinator.name
         super().__init__(api, coordinator, name, server_unique_id)
-        self.entity_description = description
+        self.entity_description = description  # pyright: ignore[reportIncompatibleVariableOverride]
         self._attr_unique_id = f"{self._server_unique_id}/{description.key}"
 
         raw_name: str = f"sensor.{name}_{description.key}"
         self.entity_id = create_entity_id_name(raw_name)
 
     @property
-    def native_value(self) -> StateType:
-        """Return the state of the device."""
+    def native_value(self) -> StateType | datetime:  # pyright: ignore[reportIncompatibleVariableOverride] # pylint: disable=too-many-return-statements, too-many-branches
+        """Return the state of the device.
+
+        Returns:
+            StateType | datetime: The current state value of the sensor.
+
+        """
 
         match self.entity_description.key:
             case "latest_data_refresh":
@@ -235,16 +267,25 @@ class PiHoleV6Sensor(PiHoleV6Entity, SensorEntity):
                 return len(self.api.cache_dhcp_leases)
             case "auth_sessions":
                 return len(self.api.cache_auth_sessions)
+            case _:
+                pass
 
         return ""
 
     def native_remaining_until_blocking_mode(self) -> int:
-        """..."""
+        """Compute the remaining seconds until blocking mode is automatically restored.
+
+        Updates the cache of remaining dates based on the current blocking timer value.
+
+        Returns:
+            int: Remaining seconds until blocking mode is restored, or 0 if no timer is active.
+
+        """
 
         value = round(self.api.cache_blocking["timer"]) if self.api.cache_blocking["timer"] is not None else 0
 
         if value > 0:
-            until_date: datetime = datetime.now() + timedelta(seconds=value)
+            until_date: datetime = datetime.now(UTC) + timedelta(seconds=value)
             self.api.cache_remaining_dates[f"{self._name}_sensor/global"] = until_date
         elif f"{self._name}_sensor/global" in self.api.cache_remaining_dates:
             del self.api.cache_remaining_dates[f"{self._name}_sensor/global"]
@@ -252,8 +293,13 @@ class PiHoleV6Sensor(PiHoleV6Entity, SensorEntity):
         return value
 
     @property
-    def extra_state_attributes(self) -> dict[str, Any] | None:
-        """Return the state attributes of the Pi-hole V6."""
+    def extra_state_attributes(self) -> dict[str, Any] | None:  # pyright: ignore[reportIncompatibleVariableOverride] # pylint: disable=too-many-return-statements, too-many-branches
+        """Return the state attributes of the Pi-hole V6.
+
+        Returns:
+            dict[str, Any] | None: A dictionary of extra attributes, or None if not applicable.
+
+        """
 
         if self.entity_description.key == "memory_use":
             return self.api.cache_padd["system"]["memory"]
@@ -262,27 +308,27 @@ class PiHoleV6Sensor(PiHoleV6Entity, SensorEntity):
             return self.api.cache_padd["system"]["cpu"]
 
         if self.entity_description.key == "ftl_info_message_count":
-            raw_messages: List[Any] = self.api.cache_ftl_info["message_list"]
-            messages: List[Any] = [{k: v for k, v in message.items() if k != "html"} for message in raw_messages]
+            raw_messages: list[Any] = self.api.cache_ftl_info["message_list"]
+            messages: list[Any] = [{k: v for k, v in message.items() if k != "html"} for message in raw_messages]
             status: str = self.api.cache_ftl_info["status"]
             return {"messages": messages, "status": status, "note": "Total number of Pi-hole diagnosis messages."}
 
         if self.entity_description.key == "configured_clients":
-            raw_clients: List[Any] = self.api.cache_configured_clients
-            excluding: List[str] = ["date_added", "date_modified"]
-            clients: List[Any] = [{k: v for k, v in client.items() if k not in excluding} for client in raw_clients]
+            raw_clients: list[Any] = self.api.cache_configured_clients
+            excluding: list[str] = ["date_added", "date_modified"]
+            clients: list[Any] = [{k: v for k, v in client.items() if k not in excluding} for client in raw_clients]
             return {"clients": clients, "note": "Total number of configured clients."}
 
         if self.entity_description.key == "dhcp_leases":
-            raw_leases: List[Any] = self.api.cache_dhcp_leases
-            excluding: List[str] = []
-            leases: List[Any] = [{k: v for k, v in lease.items() if k not in excluding} for lease in raw_leases]
+            raw_leases: list[Any] = self.api.cache_dhcp_leases
+            excluding: list[str] = []
+            leases: list[Any] = [{k: v for k, v in lease.items() if k not in excluding} for lease in raw_leases]
             return {"leases": leases, "note": "Total number of active DHCP leases."}
 
         if self.entity_description.key == "auth_sessions":
-            raw_sessions: List[Any] = self.api.cache_auth_sessions
-            excluding: List[str] = ["tls", "x_forwarded_for"]
-            sessions: List[Any] = [{k: v for k, v in session.items() if k not in excluding} for session in raw_sessions]
+            raw_sessions: list[Any] = self.api.cache_auth_sessions
+            excluding: list[str] = ["tls", "x_forwarded_for"]
+            sessions: list[Any] = [{k: v for k, v in session.items() if k not in excluding} for session in raw_sessions]
             return {"sessions": sessions, "note": "Total number of auth sessions."}
 
         match self.entity_description.key:
@@ -308,5 +354,7 @@ class PiHoleV6Sensor(PiHoleV6Entity, SensorEntity):
                 return {"note": "Average number of DNS queries per minute."}
             case "remaining_until_blocking_mode":
                 return {"note": "Remaining seconds until blocking mode is automatically changed."}
+            case _:
+                pass
 
         return None

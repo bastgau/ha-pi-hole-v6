@@ -40,7 +40,15 @@
         "step": {
             "init": {
                 "data": {
-                    "update_interval": "Fréquence de rafraîchissement des données (secondes)"
+                    "update_interval": "Fréquence de rafraîchissement des données (secondes)",
+                    "enable_device_tracker": "Activer le suivi des appareils réseau",
+                    "device_tracker_whitelist": "Utiliser la liste d'adresses comme liste blanche",
+                    "device_tracker_mac_list": "Adresses filtrées"
+                },
+                "data_description": {
+                    "enable_device_tracker": "Désactivé par défaut. Si activé, récupère la liste des appareils réseau depuis Pi-hole pour créer les entités device_tracker.",
+                    "device_tracker_whitelist": "Si activé, seules les adresses listées sont suivies. Si désactivé, les adresses listées sont exclues et toutes les autres sont suivies.",
+                    "device_tracker_mac_list": "Une adresse MAC (ou pseudo-MAC Pi-hole, ex: IP-192.168.1.10) ou IP par ligne, ou séparées par des virgules. Les adresses IP correspondent à l'IP actuelle d'un appareil et peuvent ne plus correspondre si elle change. Laisser vide pour désactiver le filtrage."
                 },
                 "description": "Après avoir modifié une de ces options, il est nécessaire de recharger le service ou de redémarrer Home Assistant.",
                 "title": "Pi-hole V6"

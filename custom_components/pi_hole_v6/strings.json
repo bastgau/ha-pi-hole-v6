@@ -47,10 +47,37 @@
             }
         }
     },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "update_interval": "Data refresh frequency (seconds)",
+                    "enable_device_tracker": "Enable network device tracking",
+                    "device_tracker_whitelist": "Use address list as a whitelist",
+                    "device_tracker_mac_list": "Filtered addresses"
+                },
+                "data_description": {
+                    "enable_device_tracker": "Disabled by default. When enabled, retrieves the list of network devices from Pi-hole to create device_tracker entities.",
+                    "device_tracker_whitelist": "When enabled, only the listed addresses are tracked. When disabled, the listed addresses are excluded and all others are tracked.",
+                    "device_tracker_mac_list": "One MAC address (or Pi-hole pseudo-MAC, e.g. IP-192.168.1.10) or IP address per line, or separated by commas. IP addresses match a device's current IP and may stop matching if it changes. Leave empty to disable filtering."
+                },
+                "description": "After modifying one of these options, it is necessary to reload the service or restart Home Assistant.",
+                "title": "Pi-hole V6"
+            }
+        },
+        "error": {
+            "invalid_update_interval": "Invalid data refresh frequency. Must be higher than 1 second and lower than 3600 seconds."
+        }
+    },
     "entity": {
         "binary_sensor": {
             "status": {
                 "name": "Status"
+            }
+        },
+        "device_tracker": {
+            "network_device": {
+                "name": "Network device"
             }
         },
         "sensor": {

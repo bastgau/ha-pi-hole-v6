@@ -1,7 +1,64 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
-set -e
+# Colors
+BLUE='\033[34m'
+GRAY='\033[0;90m'
+GREEN='\033[32m'
+MAGENTA='\033[0;35m'
+PURPLE='\033[1;35m'
+RED='\033[31m'
+YELLOW='\033[33m'
+NC='\033[0m' # No Color
+
+PROJECT=$PROJECT_NAME
+
+echo -e "\n${YELLOW}> Install requirements.txt for HA Integration:${NC}\n"
 
 cd "$(dirname "$0")/.."
-
 python3 -m pip install --requirement requirements.txt
+
+if [ $? -ne 0 ]; then
+    echo -e "\n${BLUE}[pip]${NC} ${RED}✗ Pip failed to install dependencies.${NC}\n"
+    exit 1
+fi
+
+echo -e "\n${BLUE}[pip]${NC} ${GREEN}✓ Done."
+
+
+echo -e "\n${YELLOW}> Configure environment for using VIM:${NC}\n"
+
+# Create .vimrc with Python-friendly config if it doesn't exist
+
+VIMRC="$HOME/.vimrc"
+
+if [ -f "$VIMRC" ]; then
+    echo -e "File .vimrc already exists. Skipping."
+else
+    echo -e "Creating the file .vimrc"
+    cat > "$VIMRC" << 'EOF'
+filetype on          " Enable file type detection
+syntax on            " Enable syntax highlighting
+set background=dark  " Adapt colors for dark background (ideal in PuTTY)
+set linebreak        " Wrap lines at word boundaries instead of characters (requires Wrap lines, enabled by default)
+set visualbell       " Use visual bell instead of audible beep
+set showmatch        " Highlight searched words in text
+set hlsearch         " Highlight all search results
+set autoindent       " Auto-indent new lines
+set expandtab        " Replace tabs with spaces
+set shiftwidth=4     " (auto) Indentation of 4 spaces
+set smartindent      " Enable smart-indent (improves auto-indentation, especially when pasting already indented text)
+set smarttab         " Enable smart-tabs (improves auto-indentation, manages spaces at the beginning of lines)
+set softtabstop=4    " Tab = 4 spaces
+set mouse-=a
+set backspace=indent,eol,start
+EOF
+
+    if [ $? -eq 0 ]; then
+        echo -e "File .vimrc created successfully."
+    else
+        echo -e "\n${BLUE}[vimrc]${NC} ${RED}✗ Failed to create the file .vimrc.${NC}\n"
+        exit 1
+    fi
+fi
+
+echo -e "\n${BLUE}[vimrc]${NC} ${GREEN}✓ Done.${NC}"

@@ -2,13 +2,12 @@
 
 from __future__ import annotations
 
-import logging
 from dataclasses import dataclass
-from datetime import datetime, timedelta, timezone
-from typing import Any, Dict
+from datetime import UTC, datetime, timedelta
+import logging
+from typing import TYPE_CHECKING, Any
 
-from aiohttp import client
-from homeassistant.config_entries import ConfigEntry, ConfigEntryAuthFailed
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
@@ -16,24 +15,37 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
-from homeassistant.core import Event, HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .api import API as PiholeAPI
-from .const import CONF_UPDATE_INTERVAL, DOMAIN, MIN_TIME_BETWEEN_UPDATES
-from .exceptions import APIException, DataStructureException, UnauthorizedException
+from .api import Api as PiholeAPI
+from .const import (
+    CONF_ENABLE_DEVICE_TRACKER,
+    CONF_UPDATE_INTERVAL,
+    DEFAULT_ENABLE_DEVICE_TRACKER,
+    DOMAIN,
+    MIN_TIME_BETWEEN_UPDATES,
+)
+from .exceptions import APIError, DataStructureError, UnauthorizedError
+
+if TYPE_CHECKING:
+    from aiohttp import client
+
+    from homeassistant.core import Event, HomeAssistant
+
 
 _LOGGER = logging.getLogger(__name__)
 
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
+    Platform.BUTTON,
+    Platform.DEVICE_TRACKER,
     Platform.SENSOR,
     Platform.SWITCH,
     Platform.UPDATE,
-    Platform.BUTTON,
-    # Platform.NUMBER,
 ]
 
 type PiHoleV6ConfigEntry = ConfigEntry[PiHoleV6Data]
@@ -41,99 +53,176 @@ type PiHoleV6ConfigEntry = ConfigEntry[PiHoleV6Data]
 
 @dataclass
 class PiHoleV6Data:
-    """Runtime data definition."""
+    """Runtime data definition.
+
+    Attributes:
+        api (PiholeAPI): The Pi-hole API client instance.
+        coordinator (DataUpdateCoordinator[Any]): The data update coordinator managing scheduled updates.
+
+    """
 
     api: PiholeAPI
-    coordinator: DataUpdateCoordinator[None]
+    coordinator: DataUpdateCoordinator[Any]
+
+
+async def check_result(result: Any, api_client: PiholeAPI) -> None:
+    """Check that the API result is a valid dictionary.
+
+    If the result is not a dict, logs an error, calls logout and raises DataStructureError.
+
+    Args:
+        result (Any): The result returned by the API call.
+        api_client (PiholeAPI): The Pi-hole API client instance used to call logout.
+
+    Returns:
+        None
+
+    Raises:
+        DataStructureError: If the result is not a dictionary.
+
+    """
+
+    if not isinstance(result, dict):
+        await api_client.call_logout()
+        _LOGGER.error("DataStructureError Debug: %s", str(result))
+        raise DataStructureError
+
+
+async def async_get_all_data(api_client: PiholeAPI, *, enable_device_tracker: bool) -> None:
+    """Fetch all required data from the Pi-hole API.
+
+    Sequentially calls each API endpoint and validates the result structure.
+
+    Args:
+        api_client (PiholeAPI): The Pi-hole API client instance used to perform the calls.
+        enable_device_tracker (bool): Whether to also fetch network devices for the
+            device_tracker platform.
+
+    Returns:
+        None
+
+    Raises:
+        DataStructureError: If any API call returns an unexpected data structure.
+
+    """
+
+    result = await api_client.call_summary()
+    await check_result(result, api_client)
+
+    result = await api_client.call_blocking_status()
+    await check_result(result, api_client)
+
+    result = await api_client.call_get_groups()
+    await check_result(result, api_client)
+
+    result = await api_client.call_padd()
+    await check_result(result, api_client)
+
+    result = await api_client.call_get_ftl_info_messages_count()
+    await check_result(result, api_client)
+
+    result = await api_client.call_get_configured_clients()
+    await check_result(result, api_client)
+
+    result = await api_client.call_get_dhcp_leases()
+    await check_result(result, api_client)
+
+    if enable_device_tracker:
+        result = await api_client.call_get_network_devices()
+        await check_result(result, api_client)
+
+    result = await api_client.call_get_auth_sessions()
+    await check_result(result, api_client)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: PiHoleV6ConfigEntry) -> bool:
-    """Set up Pi-hole V6 entry."""
+    """Set up Pi-hole V6 entry.
+
+    Args:
+        hass (HomeAssistant): The Home Assistant instance.
+        entry (PiHoleV6ConfigEntry): The config entry to set up.
+
+    Returns:
+        bool: True if the setup succeeded.
+
+    Raises:
+        ConfigEntryAuthFailed: If the credentials are invalid or expired.
+
+    """
+
     password = entry.data.get(CONF_PASSWORD, "")
     name = entry.data[CONF_NAME]
     url = entry.data[CONF_URL]
 
     _LOGGER.debug("Setting up %s integration with host %s", DOMAIN, url)
 
-    session: client.ClientSession = async_get_clientsession(hass, False)
+    session: client.ClientSession = async_get_clientsession(hass, verify_ssl=False)
 
     api_client: PiholeAPI = PiholeAPI(
         session=session,
         url=url,
         password=password,
-        logger=_LOGGER,
     )
 
     async def async_logout(_: Event) -> None:
+        """Log out from the Pi-hole API when Home Assistant stops.
+
+        Args:
+            _ (Event): The Home Assistant stop event (unused).
+
+        Returns:
+            None
+
+        """
         await api_client.call_logout()
 
     entry.async_on_unload(hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_logout))
 
-    async def async_update_data() -> None:
-        """Fetch data from API endpoint."""
+    async def async_update_data() -> dict[str, Any] | None:
+        """Fetch data from API endpoint.
+
+        Returns:
+            dict[str, Any] | None: A dict with the last refresh timestamp, or None
+            on the first call after initialization.
+
+        Raises:
+            ConfigEntryAuthFailed: If the credentials are invalid or expired.
+            DataStructureError: If the API returns an unexpected data structure.
+
+        """
 
         if api_client.just_initialized is True:
             api_client.just_initialized = False
             return None
 
-        api_client.last_refresh = datetime.now(timezone.utc)
+        api_client.last_refresh = datetime.now(UTC)
 
-        result: Dict[str, Any] = {}
+        result: Any = {}
+
+        enable_device_tracker: bool = entry.data.get(CONF_ENABLE_DEVICE_TRACKER, DEFAULT_ENABLE_DEVICE_TRACKER)
 
         try:
-            result = await api_client.call_summary()
-            if not isinstance(result, dict):
-                raise DataStructureException()
+            await async_get_all_data(api_client=api_client, enable_device_tracker=enable_device_tracker)
 
-            result = await api_client.call_blocking_status()
-            if not isinstance(result, dict):
-                raise DataStructureException()
-
-            result = await api_client.call_get_groups()
-            if not isinstance(result, dict):
-                raise DataStructureException()
-
-            result = await api_client.call_padd()
-            if not isinstance(result, dict):
-                raise DataStructureException()
-
-            result = await api_client.call_get_ftl_info_messages_count()
-            if not isinstance(result, dict):
-                raise DataStructureException()
-
-            result = await api_client.call_get_configured_clients()
-            if not isinstance(result, dict):
-                raise DataStructureException()
-
-            result = await api_client.call_get_dhcp_leases()
-            if not isinstance(result, dict):
-                raise DataStructureException()
-
-            result = await api_client.call_get_auth_sessions()
-            if not isinstance(result, dict):
-                raise DataStructureException()
-
-        except UnauthorizedException as err:
-            raise ConfigEntryAuthFailed("Credentials must be updated.") from err
-        except DataStructureException as err:
-            await api_client.call_logout()
-            _LOGGER.error("DataStructureException Debug: " + str(result))
-            raise err
+        except UnauthorizedError as err:
+            msg: str = "Credentials must be updated."
+            raise ConfigEntryAuthFailed(msg) from err
 
         try:
             result = await api_client.call_get_ftl_info_messages()
             if not isinstance(result, dict):
                 api_client.remove_cache("ftl_info_messages")
-                raise DataStructureException()
+                _LOGGER.error("DataStructureError Debug: %s", str(result))
+                raise DataStructureError
 
-        except DataStructureException:
-            _LOGGER.error("DataStructureException Debug: " + str(result))
-        except APIException:
+        except APIError:
             api_client.remove_cache("ftl_info_messages")
         finally:
             await api_client.call_logout()
 
-        api_client.last_refresh = datetime.now(timezone.utc)
+        api_client.last_refresh = datetime.now(UTC)
+
+        return {"last_refresh": api_client.last_refresh}
 
     conf_update_interval: int | None = entry.data.get(CONF_UPDATE_INTERVAL)
 
@@ -149,6 +238,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: PiHoleV6ConfigEntry) -> 
         name=name,
         update_method=async_update_data,
         update_interval=update_interval,
+        always_update=False,
     )
 
     await coordinator.async_config_entry_first_refresh()
@@ -160,6 +250,38 @@ async def async_setup_entry(hass: HomeAssistant, entry: PiHoleV6ConfigEntry) -> 
     return True
 
 
+async def async_remove_config_entry_device(
+    hass: HomeAssistant,  # noqa: ARG001 # pylint: disable=unused-argument
+    entry: PiHoleV6ConfigEntry,  # noqa: ARG001 # pylint: disable=unused-argument
+    device_entry: dr.DeviceEntry,
+) -> bool:
+    """Allow manual removal of a network device from the UI.
+
+    Only network devices (identified by a MAC connection) created by the
+    device_tracker platform may be removed this way. The main Pi-hole device,
+    identified by its DOMAIN identifier, is never removable through this hook.
+
+    Args:
+        hass (HomeAssistant): The Home Assistant instance (unused).
+        entry (PiHoleV6ConfigEntry): The config entry owning the device (unused).
+        device_entry (dr.DeviceEntry): The device the user is attempting to remove.
+
+    Returns:
+        bool: True if the device may be removed.
+
+    """
+    return any(conn_type == dr.CONNECTION_NETWORK_MAC for conn_type, _ in device_entry.connections)
+
+
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Unload Pi-hole entry."""
+    """Unload Pi-hole entry.
+
+    Args:
+        hass (HomeAssistant): The Home Assistant instance.
+        entry (ConfigEntry): The config entry to unload.
+
+    Returns:
+        bool: True if unloading succeeded.
+
+    """
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

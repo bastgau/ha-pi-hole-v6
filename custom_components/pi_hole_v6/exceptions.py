@@ -1,58 +1,69 @@
-"""The above classes represent the specific exceptions raised during the Pi-hole API calls."""
+"""Custom exceptions raised during Pi-hole V6 API calls."""
 
 from abc import abstractmethod
+from typing import Any
 
 
 @abstractmethod
-class APIException(Exception):
-    """The class `APIException` is a parent exception related to Pi-hole API."""
+class APIError(Exception):
+    """The class `APIError` is a parent exception related to Pi-hole API."""
 
     message: str = ""
 
     def __init__(self) -> None:
+        """Initialize the APIError exception with the class-level message."""
         super().__init__(self.message)
 
 
-class ActionExecutionException(Exception):
-    """The class `ActionExecutionException` is used to raise an exception when an action cannot be executed."""
+class ActionExecutionError(Exception):
+    """The class `ActionExecutionError` is used to raise an exception when an action cannot be executed."""
 
     message: str = "The action requested has failed. Please check HA logs or Pi-hole logs."
 
     def __init__(self) -> None:
+        """Initialize the ActionExecutionError exception with the class-level message."""
         super().__init__(self.message)
 
 
-class AbortLogoutException(Exception):
-    """The class `AbortLogoutException` represents an exception when a logout is not relevant and can be avoided."""
+class AbortLogoutError(Exception):
+    """The class `AbortLogoutError` represents an exception when a logout is not relevant and can be avoided."""
 
     code: int = 499
     reason: str = "No logout needed."
     message: str = "Logout call is not relevant. Maybe no session is active. Please check HA logs or Pi-hole logs."
 
     def __init__(self) -> None:
+        """Initialize the AbortLogoutError exception with the class-level message."""
         super().__init__(self.message)
 
 
-class BadGatewayException(APIException):
-    """The class `BadGatewayException` represents an exception for receiving an invalid response from an upstream server."""
+class BadGatewayError(APIError):
+    """The class `BadGatewayError` represents an exception for receiving an invalid response from an upstream server."""
 
     message: str = "Received an invalid response from an upstream server. Please check HA logs or Pi-hole logs."
 
 
-class BadRequestException(APIException):
-    """The class `BadRequestException` is defined for requests that are unacceptable."""
+class BadRequestError(APIError):
+    """The class `BadRequestError` is defined for requests that are unacceptable."""
 
     message: str = (
         "The request was unacceptable, often due to a missing required parameter. Please check HA logs or Pi-hole logs."
     )
 
 
-class ClientConnectorException(Exception):
-    """The class `ClientConnectorException` is used to raise an exception when the Pi-hole V6 server is unreachable."""
+class ClientConnectorError(Exception):
+    """The class `ClientConnectorError` is used to raise an exception when the Pi-hole V6 server is unreachable."""
 
     message: str = "The Pi-hole V6 server seems to be unreachable. Please check HA logs or Pi-hole logs."
 
     def __init__(self, custom_message: str = "") -> None:
+        """Initialize the ClientConnectorError exception, optionally appending a custom message.
+
+        Args:
+            custom_message (str): An optional additional message to append to the default error message.
+                If empty (default), only the default message is used.
+
+        """
         new_message: str = self.message
 
         if custom_message != "":
@@ -61,73 +72,74 @@ class ClientConnectorException(Exception):
         super().__init__(new_message)
 
 
-class ContentTypeException(Exception):
-    """The class `ContentTypeException` is used to raise an exception when the content type provided by the API is incorrect."""
+class ContentTypeError(Exception):
+    """The class `ContentTypeError` is used to raise an exception when the content type provided by the API is incorrect."""
 
     message: str = "Invalid content type returned by the API. Please check HA logs or Pi-hole logs."
 
     def __init__(self) -> None:
+        """Initialize the ContentTypeError exception with the class-level message."""
         super().__init__(self.message)
 
 
-class ForbiddenException(APIException):
-    """The class `ForbiddenException` represents an exception for when an API key lacks the necessary permissions for a request."""
+class ForbiddenError(APIError):
+    """The class `ForbiddenError` represents an exception for when an API key lacks the necessary permissions for a request."""
 
     message: str = "The API key doesn't have permissions to perform the request. Please check HA logs or Pi-hole logs."
 
 
-class GatewayTimeoutException(APIException):
-    """The class `GatewayTimeoutException` represents an exception that occurs when a server acting as a gateway times out waiting for another server."""
+class GatewayTimeoutError(APIError):
+    """The class `GatewayTimeoutError` represents an exception that occurs when a server acting as a gateway times out waiting for another server."""
 
     message: str = "The server, while acting as a gateway, timed out waiting for another server. Please check HA logs or Pi-hole logs."
 
 
-class MethodNotAllowedException(APIException):
-    """The class `MethodNotAllowedException` represents an exception that occurs when a request's HTTP method is not supported on the server."""
+class MethodNotAllowedError(APIError):
+    """The class `MethodNotAllowedError` represents an exception that occurs when a request's HTTP method is not supported on the server."""
 
     message: str = "The HTTP method is not supported on the server. Please check HA logs or Pi-hole logs."
 
 
-class NotFoundException(APIException):
-    """The class `NotFoundException` represents a situation where a requested resource does not exist."""
+class NotFoundError(APIError):
+    """The class `NotFoundError` represents a situation where a requested resource does not exist."""
 
     message: str = "The requested resource doesn't exist. Please check HA logs or Pi-hole logs."
 
 
-class RequestFailedException(APIException):
-    """The class `RequestFailedException` defines an exception for when a request fails."""
+class RequestFailedError(APIError):
+    """The class `RequestFailedError` defines an exception for when a request fails."""
 
     message: str = "The parameters were valid but the request failed. Please check HA logs or Pi-hole logs."
 
 
-class ServerErrorException(APIException):
-    """The class `ServerErrorException` defines an exception for internal server errors."""
+class ServerError(APIError):
+    """The class `ServerError` defines an exception for internal server errors."""
 
     message: str = "An internal server error occurred. Please check HA logs or Pi-hole logs."
 
 
-class ServiceUnavailableException(APIException):
-    """The class `ServiceUnavailableException` defines an exception for when the server is temporarily unavailable."""
+class ServiceUnavailableError(APIError):
+    """The class `ServiceUnavailableError` defines an exception for when the server is temporarily unavailable."""
 
     message: str = "The server is temporarily unavailable, usually due to maintenance or overload. Please check HA logs or Pi-hole logs."
 
 
-class TooManyRequestsException(APIException):
-    """The class `TooManyRequestsException` represents hitting the API with too many requests too quickly."""
+class TooManyRequestsError(APIError):
+    """The class `TooManyRequestsError` represents hitting the API with too many requests too quickly."""
 
     message: str = "Too many requests hit the API too quickly. Please check HA logs or Pi-hole logs."
 
 
-class UnauthorizedException(APIException):
-    """The class `UnauthorizedException` is used to raise an exception when no session identity is provided for an endpoint requiring authorization."""
+class UnauthorizedError(APIError):
+    """The class `UnauthorizedError` is used to raise an exception when no session identity is provided for an endpoint requiring authorization."""
 
     message: str = (
         "No session identity provided for endpoint requiring authorization. Please check HA logs or Pi-hole logs."
     )
 
 
-class DataStructureException(APIException):
-    """The class `DataStructureException` is used to raise an exception when the data structure returned by the API is incorrect."""
+class DataStructureError(APIError):
+    """The class `DataStructureError` is used to raise an exception when the data structure returned by the API is incorrect."""
 
     message: str = "Data structure returned by the API is incorrect. Please check HA logs or Pi-hole logs."
 
@@ -136,33 +148,48 @@ def handle_status(status_code: int) -> None:
     """Raise specific exceptions based on the input status code.
 
     Args:
-      status_code (int): Represents the status code and handles it based on the provided mapping.
+        status_code (int): Represents the status code and handles it based on the provided mapping.
 
     Returns:
-      result (None) : If the status code is less than 400, it returns `None`. If the status code corresponds to a known error code
-      in the mapping, it raises the corresponding exception else the exception `NotImplementedError` is thrown.
+        None: Returns immediately if the status code is less than 400.
+
+    Raises:
+        BadRequestError: If status code is 400.
+        UnauthorizedError: If status code is 401.
+        RequestFailedError: If status code is 402.
+        ForbiddenError: If status code is 403.
+        NotFoundError: If status code is 404.
+        MethodNotAllowedError: If status code is 405.
+        TooManyRequestsError: If status code is 429.
+        ServerError: If status code is 500.
+        BadGatewayError: If status code is 502.
+        ServiceUnavailableError: If status code is 503.
+        GatewayTimeoutError: If status code is 504.
+        AbortLogoutError: If status code is 499.
+        NotImplementedError: If the status code is not mapped.
 
     """
 
     if status_code < 400:
         return
 
-    exception_map = {
-        400: BadRequestException,
-        401: UnauthorizedException,
-        402: RequestFailedException,
-        403: ForbiddenException,
-        404: NotFoundException,
-        405: MethodNotAllowedException,
-        429: TooManyRequestsException,
-        500: ServerErrorException,
-        502: BadGatewayException,
-        503: ServiceUnavailableException,
-        504: GatewayTimeoutException,
-        499: AbortLogoutException,
+    exception_map: dict[int, Any] = {
+        400: BadRequestError,
+        401: UnauthorizedError,
+        402: RequestFailedError,
+        403: ForbiddenError,
+        404: NotFoundError,
+        405: MethodNotAllowedError,
+        429: TooManyRequestsError,
+        500: ServerError,
+        502: BadGatewayError,
+        503: ServiceUnavailableError,
+        504: GatewayTimeoutError,
+        499: AbortLogoutError,
     }
 
     if status_code in exception_map:
         raise exception_map[status_code]()  # noqa: RSE102
 
-    raise NotImplementedError(f"Unexpected error: Status code {status_code}")
+    msg: str = f"Unexpected error: Status code {status_code}"
+    raise NotImplementedError(msg)

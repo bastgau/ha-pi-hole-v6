@@ -1,0 +1,22 @@
+#!/bin/bash
+
+# Colors
+BLUE='\033[34m'
+GREEN='\033[32m'
+RED='\033[31m'
+YELLOW='\033[33m'
+NC='\033[0m' # No Color
+
+cd "$(dirname "$0")/.."
+
+echo -e "\n${YELLOW}> Regenerating requirements.txt from default_config: manifests${NC}\n"
+
+python3 "$(dirname "$0")/update_requirements.py"
+
+if [ $? -ne 0 ]; then
+    echo -e "\n${BLUE}[requirements]${NC} ${RED}✗ Failed to regenerate requirements.txt.${NC}\n"
+    exit 1
+fi
+
+echo -e "\n${BLUE}[requirements]${NC} ${GREEN}✓ Done.${NC}"
+echo -e "\n${YELLOW}> Review the diff, then run scripts/setup to install any new dependencies.${NC}\n"

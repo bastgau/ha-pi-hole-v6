@@ -1,99 +1,104 @@
-"""The above class represents Pi-hole API Client with methods for authentication, retrieving summary data, managing blocking status, and logging requests."""
+"""Pi-hole V6 API client for authentication, data retrieval, and blocking management."""
 
 import asyncio
 import json
 import logging
-from datetime import datetime
-from socket import gaierror as GaiError
-from typing import Any, Dict, List
+from socket import gaierror
+from typing import TYPE_CHECKING, Any
 
-import requests
-from aiohttp import ClientError, ContentTypeError, client
+from aiohttp import ClientError, ClientResponse, ContentTypeError, client
 
+from .const import MAX_NETWORK_DEVICES
 from .exceptions import (
-    AbortLogoutException,
-    APIException,
-    ClientConnectorException,
-    ContentTypeException,
-    UnauthorizedException,
+    AbortLogoutError,
+    APIError,
+    ClientConnectorError,
+    UnauthorizedError,
     handle_status,
 )
 
+if TYPE_CHECKING:
+    from datetime import datetime
 
-class API:
-    """Pi-hole API Client."""
 
-    _logger: logging.Logger | None
-    _password: str = ""
-    _session: client.ClientSession = None
-    _sid: str | None = None
+_LOGGER = logging.getLogger(__name__)
 
-    cache_auth_sessions: dict[str, Any] = {}
-    cache_blocking: dict[str, Any] = {}
-    cache_configured_clients: dict[str, dict[str, Any]] = {}
-    cache_dhcp_leases: dict[str, dict[str, Any]] = {}
-    cache_ftl_info: dict[str, dict[str, Any]] = {}
-    cache_groups: dict[str, dict[str, Any]] = {}
-    cache_padd: dict[str, Any] = {}
-    cache_remaining_dates: Dict[str, datetime] = {}
-    cache_summary: dict[str, Any] = {}
 
-    just_initialized: bool = False
-    last_refresh: datetime | None = None
+class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attributes
+    """Pi-hole API Client.
 
-    url: str = ""
+    Attributes:
+        url (str): The URL of the Pi-hole API endpoint.
+        just_initialized (bool): Flag indicating the client was just initialized, used to skip the first data fetch.
+        last_refresh (datetime | None): Timestamp of the last successful data refresh, or None if never refreshed.
+        cache_auth_sessions (list[dict[str, Any]]): Cached list of active authentication sessions.
+        cache_blocking (dict[str, Any]): Cached blocking status data.
+        cache_configured_clients (list[dict[str, Any]]): Cached list of configured clients.
+        cache_dhcp_leases (list[dict[str, Any]]): Cached list of active DHCP leases.
+        cache_ftl_info (dict[str, Any]): Cached FTL diagnosis messages and status.
+        cache_network_devices (list[dict[str, Any]]): Cached list of known network devices.
+        cache_groups (dict[str, dict[str, Any]]): Cached Pi-hole groups indexed by group name.
+        cache_padd (dict[str, Any]): Cached Pi-hole dashboard data.
+        cache_remaining_dates (dict[str, datetime]): Cached expiration dates for blocking timers.
+        cache_summary (dict[str, Any]): Cached Pi-hole activity summary.
 
-    def __init__(  # noqa: D417
+    """
+
+    def __init__(
         self,
         session: client.ClientSession,
         url: str = "http://pi.hole",
         password: str = "",
-        logger: logging.Logger | None = None,
     ) -> None:
-        """Initialize Pi-hole API Client object with an API URL and an optional logger.
+        """Initialize Pi-hole API Client object with an API URL.
 
         Args:
-          url (str): Represents the URL of API endpoint. Defaults to "http://pi.hole".
-          logger (Logger | None): Expects an object of type `Logger` or `None` which will be used to display debug message.
+            session (client.ClientSession): The aiohttp client session used to perform HTTP requests.
+            url (str): Represents the URL of API endpoint. Defaults to "http://pi.hole".
+            password (str): The password used to authenticate against the Pi-hole API. Defaults to "".
 
         """
-
-        self.url = url
-        self._logger = logger
-        self._password = password
-        self._session = session
         self._call_lock = asyncio.Lock()
+        self._password: str = password
+        self._session: client.ClientSession = session
+        self._sid: str | None = None
+        self.url: str = url
 
-    def _get_logger(self) -> logging.Logger:
-        """Return a logger if it exists, otherwise it creates a new logger.
+        self.cache_auth_sessions: list[dict[str, Any]] = []
+        self.cache_blocking: dict[str, Any] = {}
+        self.cache_configured_clients: list[dict[str, Any]] = []
+        self.cache_dhcp_leases: list[dict[str, Any]] = []
+        self.cache_ftl_info: dict[str, Any] = {}
+        self.cache_network_devices: list[dict[str, Any]] = []
+        self.cache_groups: dict[str, dict[str, Any]] = {}
+        self.cache_padd: dict[str, Any] = {}
+        self.cache_remaining_dates: dict[str, datetime] = {}
+        self.cache_summary: dict[str, Any] = {}
 
-        Returns:
-          result (Logger): The logger provided during object initialization, otherwise a new logger is created.
-
-        """
-
-        if self._logger is None:
-            return logging.getLogger()
-
-        return self._logger
+        self.just_initialized: bool = False
+        self.last_refresh: datetime | None = None
 
     async def _call(
         self,
         route: str,
         method: str,
-        action: str | None = None,
+        action: str = "",
         data: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Send HTTP requests with specified method, route, and data.
 
         Args:
             route (str): Represents the specific endpoint that you want to call.
-            method (str): Represents the HTTP method to be used. It can be one of the following: "post", "delete", or "get".
+            method (str): Represents the HTTP method to be used. It can be one of the following: "post", "put", "delete", or "get".
             action (str): Represents the action name requested.
             data (dict[str, Any] | None): Used to pass a dictionary containing data to be sent in the request when making a POST request.
 
         Returns:
-          result (dict[str, Any]): A dictionary is being returned with keys "code", "reason", and "data".
+            dict[str, Any]: A dictionary with keys "code", "reason", and "data".
+
+        Raises:
+            ClientConnectorError: If a network-level error occurs (timeout, connection refused, DNS failure).
+            RuntimeError: If the HTTP method is not supported.
 
         """
 
@@ -109,48 +114,45 @@ class API:
         if self._sid is not None and self._sid != "no password set":
             headers = headers | {"sid": self._sid}
 
-        request: requests.Response
+        request: ClientResponse
 
         try:
+            method = method.lower()
+
             async with asyncio.timeout(60):
-                if method.lower() == "post":
+                if method == "post":
                     request = await self._session.post(url, json=data, headers=headers)
-                elif method.lower() == "put":
+                elif method == "put":
                     request = await self._session.put(url, json=data, headers=headers)
-                elif method.lower() == "delete":
+                elif method == "delete":
                     request = await self._session.delete(url, headers=headers)
-                elif method.lower() == "get":
+                elif method == "get":
                     request = await self._session.get(url, headers=headers)
                 else:
-                    self._get_logger().critical("Method (%s) is not supported/implemented.", method.lower())
-                    raise RuntimeError("Method is not supported/implemented.")
+                    msg: str = f"Method ({method}) is not supported/implemented."
+                    _LOGGER.critical(msg)
+                    raise RuntimeError(msg)
 
-        except (TimeoutError, ClientError, GaiError) as err:
-            raise ClientConnectorException(str(err)) from err
+        except (TimeoutError, ClientError, gaierror) as err:
+            raise ClientConnectorError(str(err)) from err
 
         try:
             handle_status(request.status)
-        except APIException as api_error:
+        except APIError as api_error:
             log_message: str = await self._create_log_message_on_api_exception(api_error, request, method, url)
-            self._get_logger().error(log_message)
-            raise api_error
-        except Exception as err:
-            raise err
+            _LOGGER.exception(log_message)
+            raise
 
-        result_data: dict[str, Any] = {}
+        result_data: dict[str, Any] | None = None
 
         if request.status < 400 and request.text != "":
-            try:
-                result_data: str = await self._try_to_retrieve_json_result(request, privacy=False)
-                message: str = await self._create_log_message_on_api_result(request, method, url)
+            result_data = await self._try_to_retrieve_json_result(request, privacy=False)
+            message: str = await self._create_log_message_on_api_result(request, method, url)
 
-                if "password incorrect" not in message:
-                    self._get_logger().debug(message)
-                else:
-                    self._get_logger().error(message)
-
-            except ContentTypeError as err:
-                raise ContentTypeException from err
+            if "password incorrect" not in message:
+                _LOGGER.debug(message)
+            else:
+                _LOGGER.error(message)
 
         return {
             "code": request.status,
@@ -158,17 +160,35 @@ class API:
             "data": result_data,
         }
 
-    async def _try_to_retrieve_json_result(self, request: requests.Response, privacy: bool = True) -> str | None:
-        """..."""
+    async def _try_to_retrieve_json_result(
+        self,
+        request: ClientResponse,
+        privacy: bool = True,
+    ) -> dict[str, Any] | None:
+        """Attempt to parse the JSON body from an HTTP response.
 
-        text: str | None = None
+        Handles encoding errors gracefully and optionally redacts the session SID for privacy.
+
+        Args:
+            request (ClientResponse): The HTTP response object to parse.
+            privacy (bool): If True, redacts the session SID from the result. Defaults to True.
+
+        Returns:
+            dict[str, Any] | None: The parsed JSON content, or None if the response has no body.
+
+        Raises:
+            json.JSONDecodeError: If the response body cannot be parsed as valid JSON after decoding.
+
+        """
+
+        text: dict[str, Any] | None = None
 
         try:
             if request.status != 204:
                 text = await request.json()
         except UnicodeDecodeError:
             raw_data = await request.read()
-            text_data = raw_data.decode(encoding="utf-8", errors="replace")  # ou un autre encodage
+            text_data = raw_data.decode(encoding="utf-8", errors="replace")
             text = json.loads(text_data)
         except ContentTypeError:
             pass
@@ -184,33 +204,76 @@ class API:
 
         return text
 
-    async def _create_log_message_on_api_result(self, request: requests.Response, method: str, url: str) -> str:
-        """..."""
+    async def _create_log_message_on_api_result(self, request: ClientResponse, method: str, url: str) -> str:
+        """Build a log message string from an HTTP response.
 
-        text: str | None = await self._try_to_retrieve_json_result(request)
+        Args:
+            request (ClientResponse): The HTTP response object.
+            method (str): The HTTP method used for the request.
+            url (str): The URL of the request.
+
+        Returns:
+            str: A formatted log message containing status, reason, method, URL and response body.
+
+        """
+
+        text: dict[str, Any] | None = await self._try_to_retrieve_json_result(request)
         status: str = str(request.status)
         reason: str = str(request.reason)
 
         return f"{status} {reason} # {method.upper()} {url} : {text}"
 
     async def _create_log_message_on_api_exception(
-        self, api_error: APIException, request: requests.Response, method: str, url: str
+        self, api_error: APIError, request: ClientResponse, method: str, url: str
     ) -> str:
-        """..."""
+        """Build a log message string from an API exception and its associated HTTP response.
+
+        Args:
+            api_error (APIError): The API exception that was raised.
+            request (ClientResponse): The HTTP response object associated with the error.
+            method (str): The HTTP method used for the request.
+            url (str): The URL of the request.
+
+        Returns:
+            str: A formatted log message prefixed with the exception type name.
+
+        """
 
         log: str = await self._create_log_message_on_api_result(request, method, url)
         exception_name: str = str(type(api_error))
 
         return f"{exception_name} - {log}"
 
-    async def _authentification_step(self, action) -> None:
-        """..."""
+    async def _authentification_step(self, action: str) -> None:
+        """Execute the full authentication sequence for a given action.
+
+        Checks current authentication status, aborts logout if not needed,
+        and requests a login if no session is active.
+
+        Args:
+            action (str): The name of the action being performed, used to determine authentication behavior.
+
+        Returns:
+            None
+
+        """
         await self._check_authentification(action)
         await self._abort_logout(action)
         await self._request_login(action)
 
-    async def _authentification_step_with_lock(self, action) -> None:
-        """..."""
+    async def _authentification_step_with_lock(self, action: str) -> None:
+        """Execute the authentication sequence with a lock for non-auth actions.
+
+        Acquires the call lock before running the authentication step to prevent
+        concurrent authentication attempts. Auth-related actions bypass the lock.
+
+        Args:
+            action (str): The name of the action being performed.
+
+        Returns:
+            None
+
+        """
 
         if action not in ("login", "authentification_status", "logout"):
             try:
@@ -221,14 +284,25 @@ class API:
                 finally:
                     self._call_lock.release()
 
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 pass
 
         else:
             await self._authentification_step(action)
 
     async def _check_authentification(self, action: str) -> None:
-        """..."""
+        """Verify the current session is still valid and reset it if not.
+
+        Calls the authentication status endpoint and sets the SID to None
+        if the session has expired or become invalid.
+
+        Args:
+            action (str): The name of the action being performed, used to skip the check for auth-related actions.
+
+        Returns:
+            None
+
+        """
 
         try:
             if (
@@ -241,23 +315,57 @@ class API:
                 if response["code"] != 200 or response["data"]["session"]["valid"] is False:
                     self._sid = None
 
-        except UnauthorizedException:
+        except UnauthorizedError:
             self._sid = None
 
     async def _request_login(self, action: str) -> None:
-        """..."""
+        """Request a login if no active session exists.
+
+        Triggers a login call when the action is not already a login
+        and no session ID is currently set.
+
+        Args:
+            action (str): The name of the action being performed.
+
+        Returns:
+            None
+
+        """
 
         if action != "login" and self._sid is None:
             await self.call_login()
 
     async def _abort_logout(self, action: str) -> None:
-        """..."""
+        """Abort a logout call if no active session exists.
+
+        Raises AbortLogoutError when a logout is requested but there is
+        no active session to terminate.
+
+        Args:
+            action (str): The name of the action being performed.
+
+        Returns:
+            None
+
+        Raises:
+            AbortLogoutError: If a logout is attempted with no active session.
+
+        """
 
         if action == "logout" and (self._sid is None or self._sid == "no password set"):
-            raise AbortLogoutException()
+            raise AbortLogoutError
 
     async def call_authentification_status(self) -> dict[str, Any]:
-        """..."""
+        """Retrieve the current authentication session status.
+
+        Returns:
+            dict[str, Any]: A dictionary with the keys "code", "reason", and "data".
+
+        Raises:
+            APIError: If the API returns an error status code.
+            ClientConnectorError: If the server is unreachable.
+
+        """
 
         url: str = "/auth"
 
@@ -274,13 +382,14 @@ class API:
         }
 
     async def call_login(self) -> dict[str, Any]:
-        """Authenticate a user with a password.
-
-        Args:
-          password (str): Represents tne password used to authenticate the user during the login process.
+        """Authenticate against the Pi-hole API using the configured password.
 
         Returns:
-          result (dict[str, Any]): A dictionary with the keys "code", "reason", and "data".
+            dict[str, Any]: A dictionary with the keys "code", "reason", and "data".
+
+        Raises:
+            UnauthorizedError: If the password is incorrect or the session is invalid.
+            APIError: If the API returns an error status code.
 
         """
 
@@ -294,7 +403,7 @@ class API:
         )
 
         if result["data"]["session"]["valid"] is False or result["data"]["session"]["message"] == "password incorrect":
-            raise UnauthorizedException()
+            raise UnauthorizedError
 
         if result["data"]["session"]["sid"] is not None:
             self._sid = result["data"]["session"]["sid"]
@@ -311,7 +420,10 @@ class API:
         """Drop the current session.
 
         Returns:
-          result (dict[str, Any]): A dictionary with the keys "code", "reason", and "data".
+            dict[str, Any]: A dictionary with the keys "code", "reason", and "data".
+
+        Raises:
+            APIError: If the API returns an error status code during logout.
 
         """
 
@@ -328,7 +440,7 @@ class API:
 
             self._sid = None
 
-        except AbortLogoutException as err:
+        except AbortLogoutError as err:
             result["code"] = err.code
             result["reason"] = err.reason
 
@@ -342,7 +454,11 @@ class API:
         """Retrieve an overview of Pi-hole activity.
 
         Returns:
-          result (dict[str, Any]): A dictionary with the keys "code", "reason", and "data".
+            dict[str, Any]: A dictionary with the keys "code", "reason", and "data".
+
+        Raises:
+            APIError: If the API returns an error status code.
+            ClientConnectorError: If the server is unreachable.
 
         """
 
@@ -365,8 +481,15 @@ class API:
     async def call_padd(self, full: bool = True) -> dict[str, Any]:
         """Retrieve the Pi-hole API Dashboard information.
 
+        Args:
+            full (bool): If True, retrieves the full dashboard data. Defaults to True.
+
         Returns:
-          result (dict[str, Any]): A dictionary with the keys "code", "reason", and "data".
+            dict[str, Any]: A dictionary with the keys "code", "reason", and "data".
+
+        Raises:
+            APIError: If the API returns an error status code.
+            ClientConnectorError: If the server is unreachable.
 
         """
 
@@ -390,7 +513,11 @@ class API:
         """Retrieve all active sessions.
 
         Returns:
-          result (dict[str, Any]): A Dictionary with the keys "code", "reason", and "data".
+            dict[str, Any]: A dictionary with the keys "code", "reason", and "data".
+
+        Raises:
+            APIError: If the API returns an error status code.
+            ClientConnectorError: If the server is unreachable.
 
         """
 
@@ -414,7 +541,11 @@ class API:
         """Retrieve current blocking status.
 
         Returns:
-          result (dict[str, Any]): A Dictionary with the keys "code", "reason", and "data".
+            dict[str, Any]: A dictionary with the keys "code", "reason", and "data".
+
+        Raises:
+            APIError: If the API returns an error status code.
+            ClientConnectorError: If the server is unreachable.
 
         """
 
@@ -438,7 +569,11 @@ class API:
         """Enable blocking for DNS requests.
 
         Returns:
-          result (dict[str, Any]): A dictionary with the keys "code", "reason", and "data".
+            dict[str, Any]: A dictionary with the keys "code", "reason", and "data".
+
+        Raises:
+            APIError: If the API returns an error status code.
+            ClientConnectorError: If the server is unreachable.
 
         """
 
@@ -463,10 +598,14 @@ class API:
         """Disable blocking for DNS requests.
 
         Args:
-          duration (int | None): Represents the time duration in seconds for which the blocking feature will be disabled. Defaults to 120
+            duration (int | None): The time duration in seconds for which blocking will be disabled. Pass None to disable indefinitely.
 
         Returns:
-          result (dict[str, Any]): A dictionary with the keys "code", "reason", and "data".
+            dict[str, Any]: A dictionary with the keys "code", "reason", and "data".
+
+        Raises:
+            APIError: If the API returns an error status code.
+            ClientConnectorError: If the server is unreachable.
 
         """
 
@@ -493,10 +632,14 @@ class API:
         }
 
     async def call_get_ftl_info_messages(self) -> dict[str, Any]:
-        """Get FTL information messages
+        """Retrieve the list of FTL diagnosis messages.
 
         Returns:
-          result (dict[str, Any]): A dictionary with the keys "code", "reason", and "data".
+            dict[str, Any]: A dictionary with the keys "code", "reason", and "data".
+
+        Raises:
+            APIError: If the API returns an error status code.
+            ClientConnectorError: If the server is unreachable.
 
         """
 
@@ -509,7 +652,7 @@ class API:
         )
 
         self.cache_ftl_info["message_list"] = result["data"]["messages"]
-        self.cache_ftl_info["status"] = "OK: Messages fetched successfull"
+        self.cache_ftl_info["status"] = "OK: Messages fetched successfully"
 
         return {
             "code": result["code"],
@@ -518,10 +661,14 @@ class API:
         }
 
     async def call_get_ftl_info_messages_count(self) -> dict[str, Any]:
-        """Get FTL information messages
+        """Retrieve the count of FTL diagnosis messages.
 
         Returns:
-          result (dict[str, Any]): A dictionary with the keys "code", "reason", and "data".
+            dict[str, Any]: A dictionary with the keys "code", "reason", and "data".
+
+        Raises:
+            APIError: If the API returns an error status code.
+            ClientConnectorError: If the server is unreachable.
 
         """
 
@@ -545,7 +692,11 @@ class API:
         """Retrieve the list of Pi-hole groups.
 
         Returns:
-          result (dict[str, Any]): A dictionary with the keys "code", "reason", and "data".
+            dict[str, Any]: A dictionary with the keys "code", "reason", and "data".
+
+        Raises:
+            APIError: If the API returns an error status code.
+            ClientConnectorError: If the server is unreachable.
 
         """
 
@@ -577,7 +728,11 @@ class API:
         """Retrieve the configured clients.
 
         Returns:
-          result (dict[str, Any]): A dictionary with the keys "code", "reason", and "data".
+            dict[str, Any]: A dictionary with the keys "code", "reason", and "data".
+
+        Raises:
+            APIError: If the API returns an error status code.
+            ClientConnectorError: If the server is unreachable.
 
         """
 
@@ -601,7 +756,11 @@ class API:
         """Retrieve the active DHCP leases.
 
         Returns:
-          result (dict[str, Any]): A dictionary with the keys "code", "reason", and "data".
+            dict[str, Any]: A dictionary with the keys "code", "reason", and "data".
+
+        Raises:
+            APIError: If the API returns an error status code.
+            ClientConnectorError: If the server is unreachable.
 
         """
 
@@ -621,11 +780,49 @@ class API:
             "data": result["data"],
         }
 
-    async def call_group_disable(self, group: str) -> dict[str, Any]:
-        """Disable Pi-hole group.
+    async def call_get_network_devices(self, max_devices: int = MAX_NETWORK_DEVICES) -> dict[str, Any]:
+        """Retrieve the list of known network devices.
+
+        Args:
+            max_devices (int): The maximum number of devices to retrieve. Defaults to MAX_NETWORK_DEVICES.
 
         Returns:
-          result (dict[str, Any]): A dictionary with the keys "code", "reason", and "data".
+            dict[str, Any]: A dictionary with the keys "code", "reason", and "data".
+
+        Raises:
+            APIError: If the API returns an error status code.
+            ClientConnectorError: If the server is unreachable.
+
+        """
+
+        url: str = f"/network/devices?max_devices={max_devices}"
+
+        result: dict[str, Any] = await self._call(
+            url,
+            action="network_devices",
+            method="GET",
+        )
+
+        self.cache_network_devices = result["data"]["devices"]
+
+        return {
+            "code": result["code"],
+            "reason": result["reason"],
+            "data": result["data"],
+        }
+
+    async def call_group_disable(self, group: str) -> dict[str, Any]:
+        """Disable a Pi-hole group.
+
+        Args:
+            group (str): The name of the group to disable.
+
+        Returns:
+            dict[str, Any]: A dictionary with the keys "code", "reason", and "data".
+
+        Raises:
+            APIError: If the API returns an error status code.
+            ClientConnectorError: If the server is unreachable.
 
         """
 
@@ -649,10 +846,17 @@ class API:
         }
 
     async def call_group_enable(self, group: str) -> dict[str, Any]:
-        """Enable Pi-hole group.
+        """Enable a Pi-hole group.
+
+        Args:
+            group (str): The name of the group to enable.
 
         Returns:
-          result (dict[str, Any]): A dictionary with the keys "code", "reason", and "data".
+            dict[str, Any]: A dictionary with the keys "code", "reason", and "data".
+
+        Raises:
+            APIError: If the API returns an error status code.
+            ClientConnectorError: If the server is unreachable.
 
         """
 
@@ -660,7 +864,7 @@ class API:
 
         result: dict[str, Any] = await self._call(
             url,
-            action="group-disable",
+            action="group-enable",
             method="PUT",
             data={
                 "name": group,
@@ -681,7 +885,11 @@ class API:
         This includes emptying the ARP table and removing both all known devices and their associated addresses.
 
         Returns:
-          result (dict[str, Any]): A dictionary with the keys "code", "reason", and "data".
+            dict[str, Any]: A dictionary with the keys "code", "reason", and "data".
+
+        Raises:
+            APIError: If the API returns an error status code.
+            ClientConnectorError: If the server is unreachable.
 
         """
 
@@ -690,10 +898,14 @@ class API:
     async def call_action_flush_logs(self) -> dict[str, Any]:
         """Flush the DNS logs.
 
-        This includes emptying the DNS log file and purging the most recent 24 hours from both the database and FTL's internal memory.'
+        This includes emptying the DNS log file and purging the most recent 24 hours from both the database and FTL's internal memory.
 
         Returns:
-          result (dict[str, Any]): A dictionary with the keys "code", "reason", and "data".
+            dict[str, Any]: A dictionary with the keys "code", "reason", and "data".
+
+        Raises:
+            APIError: If the API returns an error status code.
+            ClientConnectorError: If the server is unreachable.
 
         """
 
@@ -705,7 +917,11 @@ class API:
         Update Pi-hole's adlists by running pihole -g.
 
         Returns:
-          result (dict[str, Any]): A dictionary with the keys "code", "reason", and "data".
+            dict[str, Any]: A dictionary with the keys "code", "reason", and "data".
+
+        Raises:
+            APIError: If the API returns an error status code.
+            ClientConnectorError: If the server is unreachable.
 
         """
 
@@ -715,28 +931,42 @@ class API:
         """Restart the pihole-FTL service.
 
         Returns:
-          result (dict[str, Any]): A dictionary with the keys "code", "reason", and "data".
+            dict[str, Any]: A dictionary with the keys "code", "reason", and "data".
+
+        Raises:
+            APIError: If the API returns an error status code.
+            ClientConnectorError: If the server is unreachable.
 
         """
 
         return await self._call_action("restartdns")
 
     async def call_action_ftl_purge_diagnosis_messages(self) -> dict[str, Any]:
-        """Purge FTP diagnosis messages
+        """Purge all FTL diagnosis messages.
+
+        Iterates over cached messages and deletes each one via the API.
+        Clears the local message cache after deletion.
 
         Returns:
-          result (dict[str, Any]): A dictionary with the keys "code", "reason", and "data".
+            dict[str, Any]: A dictionary with the keys "code", "reason", and "data".
+
+        Raises:
+            APIError: If the API returns an error status code.
+            ClientConnectorError: If the server is unreachable.
 
         """
 
-        messages: List[Any] = self.cache_ftl_info["message_list"]
+        messages: list[Any] = self.cache_ftl_info["message_list"]
 
-        result: dict[str, Any] = {"code": None, "reason": None, "data": {}}
+        result: dict[str, Any] = {"code": 200, "reason": "No FTL diagnosis message to delete", "data": {}}
+
+        if len(messages) == 0:
+            return result
 
         for message in messages:
             url: str = f"/info/messages/{message['id']}"
 
-            result = await self._call(
+            await self._call(
                 url,
                 action="action_ftl_purge_diagnosis_messages",
                 method="DELETE",
@@ -751,13 +981,17 @@ class API:
         }
 
     async def _call_action(self, action_name: str) -> dict[str, Any]:
-        """Execute an Pi-hole action.
+        """Execute a Pi-hole action.
 
         Args:
-          action_name (str): Represents the action to execute
+            action_name (str): Represents the action to execute.
 
         Returns:
-          result (dict[str, Any]): A dictionary with the keys "code", "reason", and "data".
+            dict[str, Any]: A dictionary with the keys "code", "reason", and "data".
+
+        Raises:
+            APIError: If the API returns an error status code.
+            ClientConnectorError: If the server is unreachable.
 
         """
 
@@ -776,9 +1010,16 @@ class API:
         }
 
     def remove_cache(self, data_name: str) -> None:
-        """..."""
+        """Reset a specific cache entry to its default error state.
 
-        match data_name:
-            case "ftl_info_messages":
-                self.cache_ftl_info["message_list"] = {}
-                self.cache_ftl_info["status"] = "NOK: Messages fetched unsuccessfully"
+        Args:
+            data_name (str): The name of the cache to reset. Currently supports "ftl_info_messages".
+
+        Returns:
+            None
+
+        """
+
+        if data_name == "ftl_info_messages":
+            self.cache_ftl_info["message_list"] = []
+            self.cache_ftl_info["status"] = "NOK: Messages fetched unsuccessfully"

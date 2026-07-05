@@ -309,6 +309,35 @@ The attributes `until_date` and `remaining_seconds` are existing only if the ads
 
 </details>
 
+### Device Trackers
+
+<img src="../img/entities-device-trackers.png" width="300">
+
+<details>
+  <summary>Display the device trackers</summary>
+
+<br>Network device tracking is **disabled by default**. It can be enabled from the integration options. See the [network device tracking guide](guide-network-device-tracking.md) for details.
+
+#### - Network device
+
+**Name:** device_tracker.<service\_name>\_<mac_address\>  
+**Description:** Presence of a network device known to Pi-hole. Reports `home` if the device made a DNS query recently, `not_home` otherwise.  
+**Attributes:**  Information about the network device.
+
+```json
+{
+  "ip": "192.168.31.172",
+  "mac": "ip-192.168.31.172",
+  "host_name": "macbook-air-bastien-m3.local",
+  "interface": "eth0",
+  "num_queries": 3027453,
+  "first_seen": "2025-02-18T23:19:00+00:00",
+  "last_query": "2026-07-05T14:17:27+00:00"
+}
+```
+
+</details>
+
 ### Diagnostic Sensors
 
 <img src="../img/entities-diagnostic-sensors.png" width="300">
