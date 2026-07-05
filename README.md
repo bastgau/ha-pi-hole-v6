@@ -128,6 +128,10 @@ A quick example to integrate controls in a dashboard is available on this [page]
 
 A useful tip to exclude unnecessary sensors from the Recorder is available on this [page](docs/guide-database-optimization.md).
 
+### How do I track network devices?
+
+Network device tracking, filtering, and manual removal are explained on this [page](docs/guide-network-device-tracking.md).
+
 ### Advantages of using the integration compared to the Core one?
 
 I listed the implemented features in the **HA Pi-hole V6 Integration** and the **Core Integration**.
@@ -150,6 +154,7 @@ I listed the implemented features in the **HA Pi-hole V6 Integration** and the *
 |              |[Refresh data](https://github.com/bastgau/ha-pi-hole-v6/blob/develop/docs/guide-explained-entities.md#--refresh-data)                                              |                ✅                 |       ❌       |
 |              |[Restart pihole-FTL](https://github.com/bastgau/ha-pi-hole-v6/blob/develop/docs/guide-explained-entities.md#--restart-pihole-ftl)                                        |                ✅                 |       ❌       |
 |              |[Run gravity](https://github.com/bastgau/ha-pi-hole-v6/blob/develop/docs/guide-explained-entities.md#--run-gravity)                                               |                ✅                 |       ❌       |
+| Device Tracker|[Network device](https://github.com/bastgau/ha-pi-hole-v6/blob/develop/docs/guide-explained-entities.md#--network-device) (disabled by default, filterable)                             |                ✅ + ℹ️                |       ❌       |
 | Sensor       |[Active DHCP leases](https://github.com/bastgau/ha-pi-hole-v6/blob/develop/docs/guide-explained-entities.md#--active-dhcp-leases)                                        |              ✅ + ℹ️              |       ❌       |
 |              |[Active sessions](https://github.com/bastgau/ha-pi-hole-v6/blob/develop/docs/guide-explained-entities.md#--active-sessions)                                           |             ✅ + ℹ️               |       ❌       |
 |              |[Ads blocked during the last 24 hours](https://github.com/bastgau/ha-pi-hole-v6/blob/develop/docs/guide-explained-entities.md#--ads-blocked-during-the-last-24-hours)                      |                ✅                 |       ✅       |
