@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 
 from propcache.api import cached_property
 
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -68,4 +68,5 @@ class PiHoleV6Entity(CoordinatorEntity[DataUpdateCoordinator[None]]):
             configuration_url=config_url,
             model="Pi-hole",
             sw_version="v6",
+            entry_type=DeviceEntryType.SERVICE,
         )

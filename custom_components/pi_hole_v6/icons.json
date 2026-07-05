@@ -7,7 +7,10 @@
         },
         "device_tracker": {
             "network_device": {
-                "default": "mdi:lan"
+                "default": "mdi:lan-disconnect",
+                "state": {
+                    "home": "mdi:lan-connect"
+                }
             }
         },
         "sensor": {
