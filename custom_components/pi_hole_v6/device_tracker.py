@@ -6,8 +6,10 @@ import asyncio
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Any
 
-from homeassistant.components.device_tracker.const import SourceType
-from homeassistant.components.device_tracker.entity import ScannerEntity
+from homeassistant.components.device_tracker import (
+    ScannerEntity,  # pyright: ignore[reportPrivateImportUsage]
+    SourceType,  # pyright: ignore[reportPrivateImportUsage]
+)
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.update_coordinator import CoordinatorEntity, DataUpdateCoordinator
