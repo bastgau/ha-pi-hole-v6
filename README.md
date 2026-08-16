@@ -200,4 +200,4 @@ Enjoy!
 
 ## Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=bastgau/ha-pi-hole-v6&type=Date)](https://www.star-history.com/#bastgau/ha-pi-hole-v6&Date)
+[![Star History Chart](https://star-history.dera.page/svg?repos=bastgau/ha-pi-hole-v6&type=Date)](https://star-history.dera.page/#bastgau/ha-pi-hole-v6&Date)
