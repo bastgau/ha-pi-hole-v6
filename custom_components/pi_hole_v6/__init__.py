@@ -188,6 +188,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: PiHoleV6ConfigEntry) -> 
         Raises:
             ConfigEntryAuthFailed: If the credentials are invalid or expired.
             DataStructureError: If the API returns an unexpected data structure.
+            UpdateFailed: If the Pi-hole is unreachable or the API returns an error,
+            so the coordinator marks the entities unavailable and retries.
 
         """
 
