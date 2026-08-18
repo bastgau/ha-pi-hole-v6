@@ -1,40 +1,44 @@
 """Custom exceptions raised during Pi-hole V6 API calls."""
 
-from abc import abstractmethod
 from typing import Any
 
 
-@abstractmethod
-class APIError(Exception):
-    """The class `APIError` is a parent exception related to Pi-hole API."""
+class PiHoleV6Error(Exception):
+    """The class `PiHoleV6Error` is the base exception for every error raised by this integration.
+
+    Catching this single class is enough to handle any failure coming from the
+    Pi-hole V6 client, whether it is a network-level problem, a malformed
+    response or an error status returned by the API.
+    """
 
     message: str = ""
 
-    def __init__(self) -> None:
-        """Initialize the APIError exception with the class-level message."""
-        super().__init__(self.message)
+    def __init__(self, message: str | None = None) -> None:
+        """Initialize the exception.
+
+        Args:
+            message (str | None): The message carried by the exception. If None (default), the class-level `message` attribute is used.
+
+        """
+        super().__init__(self.message if message is None else message)
 
 
-class ActionExecutionError(Exception):
+class APIError(PiHoleV6Error):
+    """The class `APIError` is a parent exception related to Pi-hole API."""
+
+
+class ActionExecutionError(PiHoleV6Error):
     """The class `ActionExecutionError` is used to raise an exception when an action cannot be executed."""
 
     message: str = "The action requested has failed. Please check HA logs or Pi-hole logs."
 
-    def __init__(self) -> None:
-        """Initialize the ActionExecutionError exception with the class-level message."""
-        super().__init__(self.message)
 
-
-class AbortLogoutError(Exception):
+class AbortLogoutError(PiHoleV6Error):
     """The class `AbortLogoutError` represents an exception when a logout is not relevant and can be avoided."""
 
     code: int = 499
     reason: str = "No logout needed."
     message: str = "Logout call is not relevant. Maybe no session is active. Please check HA logs or Pi-hole logs."
-
-    def __init__(self) -> None:
-        """Initialize the AbortLogoutError exception with the class-level message."""
-        super().__init__(self.message)
 
 
 class BadGatewayError(APIError):
@@ -51,7 +55,7 @@ class BadRequestError(APIError):
     )
 
 
-class ClientConnectorError(Exception):
+class ClientConnectorError(PiHoleV6Error):
     """The class `ClientConnectorError` is used to raise an exception when the Pi-hole V6 server is unreachable."""
 
     message: str = "The Pi-hole V6 server seems to be unreachable. Please check HA logs or Pi-hole logs."
@@ -72,14 +76,10 @@ class ClientConnectorError(Exception):
         super().__init__(new_message)
 
 
-class ContentTypeError(Exception):
+class ContentTypeError(PiHoleV6Error):
     """The class `ContentTypeError` is used to raise an exception when the content type provided by the API is incorrect."""
 
     message: str = "Invalid content type returned by the API. Please check HA logs or Pi-hole logs."
-
-    def __init__(self) -> None:
-        """Initialize the ContentTypeError exception with the class-level message."""
-        super().__init__(self.message)
 
 
 class ForbiddenError(APIError):
@@ -143,6 +143,41 @@ class DataStructureError(APIError):
 
     message: str = "Data structure returned by the API is incorrect. Please check HA logs or Pi-hole logs."
 
+    def __init__(self, endpoint: str | None = None) -> None:
+        """Initialize the exception, naming the endpoint that returned the invalid structure.
+
+        Args:
+            endpoint (str | None): The name of the API call whose result was not a dictionary. If None (default), only the default message is used.
+
+        """
+        new_message: str = self.message
+
+        if endpoint is not None:
+            new_message = f"{new_message} # Endpoint {endpoint}"
+
+        super().__init__(new_message)
+
+
+class UnexpectedStatusError(APIError):
+    """The class `UnexpectedStatusError` is used when the API returns a status code that is not mapped."""
+
+    message: str = "The API returned an unexpected status code. Please check HA logs or Pi-hole logs."
+
+    def __init__(self, status_code: int | None = None) -> None:
+        """Initialize the exception, appending the unmapped status code when it is known.
+
+        Args:
+            status_code (int | None): The unmapped HTTP status code returned by the API.
+                If None (default), only the default message is used.
+
+        """
+        new_message: str = self.message
+
+        if status_code is not None:
+            new_message = f"{new_message} # Status code {status_code}"
+
+        super().__init__(new_message)
+
 
 def handle_status(status_code: int) -> None:
     """Raise specific exceptions based on the input status code.
@@ -166,7 +201,7 @@ def handle_status(status_code: int) -> None:
         ServiceUnavailableError: If status code is 503.
         GatewayTimeoutError: If status code is 504.
         AbortLogoutError: If status code is 499.
-        NotImplementedError: If the status code is not mapped.
+        UnexpectedStatusError: If the status code is not mapped.
 
     """
 
@@ -191,5 +226,4 @@ def handle_status(status_code: int) -> None:
     if status_code in exception_map:
         raise exception_map[status_code]()  # noqa: RSE102
 
-    msg: str = f"Unexpected error: Status code {status_code}"
-    raise NotImplementedError(msg)
+    raise UnexpectedStatusError(status_code)
