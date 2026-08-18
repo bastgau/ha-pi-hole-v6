@@ -18,7 +18,7 @@ from homeassistant.const import (
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .api import Api as PiholeAPI
 from .const import (
@@ -28,7 +28,7 @@ from .const import (
     DOMAIN,
     MIN_TIME_BETWEEN_UPDATES,
 )
-from .exceptions import APIError, DataStructureError, UnauthorizedError
+from .exceptions import APIError, ClientConnectorError, DataStructureError, UnauthorizedError
 
 if TYPE_CHECKING:
     from aiohttp import client
@@ -207,6 +207,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: PiHoleV6ConfigEntry) -> 
         except UnauthorizedError as err:
             msg: str = "Credentials must be updated."
             raise ConfigEntryAuthFailed(msg) from err
+
+        except (ClientConnectorError, APIError) as err:
+            raise UpdateFailed(str(err)) from err
 
         try:
             result = await api_client.call_get_ftl_info_messages()
