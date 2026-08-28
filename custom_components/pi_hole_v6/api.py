@@ -140,7 +140,7 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
             handle_status(request.status)
         except APIError as api_error:
             log_message: str = await self._create_log_message_on_api_exception(api_error, request, method, url)
-            _LOGGER.exception(log_message)
+            _LOGGER.error(log_message)  # noqa: TRY400
             raise
 
         result_data: dict[str, Any] | None = None

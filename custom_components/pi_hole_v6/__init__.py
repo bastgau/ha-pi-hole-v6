@@ -18,7 +18,7 @@ from homeassistant.const import (
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .api import Api as PiholeAPI
 from .const import (
@@ -28,7 +28,7 @@ from .const import (
     DOMAIN,
     MIN_TIME_BETWEEN_UPDATES,
 )
-from .exceptions import APIError, DataStructureError, UnauthorizedError
+from .exceptions import APIError, DataStructureError, PiHoleV6Error, UnauthorizedError
 
 if TYPE_CHECKING:
     from aiohttp import client
@@ -65,7 +65,7 @@ class PiHoleV6Data:
     coordinator: DataUpdateCoordinator[Any]
 
 
-async def check_result(result: Any, api_client: PiholeAPI) -> None:
+async def check_result(result: Any, api_client: PiholeAPI, endpoint: str) -> None:
     """Check that the API result is a valid dictionary.
 
     If the result is not a dict, logs an error, calls logout and raises DataStructureError.
@@ -73,6 +73,7 @@ async def check_result(result: Any, api_client: PiholeAPI) -> None:
     Args:
         result (Any): The result returned by the API call.
         api_client (PiholeAPI): The Pi-hole API client instance used to call logout.
+        endpoint (str): The name of the API call that produced the result, used to identify the faulty endpoint in the logs and in the raised exception.
 
     Returns:
         None
@@ -84,8 +85,8 @@ async def check_result(result: Any, api_client: PiholeAPI) -> None:
 
     if not isinstance(result, dict):
         await api_client.call_logout()
-        _LOGGER.error("DataStructureError Debug: %s", str(result))
-        raise DataStructureError
+        _LOGGER.error("DataStructureError Debug: %s returned %s", endpoint, str(result))
+        raise DataStructureError(endpoint)
 
 
 async def async_get_all_data(api_client: PiholeAPI, *, enable_device_tracker: bool) -> None:
@@ -107,32 +108,32 @@ async def async_get_all_data(api_client: PiholeAPI, *, enable_device_tracker: bo
     """
 
     result = await api_client.call_summary()
-    await check_result(result, api_client)
+    await check_result(result, api_client, "summary")
 
     result = await api_client.call_blocking_status()
-    await check_result(result, api_client)
+    await check_result(result, api_client, "blocking_status")
 
     result = await api_client.call_get_groups()
-    await check_result(result, api_client)
+    await check_result(result, api_client, "get_groups")
 
     result = await api_client.call_padd()
-    await check_result(result, api_client)
+    await check_result(result, api_client, "padd")
 
     result = await api_client.call_get_ftl_info_messages_count()
-    await check_result(result, api_client)
+    await check_result(result, api_client, "get_ftl_info_messages_count")
 
     result = await api_client.call_get_configured_clients()
-    await check_result(result, api_client)
+    await check_result(result, api_client, "get_configured_clients")
 
     result = await api_client.call_get_dhcp_leases()
-    await check_result(result, api_client)
+    await check_result(result, api_client, "get_dhcp_leases")
 
     if enable_device_tracker:
         result = await api_client.call_get_network_devices()
-        await check_result(result, api_client)
+        await check_result(result, api_client, "get_network_devices")
 
     result = await api_client.call_get_auth_sessions()
-    await check_result(result, api_client)
+    await check_result(result, api_client, "get_auth_sessions")
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: PiHoleV6ConfigEntry) -> bool:
@@ -187,7 +188,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: PiHoleV6ConfigEntry) -> 
 
         Raises:
             ConfigEntryAuthFailed: If the credentials are invalid or expired.
-            DataStructureError: If the API returns an unexpected data structure.
+            UpdateFailed: If the Pi-hole is unreachable or the API returns an error, so the coordinator marks the entities unavailable and retries.
 
         """
 
@@ -208,12 +209,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: PiHoleV6ConfigEntry) -> 
             msg: str = "Credentials must be updated."
             raise ConfigEntryAuthFailed(msg) from err
 
+        except PiHoleV6Error as err:
+            raise UpdateFailed(str(err)) from err
+
         try:
             result = await api_client.call_get_ftl_info_messages()
             if not isinstance(result, dict):
+                endpoint: str = "get_ftl_info_messages"
                 api_client.remove_cache("ftl_info_messages")
-                _LOGGER.error("DataStructureError Debug: %s", str(result))
-                raise DataStructureError
+                _LOGGER.error("DataStructureError Debug: %s returned %s", endpoint, str(result))
+                raise DataStructureError(endpoint)
 
         except APIError:
             api_client.remove_cache("ftl_info_messages")
