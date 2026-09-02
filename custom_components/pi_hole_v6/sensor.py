@@ -255,6 +255,16 @@ class PiHoleV6Sensor(PiHoleV6Entity, SensorEntity):  # pyright: ignore[reportInc
 
     entity_description: PiHoleV6SensorEntityDescription
 
+    # Attributes kept out of the recorder: the static "note" carried by most sensors, and the refresh
+    # timestamps, which change on every cycle and are of no use in the history.
+    _unrecorded_attributes = frozenset(
+        {
+            "note",
+            "live_data_refresh",
+            "detailed_data_refresh",
+        }
+    )
+
     def __init__(
         self,
         api: ClientAPI,
