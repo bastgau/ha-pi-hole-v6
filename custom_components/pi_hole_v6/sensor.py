@@ -40,10 +40,13 @@ class PiHoleV6SensorEntityDescription(SensorEntityDescription):
     Attributes:
         coordinator_key (str): The coordinator feeding this sensor, either COORDINATOR_LIVE for the data
             that must feel responsive or COORDINATOR_DETAILS for the data refreshed at a slower pace.
+        follow_every_coordinator (bool): Whether the sensor also has to be written when a coordinator it is
+            not attached to completes a refresh, used by the sensors reporting on every coordinator.
 
     """
 
     coordinator_key: str = COORDINATOR_LIVE
+    follow_every_coordinator: bool = False
 
 
 SENSOR_TYPES: tuple[PiHoleV6SensorEntityDescription, ...] = (
@@ -133,6 +136,7 @@ SENSOR_TYPES: tuple[PiHoleV6SensorEntityDescription, ...] = (
     PiHoleV6SensorEntityDescription(
         entity_category=EntityCategory.DIAGNOSTIC,
         key="latest_data_refresh",
+        follow_every_coordinator=True,
         translation_key="latest_data_refresh",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_registry_enabled_default=False,
@@ -198,12 +202,31 @@ async def async_setup_entry(
         COORDINATOR_DETAILS: hole_data.coordinator_details,
     }
 
+    def get_extra_coordinators(
+        description: PiHoleV6SensorEntityDescription,
+    ) -> list[DataUpdateCoordinator[Any]]:
+        """Return the coordinators the sensor must listen to besides its own.
+
+        Args:
+            description (PiHoleV6SensorEntityDescription): The description of the sensor being created.
+
+        Returns:
+            list[DataUpdateCoordinator[Any]]: The other coordinators, or an empty list.
+
+        """
+
+        if not description.follow_every_coordinator:
+            return []
+
+        return [value for key, value in coordinators.items() if key != description.coordinator_key]
+
     sensors = [
         PiHoleV6Sensor(
             hole_data.api,
             coordinators[description.coordinator_key],
             entry.entry_id,
             description,
+            get_extra_coordinators(description),
         )
         for description in SENSOR_TYPES
     ]
@@ -238,6 +261,7 @@ class PiHoleV6Sensor(PiHoleV6Entity, SensorEntity):  # pyright: ignore[reportInc
         coordinator: DataUpdateCoordinator[Any],
         server_unique_id: str,
         description: PiHoleV6SensorEntityDescription,
+        extra_coordinators: list[DataUpdateCoordinator[Any]] | None = None,
     ) -> None:
         """Initialize a Pi-hole V6 sensor.
 
@@ -246,16 +270,32 @@ class PiHoleV6Sensor(PiHoleV6Entity, SensorEntity):  # pyright: ignore[reportInc
             coordinator (DataUpdateCoordinator[Any]): The data update coordinator feeding this sensor.
             server_unique_id (str): A unique identifier for the server entry.
             description (PiHoleV6SensorEntityDescription): The entity description.
+            extra_coordinators (list[DataUpdateCoordinator[Any]] | None): Other coordinators whose refresh
+                must also trigger a state write, for the sensors reporting on every coordinator.
 
         """
 
         name: str = coordinator.name
         super().__init__(api, coordinator, name, server_unique_id)
+        self._extra_coordinators: list[DataUpdateCoordinator[Any]] = extra_coordinators or []
         self.entity_description = description  # pyright: ignore[reportIncompatibleVariableOverride]
         self._attr_unique_id = f"{self._server_unique_id}/{description.key}"
 
         raw_name: str = f"sensor.{name}_{description.key}"
         self.entity_id = create_entity_id_name(raw_name)
+
+    async def async_added_to_hass(self) -> None:
+        """Subscribe to the coordinators the sensor is not attached to.
+
+        Returns:
+            None
+
+        """
+
+        await super().async_added_to_hass()
+
+        for coordinator in self._extra_coordinators:
+            self.async_on_remove(coordinator.async_add_listener(self.async_write_ha_state))
 
     @property
     def native_value(self) -> StateType | datetime:  # pyright: ignore[reportIncompatibleVariableOverride] # pylint: disable=too-many-return-statements, too-many-branches
@@ -268,7 +308,7 @@ class PiHoleV6Sensor(PiHoleV6Entity, SensorEntity):  # pyright: ignore[reportInc
 
         match self.entity_description.key:
             case "latest_data_refresh":
-                return self.api.last_refresh.get(COORDINATOR_LIVE)
+                return self.native_latest_data_refresh()
             case "ads_blocked_today":
                 return self.api.cache_summary["queries"]["blocked"]
             case "ads_percentage_blocked_today":
@@ -308,6 +348,19 @@ class PiHoleV6Sensor(PiHoleV6Entity, SensorEntity):  # pyright: ignore[reportInc
 
         return ""
 
+    def native_latest_data_refresh(self) -> datetime | None:
+        """Return the most recent refresh timestamp across every coordinator.
+
+        Returns:
+            datetime | None: The latest refresh timestamp, or None if no coordinator has refreshed yet.
+
+        """
+
+        if not self.api.last_refresh:
+            return None
+
+        return max(self.api.last_refresh.values())
+
     def native_remaining_until_blocking_mode(self) -> int:
         """Compute the remaining seconds until blocking mode is automatically restored.
 
@@ -339,8 +392,9 @@ class PiHoleV6Sensor(PiHoleV6Entity, SensorEntity):  # pyright: ignore[reportInc
 
         if self.entity_description.key == "latest_data_refresh":
             return {
+                "live_data_refresh": self.api.last_refresh.get(COORDINATOR_LIVE),
                 "detailed_data_refresh": self.api.last_refresh.get(COORDINATOR_DETAILS),
-                "note": "State is the last refresh of the live coordinator, the attribute is the last refresh of the detailed one.",
+                "note": "Most recent refresh of the two coordinators.",
             }
 
         if self.entity_description.key == "memory_use":
