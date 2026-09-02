@@ -231,7 +231,7 @@ async def async_setup_entry(
 
                     entity = PiHoleV6DeviceTracker(
                         hole_data.api,
-                        hole_data.coordinator,
+                        hole_data.coordinator_details,
                         server_unique_id,
                         device,
                     )
@@ -265,7 +265,7 @@ async def async_setup_entry(
         """
         hass.async_create_task(_async_add_remove_trackers())
 
-    entry.async_on_unload(hole_data.coordinator.async_add_listener(_schedule_add_remove_trackers))
+    entry.async_on_unload(hole_data.coordinator_details.async_add_listener(_schedule_add_remove_trackers))
 
     @callback
     def _forget_manually_removed_device(event: Event[EventDeviceRegistryUpdatedData]) -> None:

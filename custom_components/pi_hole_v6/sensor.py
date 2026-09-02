@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 import logging
 from typing import TYPE_CHECKING, Any
@@ -16,6 +17,7 @@ from homeassistant.const import CONF_NAME, PERCENTAGE, EntityCategory, UnitOfTim
 from homeassistant.helpers.event import async_track_time_interval
 
 from .common import sensor_update_timer
+from .const import COORDINATOR_DETAILS, COORDINATOR_LIVE
 from .entity import PiHoleV6Entity
 from .helper import create_entity_id_name
 
@@ -30,86 +32,102 @@ if TYPE_CHECKING:
 
 _LOGGER = logging.getLogger(__name__)
 
-SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
-    SensorEntityDescription(
+
+@dataclass(frozen=True, kw_only=True)
+class PiHoleV6SensorEntityDescription(SensorEntityDescription):
+    """Describes a Pi-hole V6 sensor entity.
+
+    Attributes:
+        coordinator_key (str): The coordinator feeding this sensor, either COORDINATOR_LIVE for the fast
+            moving statistics or COORDINATOR_DETAILS for the slow moving inventories.
+
+    """
+
+    coordinator_key: str = COORDINATOR_LIVE
+
+
+SENSOR_TYPES: tuple[PiHoleV6SensorEntityDescription, ...] = (
+    PiHoleV6SensorEntityDescription(
         key="remaining_until_blocking_mode",
         translation_key="remaining_until_blocking_mode",
         native_unit_of_measurement=UnitOfTime.SECONDS,
         device_class=SensorDeviceClass.DURATION,
         suggested_display_precision=0,
     ),
-    SensorEntityDescription(
+    PiHoleV6SensorEntityDescription(
         key="ads_blocked_today",
         translation_key="ads_blocked_today",
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    SensorEntityDescription(
+    PiHoleV6SensorEntityDescription(
         key="ads_percentage_blocked_today",
         translation_key="ads_percentage_blocked_today",
         native_unit_of_measurement=PERCENTAGE,
         suggested_display_precision=2,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    SensorEntityDescription(
+    PiHoleV6SensorEntityDescription(
         key="seen_clients",
         translation_key="seen_clients",
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    SensorEntityDescription(
+    PiHoleV6SensorEntityDescription(
         key="dns_queries_today",
         translation_key="dns_queries_today",
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    SensorEntityDescription(
+    PiHoleV6SensorEntityDescription(
         key="domains_blocked",
         translation_key="domains_blocked",
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    SensorEntityDescription(
+    PiHoleV6SensorEntityDescription(
         key="dns_queries_cached",
         translation_key="dns_queries_cached",
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    SensorEntityDescription(
+    PiHoleV6SensorEntityDescription(
         key="dns_queries_forwarded",
         translation_key="dns_queries_forwarded",
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    SensorEntityDescription(
+    PiHoleV6SensorEntityDescription(
         key="dns_queries_frequency",
         translation_key="dns_queries_frequency",
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=0,
     ),
-    SensorEntityDescription(
+    PiHoleV6SensorEntityDescription(
         key="dns_unique_clients",
         translation_key="dns_unique_clients",
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    SensorEntityDescription(
+    PiHoleV6SensorEntityDescription(
         key="dns_unique_domains",
         translation_key="dns_unique_domains",
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    SensorEntityDescription(
+    PiHoleV6SensorEntityDescription(
         key="configured_clients",
+        coordinator_key=COORDINATOR_DETAILS,
         translation_key="configured_clients",
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    SensorEntityDescription(
+    PiHoleV6SensorEntityDescription(
         key="dhcp_leases",
+        coordinator_key=COORDINATOR_DETAILS,
         translation_key="dhcp_leases",
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
     ),
-    SensorEntityDescription(
+    PiHoleV6SensorEntityDescription(
         entity_category=EntityCategory.DIAGNOSTIC,
         key="latest_data_refresh",
         translation_key="latest_data_refresh",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_registry_enabled_default=False,
     ),
-    SensorEntityDescription(
+    PiHoleV6SensorEntityDescription(
         entity_category=EntityCategory.DIAGNOSTIC,
         key="memory_use",
         translation_key="memory_use",
@@ -118,7 +136,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         suggested_display_precision=2,
         entity_registry_enabled_default=False,
     ),
-    SensorEntityDescription(
+    PiHoleV6SensorEntityDescription(
         entity_category=EntityCategory.DIAGNOSTIC,
         key="cpu_use",
         translation_key="cpu_use",
@@ -127,15 +145,17 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         suggested_display_precision=2,
         entity_registry_enabled_default=False,
     ),
-    SensorEntityDescription(
+    PiHoleV6SensorEntityDescription(
         key="ftl_info_message_count",
+        coordinator_key=COORDINATOR_DETAILS,
         translation_key="ftl_info_message_count",
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
     ),
-    SensorEntityDescription(
+    PiHoleV6SensorEntityDescription(
         entity_category=EntityCategory.DIAGNOSTIC,
         key="auth_sessions",
+        coordinator_key=COORDINATOR_DETAILS,
         translation_key="auth_sessions",
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=0,
@@ -162,10 +182,16 @@ async def async_setup_entry(
     """
     name = entry.data[CONF_NAME]
     hole_data = entry.runtime_data
+
+    coordinators: dict[str, DataUpdateCoordinator[Any]] = {
+        COORDINATOR_LIVE: hole_data.coordinator,
+        COORDINATOR_DETAILS: hole_data.coordinator_details,
+    }
+
     sensors = [
         PiHoleV6Sensor(
             hole_data.api,
-            hole_data.coordinator,
+            coordinators[description.coordinator_key],
             entry.entry_id,
             description,
         )
@@ -194,22 +220,22 @@ async def async_setup_entry(
 class PiHoleV6Sensor(PiHoleV6Entity, SensorEntity):  # pyright: ignore[reportIncompatibleVariableOverride]
     """Representation of a Pi-hole V6 sensor."""
 
-    entity_description: SensorEntityDescription
+    entity_description: PiHoleV6SensorEntityDescription
 
     def __init__(
         self,
         api: ClientAPI,
         coordinator: DataUpdateCoordinator[Any],
         server_unique_id: str,
-        description: SensorEntityDescription,
+        description: PiHoleV6SensorEntityDescription,
     ) -> None:
         """Initialize a Pi-hole V6 sensor.
 
         Args:
             api (ClientAPI): The Pi-hole API client instance.
-            coordinator (DataUpdateCoordinator[Any]): The data update coordinator.
+            coordinator (DataUpdateCoordinator[Any]): The data update coordinator feeding this sensor.
             server_unique_id (str): A unique identifier for the server entry.
-            description (SensorEntityDescription): The entity description.
+            description (PiHoleV6SensorEntityDescription): The entity description.
 
         """
 

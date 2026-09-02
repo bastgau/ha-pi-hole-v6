@@ -10,6 +10,22 @@ In the pop-up window, enter the desired `Data refresh rate` value in seconds.
 
 <img src="../img/integration-configuration.png" width="500">
 
+### The two refresh frequencies
+
+The integration uses two independent update coordinators, so the entities that barely ever change are not
+refreshed at the same pace as the live statistics. Each one has its own option:
+
+| Option | Default | Entities refreshed | Pi-hole endpoints |
+| --- | --- | --- | --- |
+| `Data refresh frequency` | 300 s | All the statistics sensors (`ads_blocked_today`, `dns_queries_*`, `seen_clients`, `domains_blocked`, …), `cpu_use`, `memory_use`, `remaining_until_blocking_mode`, `latest_data_refresh`, `binary_sensor.<service>_status`, the main switch, the group switches and the four `update` entities | `summary`, `blocking_status`, `groups`, `padd` |
+| `Inventory refresh frequency` | 3600 s | `configured_clients`, `dhcp_leases`, `auth_sessions`, `ftl_info_message_count` and every `device_tracker` entity | `clients`, `dhcp/leases`, `auth/sessions`, `info/messages`, `network/devices` |
+
+The inventory frequency must be greater than or equal to the data refresh frequency. Raising it is the
+recommended way to stop the network device trackers and the inventory sensors from filling the recorder
+database, without slowing down the refresh of the statistics and of the blocking status.
+
+Pressing the `Refresh data` button refreshes both coordinators at once.
+
 ### Deactivate the default refresh (alternative solution)
 
 In the integration page, you have to deactivate the automatic polling for the `Pi-hole V6` Integration.
