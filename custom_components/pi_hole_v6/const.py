@@ -20,12 +20,13 @@ SERVICE_DISABLE = "disable"
 SERVICE_DISABLE_ATTR_DURATION = "duration"
 SERVICE_ENABLE = "enable"
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=300)
-MIN_TIME_BETWEEN_UPDATES_DETAILS = timedelta(seconds=3600)
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=120)
+MIN_TIME_BETWEEN_UPDATES_DETAILS = timedelta(seconds=300)
 
 # Identifiers of the two data update coordinators.
-# "live" drives the fast moving data (activity summary, PADD, blocking status, groups),
-# "details" drives the slow moving inventories (clients, leases, sessions, FTL messages, network devices).
+# "live" drives the data that must feel responsive (blocking status, groups, PADD),
+# "details" drives the data that only needs a slower pace (activity summary, clients, leases,
+# sessions, FTL messages, network devices).
 COORDINATOR_LIVE = "live"
 COORDINATOR_DETAILS = "details"
 DEFAULT_ENABLE_DEVICE_TRACKER = False

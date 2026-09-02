@@ -7,12 +7,12 @@ The following sensors generate **frequent and unnecessary data**. To **reduce da
 - `sensor.<service_name>_latest_data_refresh`
 - `sensor.<service_name>_remaining_until_blocking_mode`
 
-## Slow down the inventory coordinator
+## Slow down the detailed data coordinator
 
-Network device trackers and inventory sensors (configured clients, DHCP leases, auth sessions, FTL
-messages) are refreshed by a dedicated coordinator. Increasing its `Inventory refresh frequency` option
-(3600 seconds by default) reduces the number of state changes they write to the database, without
-affecting how fast the statistics and the blocking status are refreshed. See the
+The statistics sensors, the inventory sensors (configured clients, DHCP leases, auth sessions, FTL
+messages) and the network device trackers are refreshed by a dedicated coordinator. Increasing its
+`Detailed data refresh frequency` option (300 seconds by default) reduces the number of state changes
+they write to the database, without slowing down the blocking status and the switches. See the
 [refresh guide](guide-configuring-refresh.md) for the details.
 
 ## Step-by-Step procedure

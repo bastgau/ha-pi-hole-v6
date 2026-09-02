@@ -114,7 +114,7 @@ Logs do not remove sensitive information so careful what you share, check what y
 
 ### How do I configure the refresh frequency?
 
-By default, the statistics and the blocking status are updated every 5 minutes, and the inventories (configured clients, DHCP leases, auth sessions, FTL messages, network devices) every hour. Both frequencies are configurable, as explained on the following [page](docs/guide-configuring-refresh.md).
+By default, the blocking status and the switches are updated every 2 minutes, and the detailed data (activity statistics, configured clients, DHCP leases, auth sessions, FTL messages, network devices) every 5 minutes. Both frequencies are configurable, as explained on the following [page](docs/guide-configuring-refresh.md).
 
 ### Need more (noobs) information to install/configure the integration?
 

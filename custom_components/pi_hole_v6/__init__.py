@@ -63,12 +63,13 @@ class PiHoleV6Data:
 
     Attributes:
         api (PiholeAPI): The Pi-hole API client instance.
-        coordinator (DataUpdateCoordinator[Any]): The "live" coordinator, refreshing the fast moving data
-            (activity summary, PADD, blocking status and groups) used by the statistics sensors,
-            the binary sensor, the switches and the update entities.
-        coordinator_details (DataUpdateCoordinator[Any]): The "details" coordinator, refreshing the slow moving
-            inventories (configured clients, DHCP leases, auth sessions, FTL messages and network devices)
-            used by the inventory sensors and the device trackers.
+        coordinator (DataUpdateCoordinator[Any]): The "live" coordinator, refreshing the data that must feel
+            responsive (blocking status, groups and PADD) used by the binary sensor, the switches,
+            the blocking timer, the system diagnostics and the update entities.
+        coordinator_details (DataUpdateCoordinator[Any]): The "details" coordinator, refreshing the data that
+            only needs a slower pace (activity summary, configured clients, DHCP leases, auth sessions,
+            FTL messages and network devices) used by the statistics sensors, the inventory sensors and
+            the device trackers.
 
     """
 
@@ -102,10 +103,10 @@ async def check_result(result: Any, api_client: PiholeAPI, endpoint: str) -> Non
 
 
 async def async_get_live_data(api_client: PiholeAPI) -> None:
-    """Fetch the fast moving data from the Pi-hole API.
+    """Fetch the data that must feel responsive from the Pi-hole API.
 
-    Covers the activity summary, the blocking status, the groups and the PADD payload, i.e. everything
-    the statistics sensors, the binary sensor, the switches and the update entities rely on.
+    Covers the blocking status, the groups and the PADD payload, i.e. everything the binary sensor,
+    the switches, the blocking timer, the system diagnostics and the update entities rely on.
 
     Args:
         api_client (PiholeAPI): The Pi-hole API client instance used to perform the calls.
@@ -118,9 +119,6 @@ async def async_get_live_data(api_client: PiholeAPI) -> None:
 
     """
 
-    result = await api_client.call_summary()
-    await check_result(result, api_client, "summary")
-
     result = await api_client.call_blocking_status()
     await check_result(result, api_client, "blocking_status")
 
@@ -132,10 +130,11 @@ async def async_get_live_data(api_client: PiholeAPI) -> None:
 
 
 async def async_get_details_data(api_client: PiholeAPI, *, enable_device_tracker: bool) -> None:
-    """Fetch the slow moving data from the Pi-hole API.
+    """Fetch the data that only needs a slower pace from the Pi-hole API.
 
-    Covers the configured clients, the DHCP leases, the auth sessions, the FTL diagnosis messages and,
-    when enabled, the network devices, i.e. everything the inventory sensors and the device trackers rely on.
+    Covers the activity summary, the configured clients, the DHCP leases, the auth sessions, the FTL
+    diagnosis messages and, when enabled, the network devices, i.e. everything the statistics sensors,
+    the inventory sensors and the device trackers rely on.
 
     Args:
         api_client (PiholeAPI): The Pi-hole API client instance used to perform the calls.
@@ -149,6 +148,9 @@ async def async_get_details_data(api_client: PiholeAPI, *, enable_device_tracker
         DataStructureError: If any API call returns an unexpected data structure.
 
     """
+
+    result = await api_client.call_summary()
+    await check_result(result, api_client, "summary")
 
     result = await api_client.call_get_ftl_info_messages_count()
     await check_result(result, api_client, "get_ftl_info_messages_count")

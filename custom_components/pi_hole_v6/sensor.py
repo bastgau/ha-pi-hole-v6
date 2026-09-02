@@ -38,8 +38,8 @@ class PiHoleV6SensorEntityDescription(SensorEntityDescription):
     """Describes a Pi-hole V6 sensor entity.
 
     Attributes:
-        coordinator_key (str): The coordinator feeding this sensor, either COORDINATOR_LIVE for the fast
-            moving statistics or COORDINATOR_DETAILS for the slow moving inventories.
+        coordinator_key (str): The coordinator feeding this sensor, either COORDINATOR_LIVE for the data
+            that must feel responsive or COORDINATOR_DETAILS for the data refreshed at a slower pace.
 
     """
 
@@ -56,11 +56,13 @@ SENSOR_TYPES: tuple[PiHoleV6SensorEntityDescription, ...] = (
     ),
     PiHoleV6SensorEntityDescription(
         key="ads_blocked_today",
+        coordinator_key=COORDINATOR_DETAILS,
         translation_key="ads_blocked_today",
         state_class=SensorStateClass.MEASUREMENT,
     ),
     PiHoleV6SensorEntityDescription(
         key="ads_percentage_blocked_today",
+        coordinator_key=COORDINATOR_DETAILS,
         translation_key="ads_percentage_blocked_today",
         native_unit_of_measurement=PERCENTAGE,
         suggested_display_precision=2,
@@ -68,42 +70,50 @@ SENSOR_TYPES: tuple[PiHoleV6SensorEntityDescription, ...] = (
     ),
     PiHoleV6SensorEntityDescription(
         key="seen_clients",
+        coordinator_key=COORDINATOR_DETAILS,
         translation_key="seen_clients",
         state_class=SensorStateClass.MEASUREMENT,
     ),
     PiHoleV6SensorEntityDescription(
         key="dns_queries_today",
+        coordinator_key=COORDINATOR_DETAILS,
         translation_key="dns_queries_today",
         state_class=SensorStateClass.MEASUREMENT,
     ),
     PiHoleV6SensorEntityDescription(
         key="domains_blocked",
+        coordinator_key=COORDINATOR_DETAILS,
         translation_key="domains_blocked",
         state_class=SensorStateClass.MEASUREMENT,
     ),
     PiHoleV6SensorEntityDescription(
         key="dns_queries_cached",
+        coordinator_key=COORDINATOR_DETAILS,
         translation_key="dns_queries_cached",
         state_class=SensorStateClass.MEASUREMENT,
     ),
     PiHoleV6SensorEntityDescription(
         key="dns_queries_forwarded",
+        coordinator_key=COORDINATOR_DETAILS,
         translation_key="dns_queries_forwarded",
         state_class=SensorStateClass.MEASUREMENT,
     ),
     PiHoleV6SensorEntityDescription(
         key="dns_queries_frequency",
+        coordinator_key=COORDINATOR_DETAILS,
         translation_key="dns_queries_frequency",
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=0,
     ),
     PiHoleV6SensorEntityDescription(
         key="dns_unique_clients",
+        coordinator_key=COORDINATOR_DETAILS,
         translation_key="dns_unique_clients",
         state_class=SensorStateClass.MEASUREMENT,
     ),
     PiHoleV6SensorEntityDescription(
         key="dns_unique_domains",
+        coordinator_key=COORDINATOR_DETAILS,
         translation_key="dns_unique_domains",
         state_class=SensorStateClass.MEASUREMENT,
     ),
