@@ -47,8 +47,8 @@
                     "device_tracker_mac_list": "Adresses filtrées"
                 },
                 "data_description": {
-                    "update_interval": "Fréquence des données qui doivent rester réactives : statut du blocage, interrupteur principal, interrupteurs de groupes, minuteur de blocage, utilisation CPU et mémoire et vérification des versions. 120 secondes par défaut.",
-                    "update_interval_details": "Fréquence des données rafraîchies à un rythme plus lent : statistiques d'activité, clients configurés, baux DHCP, sessions d'authentification, messages de diagnostic FTL et suivi des appareils réseau. Doit être supérieure ou égale à la fréquence de rafraîchissement des données. 300 secondes par défaut.",
+                    "update_interval": "Fréquence des données qui doivent rester réactives : statut du blocage, interrupteur principal, interrupteurs de groupes, minuteur de blocage, suivi des appareils réseau, utilisation CPU et mémoire. 120 secondes par défaut.",
+                    "update_interval_details": "Fréquence des données rafraîchies à un rythme plus lent : statistiques d'activité, clients configurés, baux DHCP, sessions d'authentification, messages de diagnostic FTL et vérification des versions. Doit être supérieure ou égale à la fréquence de rafraîchissement des données. 300 secondes par défaut.",
                     "enable_device_tracker": "Désactivé par défaut. Si activé, récupère la liste des appareils réseau depuis Pi-hole pour créer les entités device_tracker.",
                     "device_tracker_whitelist": "Si activé, seules les adresses listées sont suivies. Si désactivé, les adresses listées sont exclues et toutes les autres sont suivies.",
                     "device_tracker_mac_list": "Une adresse MAC (ou pseudo-MAC Pi-hole, ex: IP-192.168.1.10) ou IP par ligne, ou séparées par des virgules. Les adresses IP correspondent à l'IP actuelle d'un appareil et peuvent ne plus correspondre si elle change. Laisser vide pour désactiver le filtrage."

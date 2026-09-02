@@ -30,7 +30,7 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
     Attributes:
         url (str): The URL of the Pi-hole API endpoint.
         just_initialized (dict[str, bool]): Per coordinator flag indicating the client was just initialized, used to skip the first scheduled data fetch.
-        last_refresh (datetime | None): Timestamp of the last successful data refresh, or None if never refreshed.
+        last_refresh (dict[str, datetime]): Timestamp of the last data refresh of each coordinator, keyed by coordinator identifier.
         cache_auth_sessions (list[dict[str, Any]]): Cached list of active authentication sessions.
         cache_blocking (dict[str, Any]): Cached blocking status data.
         cache_configured_clients (list[dict[str, Any]]): Cached list of configured clients.
@@ -76,7 +76,7 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
         self.cache_summary: dict[str, Any] = {}
 
         self.just_initialized: dict[str, bool] = {}
-        self.last_refresh: datetime | None = None
+        self.last_refresh: dict[str, datetime] = {}
 
     async def _call(
         self,

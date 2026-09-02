@@ -17,12 +17,12 @@ refreshed at the same pace as the data that only changes slowly. Each one has it
 
 | Option | Default | Entities refreshed | Pi-hole endpoints |
 | --- | --- | --- | --- |
-| `Data refresh frequency` | 120 s | `binary_sensor.<service>_status`, the main switch, the group switches, `remaining_until_blocking_mode`, `cpu_use`, `memory_use`, `latest_data_refresh` and the four `update` entities | `blocking_status`, `groups`, `padd` |
-| `Detailed data refresh frequency` | 300 s | All the statistics sensors (`ads_blocked_today`, `ads_percentage_blocked_today`, `seen_clients`, `dns_queries_today`, `dns_queries_cached`, `dns_queries_forwarded`, `dns_queries_frequency`, `dns_unique_clients`, `dns_unique_domains`, `domains_blocked`), `configured_clients`, `dhcp_leases`, `auth_sessions`, `ftl_info_message_count` and every `device_tracker` entity | `summary`, `clients`, `dhcp/leases`, `auth/sessions`, `info/messages`, `network/devices` |
+| `Data refresh frequency` | 120 s | `binary_sensor.<service>_status`, the main switch, the group switches, `remaining_until_blocking_mode`, every `device_tracker` entity, `cpu_use`, `memory_use` and `latest_data_refresh` | `blocking_status`, `groups`, `padd`, `network/devices` |
+| `Detailed data refresh frequency` | 300 s | All the statistics sensors (`ads_blocked_today`, `ads_percentage_blocked_today`, `seen_clients`, `dns_queries_today`, `dns_queries_cached`, `dns_queries_forwarded`, `dns_queries_frequency`, `dns_unique_clients`, `dns_unique_domains`, `domains_blocked`), `configured_clients`, `dhcp_leases`, `auth_sessions`, `ftl_info_message_count` and the four `update` entities | `summary`, `clients`, `dhcp/leases`, `auth/sessions`, `info/messages` |
 
 The detailed frequency must be greater than or equal to the data refresh frequency. Raising it is the
-recommended way to stop the statistics sensors and the network device trackers from filling the recorder
-database, while the blocking status and the switches keep reacting quickly.
+recommended way to stop the statistics sensors from filling the recorder database, while the blocking
+status, the switches and the device trackers keep reacting quickly.
 
 Pressing the `Refresh data` button refreshes both coordinators at once.
 

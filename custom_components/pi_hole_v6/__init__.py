@@ -64,12 +64,11 @@ class PiHoleV6Data:
     Attributes:
         api (PiholeAPI): The Pi-hole API client instance.
         coordinator (DataUpdateCoordinator[Any]): The "live" coordinator, refreshing the data that must feel
-            responsive (blocking status, groups and PADD) used by the binary sensor, the switches,
-            the blocking timer, the system diagnostics and the update entities.
+            responsive (blocking status, groups, PADD and network devices) used by the binary sensor,
+            the switches, the blocking timer, the system diagnostics and the device trackers.
         coordinator_details (DataUpdateCoordinator[Any]): The "details" coordinator, refreshing the data that
-            only needs a slower pace (activity summary, configured clients, DHCP leases, auth sessions,
-            FTL messages and network devices) used by the statistics sensors, the inventory sensors and
-            the device trackers.
+            only needs a slower pace (activity summary, configured clients, DHCP leases, auth sessions and
+            FTL messages) used by the statistics sensors, the inventory sensors and the update entities.
 
     """
 
@@ -102,14 +101,17 @@ async def check_result(result: Any, api_client: PiholeAPI, endpoint: str) -> Non
         raise DataStructureError(endpoint)
 
 
-async def async_get_live_data(api_client: PiholeAPI) -> None:
+async def async_get_live_data(api_client: PiholeAPI, *, enable_device_tracker: bool) -> None:
     """Fetch the data that must feel responsive from the Pi-hole API.
 
-    Covers the blocking status, the groups and the PADD payload, i.e. everything the binary sensor,
-    the switches, the blocking timer, the system diagnostics and the update entities rely on.
+    Covers the blocking status, the groups, the PADD payload and, when enabled, the network devices,
+    i.e. everything the binary sensor, the switches, the blocking timer, the system diagnostics and
+    the device trackers rely on.
 
     Args:
         api_client (PiholeAPI): The Pi-hole API client instance used to perform the calls.
+        enable_device_tracker (bool): Whether to also fetch network devices for the
+            device_tracker platform.
 
     Returns:
         None
@@ -128,18 +130,20 @@ async def async_get_live_data(api_client: PiholeAPI) -> None:
     result = await api_client.call_padd()
     await check_result(result, api_client, "padd")
 
+    if enable_device_tracker:
+        result = await api_client.call_get_network_devices()
+        await check_result(result, api_client, "get_network_devices")
 
-async def async_get_details_data(api_client: PiholeAPI, *, enable_device_tracker: bool) -> None:
+
+async def async_get_details_data(api_client: PiholeAPI) -> None:
     """Fetch the data that only needs a slower pace from the Pi-hole API.
 
-    Covers the activity summary, the configured clients, the DHCP leases, the auth sessions, the FTL
-    diagnosis messages and, when enabled, the network devices, i.e. everything the statistics sensors,
-    the inventory sensors and the device trackers rely on.
+    Covers the activity summary, the configured clients, the DHCP leases, the auth sessions and the FTL
+    diagnosis messages, i.e. everything the statistics sensors, the inventory sensors and the update
+    entities rely on.
 
     Args:
         api_client (PiholeAPI): The Pi-hole API client instance used to perform the calls.
-        enable_device_tracker (bool): Whether to also fetch network devices for the
-            device_tracker platform.
 
     Returns:
         None
@@ -160,10 +164,6 @@ async def async_get_details_data(api_client: PiholeAPI, *, enable_device_tracker
 
     result = await api_client.call_get_dhcp_leases()
     await check_result(result, api_client, "get_dhcp_leases")
-
-    if enable_device_tracker:
-        result = await api_client.call_get_network_devices()
-        await check_result(result, api_client, "get_network_devices")
 
     result = await api_client.call_get_auth_sessions()
     await check_result(result, api_client, "get_auth_sessions")
@@ -263,13 +263,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: PiHoleV6ConfigEntry) -> 
         result: Any = {}
 
         async with refresh_lock:
-            api_client.last_refresh = datetime.now(UTC)
+            api_client.last_refresh[coordinator_key] = datetime.now(UTC)
 
             try:
                 if coordinator_key == COORDINATOR_LIVE:
-                    await async_get_live_data(api_client=api_client)
+                    await async_get_live_data(api_client=api_client, enable_device_tracker=enable_device_tracker)
                 else:
-                    await async_get_details_data(api_client=api_client, enable_device_tracker=enable_device_tracker)
+                    await async_get_details_data(api_client=api_client)
 
             except UnauthorizedError as err:
                 msg: str = "Credentials must be updated."
@@ -292,9 +292,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: PiHoleV6ConfigEntry) -> 
             finally:
                 await api_client.call_logout()
 
-            api_client.last_refresh = datetime.now(UTC)
+            api_client.last_refresh[coordinator_key] = datetime.now(UTC)
 
-        return {"last_refresh": api_client.last_refresh}
+        return {"last_refresh": api_client.last_refresh[coordinator_key]}
 
     # Both coordinators must share the same name: the entity ids are derived from it.
     coordinator = DataUpdateCoordinator(

@@ -268,7 +268,7 @@ class PiHoleV6Sensor(PiHoleV6Entity, SensorEntity):  # pyright: ignore[reportInc
 
         match self.entity_description.key:
             case "latest_data_refresh":
-                return self.api.last_refresh
+                return self.api.last_refresh.get(COORDINATOR_LIVE)
             case "ads_blocked_today":
                 return self.api.cache_summary["queries"]["blocked"]
             case "ads_percentage_blocked_today":
@@ -336,6 +336,12 @@ class PiHoleV6Sensor(PiHoleV6Entity, SensorEntity):  # pyright: ignore[reportInc
             dict[str, Any] | None: A dictionary of extra attributes, or None if not applicable.
 
         """
+
+        if self.entity_description.key == "latest_data_refresh":
+            return {
+                "detailed_data_refresh": self.api.last_refresh.get(COORDINATOR_DETAILS),
+                "note": "State is the last refresh of the live coordinator, the attribute is the last refresh of the detailed one.",
+            }
 
         if self.entity_description.key == "memory_use":
             return self.api.cache_padd["system"]["memory"]
