@@ -40,14 +40,14 @@
         "step": {
             "init": {
                 "data": {
-                    "update_interval": "Fréquence de rafraîchissement des données (secondes)",
+                    "update_interval_live": "Fréquence de rafraîchissement des données (secondes)",
                     "update_interval_stats": "Fréquence de rafraîchissement des statistiques (secondes)",
                     "enable_device_tracker": "Activer le suivi des appareils réseau",
                     "device_tracker_whitelist": "Utiliser la liste d'adresses comme liste blanche",
                     "device_tracker_mac_list": "Adresses filtrées"
                 },
                 "data_description": {
-                    "update_interval": "Fréquence de rafraîchissement des entités qui reflètent l'état courant de votre Pi-hole : statut du service et du blocage, interrupteurs et indicateurs temps réel. Diminuer cette valeur rend le tableau de bord plus réactif, au prix de davantage de requêtes vers votre Pi-hole. 120 secondes par défaut.",
+                    "update_interval_live": "Fréquence de rafraîchissement des entités qui reflètent l'état courant de votre Pi-hole : statut du service et du blocage, interrupteurs et indicateurs temps réel. Diminuer cette valeur rend le tableau de bord plus réactif, au prix de davantage de requêtes vers votre Pi-hole. 120 secondes par défaut.",
                     "update_interval_stats": "Fréquence de rafraîchissement des compteurs cumulatifs et des vérifications périodiques. Leurs valeurs évoluent en permanence mais n'ont d'intérêt qu'en tendance : allonger cet intervalle réduit le nombre de lignes écrites dans la base du recorder, sans perdre aucune donnée. Doit être supérieure ou égale à la fréquence de rafraîchissement des données. 300 secondes par défaut.",
                     "enable_device_tracker": "Désactivé par défaut. Si activé, récupère la liste des appareils réseau depuis Pi-hole pour créer les entités device_tracker.",
                     "device_tracker_whitelist": "Si activé, seules les adresses listées sont suivies. Si désactivé, les adresses listées sont exclues et toutes les autres sont suivies.",
@@ -58,7 +58,7 @@
             }
         },
         "error": {
-            "invalid_update_interval": "Fréquence de rafraîchissement des données invalide. Doit être supérieure à 1 seconde et inférieure à 3600 secondes.",
+            "invalid_update_interval_live": "Fréquence de rafraîchissement des données invalide. Doit être supérieure à 1 seconde et inférieure à 3600 secondes.",
             "invalid_update_interval_stats": "Fréquence de rafraîchissement des statistiques invalide. Doit être comprise entre 60 et 86400 secondes, et supérieure ou égale à la fréquence de rafraîchissement des données."
         }
     },

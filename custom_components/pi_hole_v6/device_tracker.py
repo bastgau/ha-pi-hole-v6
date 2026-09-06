@@ -23,7 +23,7 @@ from .const import (
     DEFAULT_DEVICE_TRACKER_WHITELIST,
     DEFAULT_ENABLE_DEVICE_TRACKER,
     DOMAIN,
-    MIN_TIME_BETWEEN_UPDATES,
+    MIN_TIME_BETWEEN_UPDATES_LIVE,
 )
 from .helper import create_entity_id_name, parse_mac_list
 
@@ -425,7 +425,7 @@ class PiHoleV6DeviceTracker(  # pyright: ignore[reportIncompatibleVariableOverri
         if not device:
             return False
         last_query = datetime.fromtimestamp(device["lastQuery"], tz=UTC)
-        return (datetime.now(UTC) - last_query).total_seconds() <= 2 * MIN_TIME_BETWEEN_UPDATES.total_seconds()
+        return (datetime.now(UTC) - last_query).total_seconds() <= 2 * MIN_TIME_BETWEEN_UPDATES_LIVE.total_seconds()
 
     @property
     def ip_address(self) -> str | None:  # pyright: ignore[reportIncompatibleVariableOverride]

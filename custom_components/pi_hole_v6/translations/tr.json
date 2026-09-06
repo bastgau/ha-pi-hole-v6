@@ -40,14 +40,14 @@
         "step": {
             "init": {
                 "data": {
-                    "update_interval": "Veri yenileme sıklığı (saniye)"
+                    "update_interval_live": "Veri yenileme sıklığı (saniye)"
                 },
                 "description": "Bu seçeneklerden birini değiştirdikten sonra hizmeti yeniden yüklemeniz veya Home Assistant'ı yeniden başlatmanız gerekir.",
                 "title": "Pi-hole V6"
             }
         },
         "error": {
-            "invalid_update_interval": "Geçersiz veri yenileme sıklığı. 1 saniyeden büyük ve 3600 saniyeden küçük olmalıdır."
+            "invalid_update_interval_live": "Geçersiz veri yenileme sıklığı. 1 saniyeden büyük ve 3600 saniyeden küçük olmalıdır."
         }
     },
     "entity": {

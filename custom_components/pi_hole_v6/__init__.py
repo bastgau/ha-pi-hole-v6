@@ -25,13 +25,14 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .api import Api as PiholeAPI
 from .const import (
     CONF_ENABLE_DEVICE_TRACKER,
-    CONF_UPDATE_INTERVAL,
+    CONF_UPDATE_INTERVAL_LIVE,
     CONF_UPDATE_INTERVAL_STATS,
     COORDINATOR_LIVE,
     COORDINATOR_STATS,
     DEFAULT_ENABLE_DEVICE_TRACKER,
     DOMAIN,
-    MIN_TIME_BETWEEN_UPDATES,
+    LEGACY_CONF_UPDATE_INTERVAL,
+    MIN_TIME_BETWEEN_UPDATES_LIVE,
     MIN_TIME_BETWEEN_UPDATES_STATS,
 )
 from .exceptions import APIError, DataStructureError, PiHoleV6Error, UnauthorizedError
@@ -168,6 +169,34 @@ async def async_get_stats_data(api_client: PiholeAPI) -> None:
     await check_result(result, api_client, "get_ftl_info_messages_count")
 
 
+def migrate_legacy_update_interval(hass: HomeAssistant, entry: PiHoleV6ConfigEntry) -> None:
+    """Carry the refresh interval stored under the pre-split option key over to its new name.
+
+    Entries created before the coordinator split hold the interval under "update_interval".
+    Renaming the option would silently reset those installations to the default, so the stored
+    value is moved once, in place, and the stale key is dropped.
+
+    Args:
+        hass (HomeAssistant): The Home Assistant instance.
+        entry (PiHoleV6ConfigEntry): The config entry to migrate.
+
+    Returns:
+        None
+
+    """
+
+    legacy_interval: int | None = entry.data.get(LEGACY_CONF_UPDATE_INTERVAL)
+
+    if legacy_interval is None or CONF_UPDATE_INTERVAL_LIVE in entry.data:
+        return
+
+    data: dict[str, Any] = {key: value for key, value in entry.data.items() if key != LEGACY_CONF_UPDATE_INTERVAL}
+    data[CONF_UPDATE_INTERVAL_LIVE] = legacy_interval
+
+    _LOGGER.debug("Migrating %s option to %s", LEGACY_CONF_UPDATE_INTERVAL, CONF_UPDATE_INTERVAL_LIVE)
+    hass.config_entries.async_update_entry(entry, data=data)
+
+
 def get_update_interval(entry: PiHoleV6ConfigEntry, conf_key: str, default: timedelta) -> timedelta:
     """Read a coordinator update interval from the config entry.
 
@@ -209,6 +238,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: PiHoleV6ConfigEntry) -> 
     url = entry.data[CONF_URL]
 
     _LOGGER.debug("Setting up %s integration with host %s", DOMAIN, url)
+
+    migrate_legacy_update_interval(hass, entry)
 
     session: client.ClientSession = async_get_clientsession(hass, verify_ssl=False)
 
@@ -302,7 +333,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: PiHoleV6ConfigEntry) -> 
         config_entry=entry,
         name=name,
         update_method=partial(async_update_data, COORDINATOR_LIVE),
-        update_interval=get_update_interval(entry, CONF_UPDATE_INTERVAL, MIN_TIME_BETWEEN_UPDATES),
+        update_interval=get_update_interval(entry, CONF_UPDATE_INTERVAL_LIVE, MIN_TIME_BETWEEN_UPDATES_LIVE),
         always_update=False,
     )
 
