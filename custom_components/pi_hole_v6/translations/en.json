@@ -40,14 +40,14 @@
         "step": {
             "init": {
                 "data": {
-                    "update_interval": "Data refresh frequency (seconds)",
+                    "update_interval_live": "Data refresh frequency (seconds)",
                     "update_interval_stats": "Statistics refresh frequency (seconds)",
                     "enable_device_tracker": "Enable network device tracking",
                     "device_tracker_whitelist": "Use address list as a whitelist",
                     "device_tracker_mac_list": "Filtered addresses"
                 },
                 "data_description": {
-                    "update_interval": "How often the entities that reflect the current state of your Pi-hole are refreshed: service and blocking status, switches, and the live indicators. Lowering it makes the dashboard more reactive, at the cost of more requests to your Pi-hole. Defaults to 120 seconds.",
+                    "update_interval_live": "How often the entities that reflect the current state of your Pi-hole are refreshed: service and blocking status, switches, and the live indicators. Lowering it makes the dashboard more reactive, at the cost of more requests to your Pi-hole. Defaults to 120 seconds.",
                     "update_interval_stats": "How often the cumulative counters and the periodic checks are refreshed. Their values keep moving but are only meaningful as a trend, so a longer interval reduces the number of rows written to the recorder database without losing any data. Must be greater than or equal to the data refresh frequency. Defaults to 300 seconds.",
                     "enable_device_tracker": "Disabled by default. When enabled, retrieves the list of network devices from Pi-hole to create device_tracker entities.",
                     "device_tracker_whitelist": "When enabled, only the listed addresses are tracked. When disabled, the listed addresses are excluded and all others are tracked.",
@@ -58,7 +58,7 @@
             }
         },
         "error": {
-            "invalid_update_interval": "Invalid data refresh frequency. Must be higher than 1 second and lower than 3600 seconds.",
+            "invalid_update_interval_live": "Invalid data refresh frequency. Must be higher than 1 second and lower than 3600 seconds.",
             "invalid_update_interval_stats": "Invalid statistics refresh frequency. Must be between 60 and 86400 seconds, and greater than or equal to the data refresh frequency."
         }
     },

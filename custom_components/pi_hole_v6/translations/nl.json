@@ -40,14 +40,14 @@
         "step": {
             "init": {
                 "data": {
-                    "update_interval": "Gegevensverversingsfrequentie (seconden)"
+                    "update_interval_live": "Gegevensverversingsfrequentie (seconden)"
                 },
                 "description": "Nadat u een van deze opties hebt gewijzigd, moet u de service opnieuw laden of Home Assistant opnieuw opstarten.",
                 "title": "Pi-hole V6"
             }
         },
         "error": {
-            "invalid_update_interval": "Ongeldige data refresh frequentie. Deze moet hoger zijn dan 1 seconde en lager dan 3600 seconden."
+            "invalid_update_interval_live": "Ongeldige data refresh frequentie. Deze moet hoger zijn dan 1 seconde en lager dan 3600 seconden."
         }
     },
     "entity": {

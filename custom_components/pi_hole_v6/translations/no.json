@@ -40,14 +40,14 @@
         "step": {
             "init": {
                 "data": {
-                    "update_interval": "Dataoppdateringsfrekvens (sekunder)"
+                    "update_interval_live": "Dataoppdateringsfrekvens (sekunder)"
                 },
                 "description": "Etter å ha endret en av disse innstillingene, er det nødvendig å laste inn tjenesten på nytt eller starte Home Assistant på nytt.",
                 "title": "Pi-hole V6"
             }
         },
         "error": {
-            "invalid_update_interval": "Ugyldig dataoppdateringsfrekvens. Må være høyere enn 1 sekund og lavere enn 3600 sekunder."
+            "invalid_update_interval_live": "Ugyldig dataoppdateringsfrekvens. Må være høyere enn 1 sekund og lavere enn 3600 sekunder."
         }
     },
     "entity": {

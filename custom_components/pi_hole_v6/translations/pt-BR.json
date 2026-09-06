@@ -40,14 +40,14 @@
         "step": {
             "init": {
                 "data": {
-                    "update_interval": "Frequência de atualização de dados (segundos)"
+                    "update_interval_live": "Frequência de atualização de dados (segundos)"
                 },
                 "description": "Após modificar uma dessas opções, é necessário recarregar o serviço ou reiniciar o Home Assistant.",
                 "title": "Pi-hole V6"
             }
         },
         "error": {
-            "invalid_update_interval": "Frequência de atualização de dados inválida. Deve ser maior que 1 segundo e menor que 3600 segundos."
+            "invalid_update_interval_live": "Frequência de atualização de dados inválida. Deve ser maior que 1 segundo e menor que 3600 segundos."
         }
     },
     "entity": {

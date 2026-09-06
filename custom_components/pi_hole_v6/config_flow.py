@@ -22,7 +22,7 @@ from .const import (
     CONF_DEVICE_TRACKER_MAC_LIST,
     CONF_DEVICE_TRACKER_WHITELIST,
     CONF_ENABLE_DEVICE_TRACKER,
-    CONF_UPDATE_INTERVAL,
+    CONF_UPDATE_INTERVAL_LIVE,
     CONF_UPDATE_INTERVAL_STATS,
     CONFIG_ENTRY_VERSION,
     DEFAULT_DEVICE_TRACKER_MAC_LIST,
@@ -33,7 +33,7 @@ from .const import (
     DEFAULT_URL,
     DOMAIN,
     EXAMPLE_URL,
-    MIN_TIME_BETWEEN_UPDATES,
+    MIN_TIME_BETWEEN_UPDATES_LIVE,
     MIN_TIME_BETWEEN_UPDATES_STATS,
 )
 from .exceptions import (
@@ -243,7 +243,7 @@ def _get_data_option_schema() -> vol.Schema:
     return vol.Schema(
         {
             vol.Required(
-                CONF_UPDATE_INTERVAL,
+                CONF_UPDATE_INTERVAL_LIVE,
             ): vol.All(
                 selector.NumberSelector(  # pyright: ignore[reportUnknownMemberType]
                     selector.NumberSelectorConfig(
@@ -304,10 +304,10 @@ async def _async_validate_input(
         Any: An empty dict if the input is valid, or a dict mapping a field key to an error string.
 
     """
-    if user_input[CONF_UPDATE_INTERVAL] == 1:
-        return {CONF_UPDATE_INTERVAL: "invalid_update_interval"}
+    if user_input[CONF_UPDATE_INTERVAL_LIVE] == 1:
+        return {CONF_UPDATE_INTERVAL_LIVE: "invalid_update_interval_live"}
 
-    if user_input[CONF_UPDATE_INTERVAL_STATS] < user_input[CONF_UPDATE_INTERVAL]:
+    if user_input[CONF_UPDATE_INTERVAL_STATS] < user_input[CONF_UPDATE_INTERVAL_LIVE]:
         return {CONF_UPDATE_INTERVAL_STATS: "invalid_update_interval_stats"}
 
     return {}
@@ -346,14 +346,14 @@ class OptionsFlowHandler(OptionsFlow):
                 errors=dict(errors),
             )
 
-        update_interval = self.config_entry.data.get(CONF_UPDATE_INTERVAL, None)
+        update_interval_live = self.config_entry.data.get(CONF_UPDATE_INTERVAL_LIVE, None)
         update_interval_stats = self.config_entry.data.get(CONF_UPDATE_INTERVAL_STATS, None)
         enable_device_tracker = self.config_entry.data.get(CONF_ENABLE_DEVICE_TRACKER, None)
         device_tracker_whitelist = self.config_entry.data.get(CONF_DEVICE_TRACKER_WHITELIST, None)
         device_tracker_mac_list = self.config_entry.data.get(CONF_DEVICE_TRACKER_MAC_LIST, None)
 
         if (
-            update_interval is None
+            update_interval_live is None
             or update_interval_stats is None
             or enable_device_tracker is None
             or device_tracker_whitelist is None
@@ -363,7 +363,7 @@ class OptionsFlowHandler(OptionsFlow):
                 self.config_entry,
                 data={
                     **self.config_entry.data,
-                    CONF_UPDATE_INTERVAL: update_interval or MIN_TIME_BETWEEN_UPDATES.seconds,
+                    CONF_UPDATE_INTERVAL_LIVE: update_interval_live or MIN_TIME_BETWEEN_UPDATES_LIVE.seconds,
                     CONF_UPDATE_INTERVAL_STATS: (update_interval_stats or MIN_TIME_BETWEEN_UPDATES_STATS.seconds),
                     CONF_ENABLE_DEVICE_TRACKER: (
                         DEFAULT_ENABLE_DEVICE_TRACKER if enable_device_tracker is None else enable_device_tracker
