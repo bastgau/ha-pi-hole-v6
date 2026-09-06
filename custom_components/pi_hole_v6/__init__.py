@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import asyncio
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
+from functools import partial
 import logging
 from typing import TYPE_CHECKING, Any
 
@@ -24,9 +26,13 @@ from .api import Api as PiholeAPI
 from .const import (
     CONF_ENABLE_DEVICE_TRACKER,
     CONF_UPDATE_INTERVAL,
+    CONF_UPDATE_INTERVAL_STATS,
+    COORDINATOR_LIVE,
+    COORDINATOR_STATS,
     DEFAULT_ENABLE_DEVICE_TRACKER,
     DOMAIN,
     MIN_TIME_BETWEEN_UPDATES,
+    MIN_TIME_BETWEEN_UPDATES_STATS,
 )
 from .exceptions import APIError, DataStructureError, PiHoleV6Error, UnauthorizedError
 
@@ -57,12 +63,17 @@ class PiHoleV6Data:
 
     Attributes:
         api (PiholeAPI): The Pi-hole API client instance.
-        coordinator (DataUpdateCoordinator[Any]): The data update coordinator managing scheduled updates.
+        coordinator (DataUpdateCoordinator[Any]): The "live" coordinator, driving the entities that
+            must reflect the current state of the Pi-hole instance.
+        coordinator_stats (DataUpdateCoordinator[Any]): The "stats" coordinator, driving the cumulative
+            counters and the periodic checks, whose values only matter as a trend. Some of its entities
+            read caches filled by the live coordinator and are simply paced by this slower rhythm.
 
     """
 
     api: PiholeAPI
     coordinator: DataUpdateCoordinator[Any]
+    coordinator_stats: DataUpdateCoordinator[Any]
 
 
 async def check_result(result: Any, api_client: PiholeAPI, endpoint: str) -> None:
@@ -89,10 +100,12 @@ async def check_result(result: Any, api_client: PiholeAPI, endpoint: str) -> Non
         raise DataStructureError(endpoint)
 
 
-async def async_get_all_data(api_client: PiholeAPI, *, enable_device_tracker: bool) -> None:
-    """Fetch all required data from the Pi-hole API.
+async def async_get_live_data(api_client: PiholeAPI, *, enable_device_tracker: bool) -> None:
+    """Fetch the data behind the entities that must stay responsive.
 
-    Sequentially calls each API endpoint and validates the result structure.
+    An endpoint belongs here as soon as a single responsive entity needs its value fresh, even when
+    other entities reading the same cache are attached to the stats coordinator: the caches are
+    shared, only the state writes are paced.
 
     Args:
         api_client (PiholeAPI): The Pi-hole API client instance used to perform the calls.
@@ -119,9 +132,6 @@ async def async_get_all_data(api_client: PiholeAPI, *, enable_device_tracker: bo
     result = await api_client.call_padd()
     await check_result(result, api_client, "padd")
 
-    result = await api_client.call_get_ftl_info_messages_count()
-    await check_result(result, api_client, "get_ftl_info_messages_count")
-
     result = await api_client.call_get_configured_clients()
     await check_result(result, api_client, "get_configured_clients")
 
@@ -134,6 +144,49 @@ async def async_get_all_data(api_client: PiholeAPI, *, enable_device_tracker: bo
 
     result = await api_client.call_get_auth_sessions()
     await check_result(result, api_client, "get_auth_sessions")
+
+
+async def async_get_stats_data(api_client: PiholeAPI) -> None:
+    """Fetch the data behind the entities that only need a slower pace.
+
+    An endpoint belongs here when no responsive entity depends on it. Entities attached to this
+    coordinator may still read caches filled by the live coordinator; what this rhythm paces is when
+    they write their state, which is what keeps them out of the recorder on every cycle.
+
+    Args:
+        api_client (PiholeAPI): The Pi-hole API client instance used to perform the calls.
+
+    Returns:
+        None
+
+    Raises:
+        DataStructureError: If any API call returns an unexpected data structure.
+
+    """
+
+    result = await api_client.call_get_ftl_info_messages_count()
+    await check_result(result, api_client, "get_ftl_info_messages_count")
+
+
+def get_update_interval(entry: PiHoleV6ConfigEntry, conf_key: str, default: timedelta) -> timedelta:
+    """Read a coordinator update interval from the config entry.
+
+    Args:
+        entry (PiHoleV6ConfigEntry): The config entry holding the user options.
+        conf_key (str): The option key holding the interval, in seconds.
+        default (timedelta): The interval to use when the option is not set yet.
+
+    Returns:
+        timedelta: The update interval to give to the coordinator.
+
+    """
+
+    interval: int | None = entry.data.get(conf_key)
+
+    if interval is None:
+        return default
+
+    return timedelta(seconds=interval)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: PiHoleV6ConfigEntry) -> bool:
@@ -179,12 +232,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: PiHoleV6ConfigEntry) -> 
 
     entry.async_on_unload(hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_logout))
 
-    async def async_update_data() -> dict[str, Any] | None:
-        """Fetch data from API endpoint.
+    # Both coordinators drive the same authenticated API session: serialize their refresh cycles so
+    # one of them never logs out while the other one is still fetching data.
+    refresh_lock = asyncio.Lock()
+
+    async def async_update_data(coordinator_key: str) -> dict[str, Any] | None:
+        """Fetch data from API endpoint for the given coordinator.
+
+        Args:
+            coordinator_key (str): The coordinator to refresh, either COORDINATOR_LIVE or COORDINATOR_STATS.
 
         Returns:
             dict[str, Any] | None: A dict with the last refresh timestamp, or None
-            on the first call after initialization.
+            on the first scheduled call after initialization.
 
         Raises:
             ConfigEntryAuthFailed: If the credentials are invalid or expired.
@@ -192,64 +252,76 @@ async def async_setup_entry(hass: HomeAssistant, entry: PiHoleV6ConfigEntry) -> 
 
         """
 
-        if api_client.just_initialized is True:
-            api_client.just_initialized = False
+        # The first scheduled refresh would duplicate the data already fetched during the setup, skip it.
+        if api_client.just_initialized.get(coordinator_key, False) is True:
+            api_client.just_initialized[coordinator_key] = False
             return None
-
-        api_client.last_refresh = datetime.now(UTC)
-
-        result: Any = {}
 
         enable_device_tracker: bool = entry.data.get(CONF_ENABLE_DEVICE_TRACKER, DEFAULT_ENABLE_DEVICE_TRACKER)
 
-        try:
-            await async_get_all_data(api_client=api_client, enable_device_tracker=enable_device_tracker)
+        result: Any = {}
 
-        except UnauthorizedError as err:
-            msg: str = "Credentials must be updated."
-            raise ConfigEntryAuthFailed(msg) from err
+        async with refresh_lock:
+            api_client.last_refresh[coordinator_key] = datetime.now(UTC)
 
-        except PiHoleV6Error as err:
-            raise UpdateFailed(str(err)) from err
+            try:
+                if coordinator_key == COORDINATOR_LIVE:
+                    await async_get_live_data(api_client=api_client, enable_device_tracker=enable_device_tracker)
+                else:
+                    await async_get_stats_data(api_client=api_client)
 
-        try:
-            result = await api_client.call_get_ftl_info_messages()
-            if not isinstance(result, dict):
-                endpoint: str = "get_ftl_info_messages"
+            except UnauthorizedError as err:
+                msg: str = "Credentials must be updated."
+                raise ConfigEntryAuthFailed(msg) from err
+
+            except PiHoleV6Error as err:
+                raise UpdateFailed(str(err)) from err
+
+            try:
+                if coordinator_key == COORDINATOR_STATS:
+                    result = await api_client.call_get_ftl_info_messages()
+                    if not isinstance(result, dict):
+                        endpoint: str = "get_ftl_info_messages"
+                        api_client.remove_cache("ftl_info_messages")
+                        _LOGGER.error("DataStructureError Debug: %s returned %s", endpoint, str(result))
+                        raise DataStructureError(endpoint)
+
+            except APIError:
                 api_client.remove_cache("ftl_info_messages")
-                _LOGGER.error("DataStructureError Debug: %s returned %s", endpoint, str(result))
-                raise DataStructureError(endpoint)
+            finally:
+                await api_client.call_logout()
 
-        except APIError:
-            api_client.remove_cache("ftl_info_messages")
-        finally:
-            await api_client.call_logout()
+            api_client.last_refresh[coordinator_key] = datetime.now(UTC)
 
-        api_client.last_refresh = datetime.now(UTC)
+        return {"last_refresh": api_client.last_refresh[coordinator_key]}
 
-        return {"last_refresh": api_client.last_refresh}
-
-    conf_update_interval: int | None = entry.data.get(CONF_UPDATE_INTERVAL)
-
-    if conf_update_interval is None:
-        update_interval = MIN_TIME_BETWEEN_UPDATES
-    else:
-        update_interval = timedelta(seconds=conf_update_interval)
-
+    # Both coordinators must share the same name: the entity ids are derived from it.
     coordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
         config_entry=entry,
         name=name,
-        update_method=async_update_data,
-        update_interval=update_interval,
+        update_method=partial(async_update_data, COORDINATOR_LIVE),
+        update_interval=get_update_interval(entry, CONF_UPDATE_INTERVAL, MIN_TIME_BETWEEN_UPDATES),
+        always_update=False,
+    )
+
+    coordinator_stats = DataUpdateCoordinator(
+        hass,
+        _LOGGER,
+        config_entry=entry,
+        name=name,
+        update_method=partial(async_update_data, COORDINATOR_STATS),
+        update_interval=get_update_interval(entry, CONF_UPDATE_INTERVAL_STATS, MIN_TIME_BETWEEN_UPDATES_STATS),
         always_update=False,
     )
 
     await coordinator.async_config_entry_first_refresh()
-    api_client.just_initialized = True
+    await coordinator_stats.async_config_entry_first_refresh()
 
-    entry.runtime_data = PiHoleV6Data(api_client, coordinator)
+    api_client.just_initialized = {COORDINATOR_LIVE: True, COORDINATOR_STATS: True}
+
+    entry.runtime_data = PiHoleV6Data(api_client, coordinator, coordinator_stats)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True

@@ -313,6 +313,16 @@ class PiHoleV6DeviceTracker(  # pyright: ignore[reportIncompatibleVariableOverri
     _attr_has_entity_name = True
     _attr_translation_key = "network_device"
 
+    # Query counters move on every refresh for any active device. Keeping them out of the recorder lets
+    # the stored attributes stay constant, so they are deduplicated instead of being written again for
+    # every device on every cycle. They remain available live.
+    _unrecorded_attributes = frozenset(
+        {
+            "num_queries",
+            "last_query",
+        }
+    )
+
     def __init__(
         self,
         api: PiholeAPI,
