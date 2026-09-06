@@ -6,7 +6,7 @@ On the Pi-hole V6 Integration page (_/config/integrations/integration/pi_hole_v6
 
 <img src="../img/integration-page.png" width="500">
 
-In the pop-up window, enter the desired `Data refresh rate` value in seconds.
+In the pop-up window, enter the desired `Live refresh frequency` value in seconds.
 
 <img src="../img/integration-configuration.png" width="500">
 
@@ -14,13 +14,13 @@ In the pop-up window, enter the desired `Data refresh rate` value in seconds.
 
 The integration uses two independent update coordinators, each with its own option:
 
-- **`Data refresh frequency`** — 120 seconds by default. Drives what must reflect the current state of
+- **`Live refresh frequency`** — 120 seconds by default. Drives what must reflect the current state of
   your Pi-hole. Calls `blocking_status`, `groups`, `padd`, `summary`, `clients`, `dhcp/leases`,
   `auth/sessions` and `network/devices`.
 - **`Statistics refresh frequency`** — 300 seconds by default. Drives the cumulative counters and the
   periodic checks, whose values only matter as a trend. Calls `info/messages` and `info/messages/count`.
 
-The statistics frequency must be greater than or equal to the data refresh frequency. Raising it is the
+The statistics frequency must be greater than or equal to the live refresh frequency. Raising it is the
 recommended way to reduce the number of rows the cumulative counters write to the recorder database,
 while the blocking status, the switches and the device trackers keep reacting quickly.
 
