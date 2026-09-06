@@ -83,6 +83,7 @@ async def async_setup_entry(
         PiHoleV6Button(
             hole_data.api,
             hole_data.coordinator,
+            hole_data.coordinator_stats,
             entry.entry_id,
             description,
         )
@@ -101,6 +102,7 @@ class PiHoleV6Button(PiHoleV6Entity, ButtonEntity):  # pyright: ignore[reportInc
         self,
         api: PiholeAPI,
         coordinator: DataUpdateCoordinator[None],
+        coordinator_stats: DataUpdateCoordinator[None],
         server_unique_id: str,
         description: PiholeV6ButtonEntityDescription,
     ) -> None:
@@ -108,7 +110,9 @@ class PiHoleV6Button(PiHoleV6Entity, ButtonEntity):  # pyright: ignore[reportInc
 
         Args:
             api (PiholeAPI): The Pi-hole API client instance.
-            coordinator (DataUpdateCoordinator[None]): The data update coordinator.
+            coordinator (DataUpdateCoordinator[None]): The "live" data update coordinator.
+            coordinator_stats (DataUpdateCoordinator[None]): The "stats" data update coordinator, kept so
+                an action can refresh and notify the slow moving entities as well.
             server_unique_id (str): A unique identifier for the server entry.
             description (PiholeV6ButtonEntityDescription): The entity description.
 
@@ -116,6 +120,7 @@ class PiHoleV6Button(PiHoleV6Entity, ButtonEntity):  # pyright: ignore[reportInc
 
         name: str = coordinator.name
         super().__init__(api, coordinator, name, server_unique_id)
+        self._coordinator_stats = coordinator_stats
         self.entity_description = description  # pyright: ignore[reportIncompatibleVariableOverride]
         self._attr_unique_id = f"{self._server_unique_id}/{description.key}"
         self._is_enabled = True  # Initial state is enabled
@@ -147,6 +152,7 @@ class PiHoleV6Button(PiHoleV6Entity, ButtonEntity):  # pyright: ignore[reportInc
                 case "action_refresh_data":
                     await self.api.call_blocking_status()
                     await self.async_update()
+                    await self._coordinator_stats.async_request_refresh()
                     self.schedule_update_ha_state(force_refresh=True)
                 case "action_ftl_purge_diagnosis_messages":
                     await self.api.call_action_ftl_purge_diagnosis_messages()
@@ -166,7 +172,9 @@ class PiHoleV6Button(PiHoleV6Entity, ButtonEntity):  # pyright: ignore[reportInc
                 "To perform the 'flush/arp', 'flush/logs' and 'restartdns' actions, the 'Permit destructive actions via API' option must be enabled in the Pi-hole options"
             )
 
+        # An action can change data owned by either coordinator, notify both of them.
         self.coordinator.async_update_listeners()
+        self._coordinator_stats.async_update_listeners()
 
     @property
     def is_enabled(self) -> bool:
