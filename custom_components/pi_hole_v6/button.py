@@ -156,6 +156,7 @@ class PiHoleV6Button(PiHoleV6Entity, ButtonEntity):  # pyright: ignore[reportInc
                     self.schedule_update_ha_state(force_refresh=True)
                 case "action_ftl_purge_diagnosis_messages":
                     await self.api.call_action_ftl_purge_diagnosis_messages()
+                    await self._coordinator_stats.async_request_refresh()
                     self.schedule_update_ha_state(force_refresh=True)
                 case _:
                     pass
