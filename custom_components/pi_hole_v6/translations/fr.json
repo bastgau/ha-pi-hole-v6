@@ -68,6 +68,11 @@
                 "name": "Statut"
             }
         },
+        "device_tracker": {
+            "network_device": {
+                "name": "Appareil réseau"
+            }
+        },
         "button": {
             "action_flush_arp": {
                 "name": "Vider la table réseau"

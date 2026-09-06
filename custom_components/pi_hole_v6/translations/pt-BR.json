@@ -40,20 +40,37 @@
         "step": {
             "init": {
                 "data": {
-                    "update_interval_live": "Frequência de atualização de dados (segundos)"
+                    "update_interval_live": "Frequência de atualização em tempo real (segundos)",
+                    "update_interval_stats": "Frequência de atualização das estatísticas (segundos)",
+                    "enable_device_tracker": "Ativar o rastreamento de dispositivos de rede",
+                    "device_tracker_whitelist": "Usar a lista de endereços como lista de permissões",
+                    "device_tracker_mac_list": "Endereços filtrados"
+                },
+                "data_description": {
+                    "update_interval_live": "Com que frequência as entidades que refletem o estado atual do seu Pi-hole são atualizadas: status do serviço e do bloqueio, interruptores e indicadores em tempo real. Reduzi-la deixa o painel mais responsivo, ao custo de mais requisições ao seu Pi-hole. Padrão: 120 segundos.",
+                    "update_interval_stats": "Com que frequência os contadores acumulados e as verificações periódicas são atualizados. Seus valores mudam o tempo todo, mas só fazem sentido como tendência, então um intervalo maior reduz o número de linhas gravadas no banco de dados do recorder sem perder nenhum dado. Deve ser maior ou igual à frequência de atualização em tempo real. Padrão: 300 segundos.",
+                    "enable_device_tracker": "Desativado por padrão. Quando ativado, obtém do Pi-hole a lista de dispositivos de rede para criar entidades device_tracker.",
+                    "device_tracker_whitelist": "Quando ativado, apenas os endereços listados são rastreados. Quando desativado, os endereços listados são excluídos e todos os demais são rastreados.",
+                    "device_tracker_mac_list": "Um endereço MAC (ou pseudo-MAC do Pi-hole, ex.: IP-192.168.1.10) ou endereço IP por linha, ou separados por vírgulas. Endereços IP correspondem ao IP atual de um dispositivo e podem deixar de corresponder se ele mudar. Deixe vazio para desativar a filtragem."
                 },
                 "description": "Após modificar uma dessas opções, é necessário recarregar o serviço ou reiniciar o Home Assistant.",
                 "title": "Pi-hole V6"
             }
         },
         "error": {
-            "invalid_update_interval_live": "Frequência de atualização de dados inválida. Deve ser maior que 1 segundo e menor que 3600 segundos."
+            "invalid_update_interval_live": "Frequência de atualização em tempo real inválida. Deve ser maior que 1 segundo e menor que 3600 segundos.",
+            "invalid_update_interval_stats": "Frequência de atualização das estatísticas inválida. Deve estar entre 60 e 86400 segundos e ser maior ou igual à frequência de atualização em tempo real."
         }
     },
     "entity": {
         "binary_sensor": {
             "status": {
                 "name": "Status"
+            }
+        },
+        "device_tracker": {
+            "network_device": {
+                "name": "Dispositivo de rede"
             }
         },
         "button": {
@@ -135,6 +152,14 @@
             "configured_clients": {
                 "name": "Clients configurés",
                 "unit_of_measurement": "clients"
+            },
+            "dhcp_leases": {
+                "name": "Concessões DHCP ativas",
+                "unit_of_measurement": "concessões"
+            },
+            "auth_sessions": {
+                "name": "Sessões ativas",
+                "unit_of_measurement": "sessões"
             }
         },
         "switch": {

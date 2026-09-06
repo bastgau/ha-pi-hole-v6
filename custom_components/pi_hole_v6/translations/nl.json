@@ -40,20 +40,37 @@
         "step": {
             "init": {
                 "data": {
-                    "update_interval_live": "Gegevensverversingsfrequentie (seconden)"
+                    "update_interval_live": "Realtime verversingsfrequentie (seconden)",
+                    "update_interval_stats": "Verversingsfrequentie van statistieken (seconden)",
+                    "enable_device_tracker": "Netwerkapparaten volgen inschakelen",
+                    "device_tracker_whitelist": "Adreslijst als witte lijst gebruiken",
+                    "device_tracker_mac_list": "Gefilterde adressen"
+                },
+                "data_description": {
+                    "update_interval_live": "Hoe vaak de entiteiten worden ververst die de huidige status van uw Pi-hole weergeven: service- en blokkeerstatus, schakelaars en realtime-indicatoren. Een lagere waarde maakt het dashboard responsiever, ten koste van meer verzoeken aan uw Pi-hole. Standaard 120 seconden.",
+                    "update_interval_stats": "Hoe vaak de cumulatieve tellers en de periodieke controles worden ververst. Hun waarden veranderen voortdurend maar zijn alleen als trend zinvol, dus een langer interval vermindert het aantal rijen dat naar de recorder-database wordt geschreven zonder gegevens te verliezen. Moet groter dan of gelijk aan de realtime verversingsfrequentie zijn. Standaard 300 seconden.",
+                    "enable_device_tracker": "Standaard uitgeschakeld. Indien ingeschakeld wordt de lijst met netwerkapparaten van Pi-hole opgehaald om device_tracker-entiteiten aan te maken.",
+                    "device_tracker_whitelist": "Indien ingeschakeld worden alleen de vermelde adressen gevolgd. Indien uitgeschakeld worden de vermelde adressen uitgesloten en worden alle andere gevolgd.",
+                    "device_tracker_mac_list": "Eén MAC-adres (of Pi-hole pseudo-MAC, bijv. IP-192.168.1.10) of IP-adres per regel, of gescheiden door komma's. IP-adressen komen overeen met het huidige IP van een apparaat en kunnen niet meer overeenkomen als dit verandert. Laat leeg om filteren uit te schakelen."
                 },
                 "description": "Nadat u een van deze opties hebt gewijzigd, moet u de service opnieuw laden of Home Assistant opnieuw opstarten.",
                 "title": "Pi-hole V6"
             }
         },
         "error": {
-            "invalid_update_interval_live": "Ongeldige data refresh frequentie. Deze moet hoger zijn dan 1 seconde en lager dan 3600 seconden."
+            "invalid_update_interval_live": "Ongeldige realtime verversingsfrequentie. Deze moet hoger zijn dan 1 seconde en lager dan 3600 seconden.",
+            "invalid_update_interval_stats": "Ongeldige verversingsfrequentie van statistieken. Deze moet tussen 60 en 86400 seconden liggen en groter dan of gelijk aan de realtime verversingsfrequentie zijn."
         }
     },
     "entity": {
         "binary_sensor": {
             "status": {
                 "name": "Status"
+            }
+        },
+        "device_tracker": {
+            "network_device": {
+                "name": "Netwerkapparaat"
             }
         },
         "button": {
@@ -135,6 +152,14 @@
             "configured_clients": {
                 "name": "Clients configurés",
                 "unit_of_measurement": "clients"
+            },
+            "dhcp_leases": {
+                "name": "Actieve DHCP-leases",
+                "unit_of_measurement": "leases"
+            },
+            "auth_sessions": {
+                "name": "Actieve sessies",
+                "unit_of_measurement": "sessies"
             }
         },
         "switch": {

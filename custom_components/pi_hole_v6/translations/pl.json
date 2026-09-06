@@ -40,20 +40,37 @@
         "step": {
             "init": {
                 "data": {
-                    "update_interval_live": "Częstotliwość odświeżania danych (sekundy)"
+                    "update_interval_live": "Częstotliwość odświeżania w czasie rzeczywistym (sekundy)",
+                    "update_interval_stats": "Częstotliwość odświeżania statystyk (sekundy)",
+                    "enable_device_tracker": "Włącz śledzenie urządzeń sieciowych",
+                    "device_tracker_whitelist": "Użyj listy adresów jako białej listy",
+                    "device_tracker_mac_list": "Filtrowane adresy"
+                },
+                "data_description": {
+                    "update_interval_live": "Jak często odświeżane są encje odzwierciedlające bieżący stan Pi-hole: stan usługi i blokowania, przełączniki oraz wskaźniki czasu rzeczywistego. Zmniejszenie tej wartości zwiększa responsywność pulpitu kosztem większej liczby zapytań do Pi-hole. Domyślnie 120 sekund.",
+                    "update_interval_stats": "Jak często odświeżane są liczniki skumulowane i okresowe sprawdzenia. Ich wartości zmieniają się nieustannie, ale mają znaczenie tylko jako trend, więc dłuższy interwał zmniejsza liczbę wierszy zapisywanych w bazie danych recordera bez utraty danych. Musi być większa lub równa częstotliwości odświeżania w czasie rzeczywistym. Domyślnie 300 sekund.",
+                    "enable_device_tracker": "Domyślnie wyłączone. Po włączeniu pobiera z Pi-hole listę urządzeń sieciowych, aby utworzyć encje device_tracker.",
+                    "device_tracker_whitelist": "Po włączeniu śledzone są tylko wymienione adresy. Po wyłączeniu wymienione adresy są pomijane, a śledzone są wszystkie pozostałe.",
+                    "device_tracker_mac_list": "Jeden adres MAC (lub pseudo-MAC Pi-hole, np. IP-192.168.1.10) albo adres IP w wierszu, lub oddzielone przecinkami. Adresy IP odpowiadają bieżącemu adresowi IP urządzenia i mogą przestać pasować po jego zmianie. Pozostaw puste, aby wyłączyć filtrowanie."
                 },
                 "description": "Po zmianie jednej z tych opcji konieczne jest ponowne załadowanie usługi lub ponowne uruchomienie Home Assistant.",
                 "title": "Pi-hole V6"
             }
         },
         "error": {
-            "invalid_update_interval_live": "Nieprawidłowa częstotliwość odświeżania danych. Musi być większa niż 1 sekunda i mniejsza niż 3600 sekund."
+            "invalid_update_interval_live": "Nieprawidłowa częstotliwość odświeżania w czasie rzeczywistym. Musi być większa niż 1 sekunda i mniejsza niż 3600 sekund.",
+            "invalid_update_interval_stats": "Nieprawidłowa częstotliwość odświeżania statystyk. Musi mieścić się między 60 a 86400 sekundami i być większa lub równa częstotliwości odświeżania w czasie rzeczywistym."
         }
     },
     "entity": {
         "binary_sensor": {
             "status": {
                 "name": "Status"
+            }
+        },
+        "device_tracker": {
+            "network_device": {
+                "name": "Urządzenie sieciowe"
             }
         },
         "button": {
@@ -92,13 +109,13 @@
                 "name": "Zapytania DNS dzisiaj",
                 "unit_of_measurement": "zapytania"
             },
-            "dns_queries_frequency": {
-                "name": "Average number of DNS queries",
-                "unit_of_measurement": "queries/min"
-            },
             "domains_blocked": {
                 "name": "Zablokowane domeny",
                 "unit_of_measurement": "domeny"
+            },
+            "dns_queries_frequency": {
+                "name": "Average number of DNS queries",
+                "unit_of_measurement": "queries/min"
             },
             "dns_queries_cached": {
                 "name": "Zapytania DNS w cache",
@@ -135,6 +152,14 @@
             "configured_clients": {
                 "name": "Clients configurés",
                 "unit_of_measurement": "clients"
+            },
+            "dhcp_leases": {
+                "name": "Aktywne dzierżawy DHCP",
+                "unit_of_measurement": "dzierżawy"
+            },
+            "auth_sessions": {
+                "name": "Aktywne sesje",
+                "unit_of_measurement": "sesje"
             }
         },
         "switch": {
