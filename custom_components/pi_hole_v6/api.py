@@ -972,7 +972,10 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
                 method="DELETE",
             )
 
+        # Every known message was just deleted, so the cached count would otherwise stay stale until
+        # the next refresh. Pi-hole may have raised a new one meanwhile, which that refresh will correct.
         self.cache_ftl_info["message_list"] = []
+        self.cache_ftl_info["message_count"] = 0
 
         return {
             "code": result["code"],
