@@ -40,20 +40,37 @@
         "step": {
             "init": {
                 "data": {
-                    "update_interval_live": "Frekvencia obnovovania dát (sekundy)"
+                    "update_interval_live": "Frekvencia obnovovania v reálnom čase (sekundy)",
+                    "update_interval_stats": "Frekvencia obnovovania štatistík (sekundy)",
+                    "enable_device_tracker": "Povoliť sledovanie sieťových zariadení",
+                    "device_tracker_whitelist": "Použiť zoznam adries ako zoznam povolených",
+                    "device_tracker_mac_list": "Filtrované adresy"
+                },
+                "data_description": {
+                    "update_interval_live": "Ako často sa obnovujú entity odrážajúce aktuálny stav vášho Pi-hole: stav služby a blokovania, prepínače a ukazovatele v reálnom čase. Zníženie hodnoty zrýchli odozvu ovládacieho panela za cenu väčšieho počtu požiadaviek na Pi-hole. Predvolene 120 sekúnd.",
+                    "update_interval_stats": "Ako často sa obnovujú kumulatívne počítadlá a pravidelné kontroly. Ich hodnoty sa neustále menia, ale majú význam iba ako trend, takže dlhší interval zníži počet riadkov zapísaných do databázy recordera bez straty údajov. Musí byť väčšia alebo rovná frekvencii obnovovania v reálnom čase. Predvolene 300 sekúnd.",
+                    "enable_device_tracker": "Predvolene vypnuté. Ak je zapnuté, načíta z Pi-hole zoznam sieťových zariadení a vytvorí entity device_tracker.",
+                    "device_tracker_whitelist": "Ak je zapnuté, sledujú sa iba uvedené adresy. Ak je vypnuté, uvedené adresy sa vylúčia a sledujú sa všetky ostatné.",
+                    "device_tracker_mac_list": "Jedna MAC adresa (alebo pseudo-MAC Pi-hole, napr. IP-192.168.1.10) alebo IP adresa na riadok, prípadne oddelené čiarkami. IP adresy zodpovedajú aktuálnej IP zariadenia a pri jej zmene nemusia ďalej zodpovedať. Ponechajte prázdne na vypnutie filtrovania."
                 },
                 "description": "Po zmenení jednej z týchto možností je potrebné znova načítať službu alebo reštartovať Home Assistant.",
                 "title": "Pi-hole V6"
             }
         },
         "error": {
-            "invalid_update_interval_live": "Neplatná frekvencia obnovovania dát. Musí byť vyššia ako 1 sekunda a nižšia ako 3600 sekúnd."
+            "invalid_update_interval_live": "Neplatná frekvencia obnovovania v reálnom čase. Musí byť vyššia ako 1 sekunda a nižšia ako 3600 sekúnd.",
+            "invalid_update_interval_stats": "Neplatná frekvencia obnovovania štatistík. Musí byť medzi 60 a 86400 sekundami a väčšia alebo rovná frekvencii obnovovania v reálnom čase."
         }
     },
     "entity": {
         "binary_sensor": {
             "status": {
                 "name": "Stav"
+            }
+        },
+        "device_tracker": {
+            "network_device": {
+                "name": "Sieťové zariadenie"
             }
         },
         "button": {
@@ -135,6 +152,14 @@
             "configured_clients": {
                 "name": "Clients configurés",
                 "unit_of_measurement": "clients"
+            },
+            "dhcp_leases": {
+                "name": "Aktívne zápožičky DHCP",
+                "unit_of_measurement": "zápožičky"
+            },
+            "auth_sessions": {
+                "name": "Aktívne relácie",
+                "unit_of_measurement": "relácie"
             }
         },
         "switch": {
