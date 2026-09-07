@@ -241,6 +241,10 @@ class PiHoleV6Switch(PiHoleV6Entity, SwitchEntity):  # pyright: ignore[reportInc
             if with_update is True:
                 await self.async_update()
                 self.schedule_update_ha_state(force_refresh=True)
+                # binary_sensor.status reads the same cache_blocking cache but is a separate
+                # entity: notify the coordinator so it reflects the change now, not at the
+                # next scheduled refresh.
+                self.coordinator.async_update_listeners()
 
         except (
             BadRequestError,
