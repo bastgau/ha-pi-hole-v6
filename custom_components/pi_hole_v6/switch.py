@@ -241,6 +241,10 @@ class PiHoleV6Switch(PiHoleV6Entity, SwitchEntity):  # pyright: ignore[reportInc
             if with_update is True:
                 await self.async_update()
                 self.schedule_update_ha_state(force_refresh=True)
+                # binary_sensor.status reads the same cache_blocking cache but is a separate
+                # entity: notify the coordinator so it reflects the change now, not at the
+                # next scheduled refresh.
+                self.coordinator.async_update_listeners()
 
         except (
             BadRequestError,
@@ -279,6 +283,26 @@ class PiHoleV6Switch(PiHoleV6Entity, SwitchEntity):  # pyright: ignore[reportInc
         """
         _LOGGER.debug("Enabling Pi-hole '%s'", self.name)
         await self.async_turn_switch(action="enable")
+
+    async def async_turn_service(self, action: str, duration: Any = None, with_update: bool = True) -> None:
+        """Turn on/off the Pi-hole blocking, exposing the same entry point as a group switch.
+
+        The blocking timer iterates over every switch holding a remaining date, whether it is this
+        global switch or a group one, and calls this method when the countdown reaches zero. Both
+        classes therefore have to answer to the same name.
+
+        Args:
+            action (str): The action to perform, either "enable" or "disable".
+            duration (Any): Optional duration in seconds for which blocking should be disabled.
+                Only relevant when action is "disable". Defaults to None.
+            with_update (bool): If True, triggers a state update after the action. Defaults to True.
+
+        Returns:
+            None
+
+        """
+
+        await self.async_turn_switch(action=action, duration=duration, with_update=with_update)
 
 
 class PiHoleV6Group(PiHoleV6Entity, SwitchEntity):  # pyright: ignore[reportIncompatibleVariableOverride]
