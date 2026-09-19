@@ -103,7 +103,7 @@ async def async_setup_entry(
     async_add_entities(
         PiHoleV6UpdateEntity(
             hole_data.api,
-            hole_data.coordinator,
+            hole_data.coordinator_stats,
             entry.entry_id,
             description,
         )

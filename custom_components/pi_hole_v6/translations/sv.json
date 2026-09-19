@@ -40,20 +40,37 @@
         "step": {
             "init": {
                 "data": {
-                    "update_interval": "Datauppdateringsfrekvens (sekunder)"
+                    "update_interval_live": "Uppdateringsfrekvens i realtid (sekunder)",
+                    "update_interval_stats": "Uppdateringsfrekvens för statistik (sekunder)",
+                    "enable_device_tracker": "Aktivera spårning av nätverksenheter",
+                    "device_tracker_whitelist": "Använd adresslistan som vitlista",
+                    "device_tracker_mac_list": "Filtrerade adresser"
+                },
+                "data_description": {
+                    "update_interval_live": "Hur ofta de entiteter som speglar din Pi-holes aktuella tillstånd uppdateras: tjänste- och blockeringsstatus, brytare och realtidsindikatorer. Ett lägre värde gör panelen mer responsiv, till priset av fler förfrågningar till din Pi-hole. Standard är 120 sekunder.",
+                    "update_interval_stats": "Hur ofta de kumulativa räknarna och de periodiska kontrollerna uppdateras. Deras värden ändras hela tiden men är bara meningsfulla som trend, så ett längre intervall minskar antalet rader som skrivs till recorder-databasen utan att data går förlorade. Måste vara större än eller lika med uppdateringsfrekvensen i realtid. Standard är 300 sekunder.",
+                    "enable_device_tracker": "Inaktiverat som standard. När det är aktiverat hämtas listan över nätverksenheter från Pi-hole för att skapa device_tracker-entiteter.",
+                    "device_tracker_whitelist": "När det är aktiverat spåras endast de angivna adresserna. När det är inaktiverat utesluts de angivna adresserna och alla övriga spåras.",
+                    "device_tracker_mac_list": "En MAC-adress (eller Pi-hole pseudo-MAC, t.ex. IP-192.168.1.10) eller IP-adress per rad, eller separerade med kommatecken. IP-adresser matchar en enhets aktuella IP och kan sluta matcha om den ändras. Lämna tomt för att inaktivera filtrering."
                 },
                 "description": "Efter att ha ändrat något av dessa alternativ måste du ladda om tjänsten eller starta om Home Assistant.",
                 "title": "Pi-hole V6"
             }
         },
         "error": {
-            "invalid_update_interval": "Ogiltig datauppdateringsfrekvens. Måste vara högre än 1 sekund och lägre än 3600 sekunder."
+            "invalid_update_interval_live": "Ogiltig uppdateringsfrekvens i realtid. Måste vara högre än 1 sekund och lägre än 3600 sekunder.",
+            "invalid_update_interval_stats": "Ogiltig uppdateringsfrekvens för statistik. Måste vara mellan 60 och 86400 sekunder och större än eller lika med uppdateringsfrekvensen i realtid."
         }
     },
     "entity": {
         "binary_sensor": {
             "status": {
                 "name": "Status"
+            }
+        },
+        "device_tracker": {
+            "network_device": {
+                "name": "Nätverksenhet"
             }
         },
         "button": {
@@ -135,6 +152,14 @@
             "configured_clients": {
                 "name": "Clients configurés",
                 "unit_of_measurement": "clients"
+            },
+            "dhcp_leases": {
+                "name": "Aktiva DHCP-leasar",
+                "unit_of_measurement": "leasar"
+            },
+            "auth_sessions": {
+                "name": "Aktiva sessioner",
+                "unit_of_measurement": "sessioner"
             }
         },
         "switch": {

@@ -6,9 +6,62 @@ On the Pi-hole V6 Integration page (_/config/integrations/integration/pi_hole_v6
 
 <img src="../img/integration-page.png" width="500">
 
-In the pop-up window, enter the desired `Data refresh rate` value in seconds.
+In the pop-up window, enter the desired `Live refresh frequency` value in seconds.
 
 <img src="../img/integration-configuration.png" width="500">
+
+### The two refresh frequencies
+
+The integration uses two independent update coordinators, each with its own option:
+
+- **`Live refresh frequency`** — 120 seconds by default. Drives what must reflect the current state of
+  your Pi-hole. Calls `blocking_status`, `groups`, `padd`, `summary`, `clients`, `dhcp/leases`,
+  `auth/sessions` and `network/devices`.
+- **`Statistics refresh frequency`** — 300 seconds by default. Drives the cumulative counters and the
+  periodic checks, whose values only matter as a trend. Calls `info/messages` and `info/messages/count`.
+
+The statistics frequency must be greater than or equal to the live refresh frequency. Raising it is the
+recommended way to reduce the number of rows the cumulative counters write to the recorder database,
+while the blocking status, the switches and the device trackers keep reacting quickly.
+
+The activity summary is fetched by the fast coordinator because the client counters and the query rate
+need it fresh. The cumulative counters read that same shared cache, they are simply written at the
+slower rhythm, which is exactly where the saving comes from. No data is lost.
+
+Pressing the `Refresh data` button refreshes both coordinators at once.
+
+| Entity | Coordinator |
+| --- | --- |
+| `sensor.<service_name>_ads_blocked_today` | `stats` |
+| `sensor.<service_name>_ads_percentage_blocked_today` | `stats` |
+| `sensor.<service_name>_dns_queries_cached` | `stats` |
+| `sensor.<service_name>_dns_queries_forwarded` | `stats` |
+| `sensor.<service_name>_dns_queries_today` | `stats` |
+| `sensor.<service_name>_dns_unique_domains` | `stats` |
+| `sensor.<service_name>_domains_blocked` | `stats` |
+| `sensor.<service_name>_ftl_info_message_count` | `stats` |
+| `update.<service_name>_core_update_available` | `stats` |
+| `update.<service_name>_docker_update_available` | `stats` |
+| `update.<service_name>_ftl_update_available` | `stats` |
+| `update.<service_name>_web_update_available` | `stats` |
+| `binary_sensor.<service_name>_status` | `live` |
+| `button.<service_name>_*` (all 6 actions) | `live` |
+| `device_tracker.*` (one per network device) | `live` |
+| `sensor.<service_name>_auth_sessions` | `live` |
+| `sensor.<service_name>_configured_clients` | `live` |
+| `sensor.<service_name>_cpu_use` | `live` |
+| `sensor.<service_name>_dhcp_leases` | `live` |
+| `sensor.<service_name>_dns_queries_frequency` | `live` |
+| `sensor.<service_name>_dns_unique_clients` | `live` |
+| `sensor.<service_name>_memory_use` | `live` |
+| `sensor.<service_name>_remaining_until_blocking_mode` | `live` |
+| `sensor.<service_name>_seen_clients` | `live` |
+| `switch.<service_name>` | `live` |
+| `switch.<service_name>_group_*` | `live` |
+| `sensor.<service_name>_latest_data_refresh` | `live` and `stats` |
+
+`latest_data_refresh` is the only entity written by both: its state reports whichever coordinator
+refreshed last.
 
 ### Deactivate the default refresh (alternative solution)
 

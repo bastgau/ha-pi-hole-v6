@@ -114,7 +114,7 @@ Logs do not remove sensitive information so careful what you share, check what y
 
 ### How do I configure the refresh frequency?
 
-By default, the data is updated every 5 minutes. You can configure a different frequency as explained on the following [page](docs/guide-configuring-refresh.md).
+By default, the blocking status, the switches, the network device trackers and the client counters are updated every 2 minutes, and the cumulative statistics (blocked and total queries, unique domains, FTL messages, version checks) every 5 minutes. Both frequencies are configurable, as explained on the following [page](docs/guide-configuring-refresh.md).
 
 ### Need more (noobs) information to install/configure the integration?
 

@@ -45,9 +45,14 @@ sequence:
         {{ states.input_select.pi_hole_time_droptdown.state | int |
         timestamp_custom('%H:%M:%S', False) }}
       pihole_entity: >
-        {{ states.switch | selectattr('attributes.friendly_name', 'eq',
-        states.input_select.pi_hole_entity_dropdown.state | string) |
-        map(attribute='entity_id') | list | first }}
+        {% set target = states.input_select.pi_hole_entity_dropdown.state | lower %}
+        {% set ns = namespace(result='none') %}
+        {% for s in states.switch %}
+          {% if s.attributes.friendly_name and s.attributes.friendly_name | lower == target %}
+            {% set ns.result = s.entity_id %}
+          {% endif %}
+        {% endfor %}
+        {{ ns.result }}
   - action: pi_hole_v6.disable
     target:
       entity_id:

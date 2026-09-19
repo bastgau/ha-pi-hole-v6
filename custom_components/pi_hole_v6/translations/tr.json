@@ -40,20 +40,37 @@
         "step": {
             "init": {
                 "data": {
-                    "update_interval": "Veri yenileme sıklığı (saniye)"
+                    "update_interval_live": "Gerçek zamanlı yenileme sıklığı (saniye)",
+                    "update_interval_stats": "İstatistik yenileme sıklığı (saniye)",
+                    "enable_device_tracker": "Ağ cihazı takibini etkinleştir",
+                    "device_tracker_whitelist": "Adres listesini beyaz liste olarak kullan",
+                    "device_tracker_mac_list": "Filtrelenen adresler"
+                },
+                "data_description": {
+                    "update_interval_live": "Pi-hole'unuzun güncel durumunu yansıtan varlıkların ne sıklıkla yenileneceği: hizmet ve engelleme durumu, anahtarlar ve gerçek zamanlı göstergeler. Değeri düşürmek panoyu daha duyarlı hale getirir, ancak Pi-hole'unuza daha fazla istek gönderilir. Varsayılan 120 saniyedir.",
+                    "update_interval_stats": "Kümülatif sayaçların ve düzenli denetimlerin ne sıklıkla yenileneceği. Değerleri sürekli değişir ancak yalnızca eğilim olarak anlamlıdır; bu nedenle daha uzun bir aralık, veri kaybı olmadan recorder veritabanına yazılan satır sayısını azaltır. Gerçek zamanlı yenileme sıklığına eşit veya ondan büyük olmalıdır. Varsayılan 300 saniyedir.",
+                    "enable_device_tracker": "Varsayılan olarak devre dışı. Etkinleştirildiğinde, device_tracker varlıkları oluşturmak için ağ cihazlarının listesi Pi-hole'dan alınır.",
+                    "device_tracker_whitelist": "Etkinleştirildiğinde yalnızca listelenen adresler takip edilir. Devre dışı bırakıldığında listelenen adresler hariç tutulur ve diğerlerinin tümü takip edilir.",
+                    "device_tracker_mac_list": "Her satırda bir MAC adresi (veya Pi-hole sözde MAC'i, ör. IP-192.168.1.10) ya da IP adresi, veya virgülle ayrılmış olarak. IP adresleri bir cihazın geçerli IP'siyle eşleşir ve bu değişirse eşleşmeyi bırakabilir. Filtrelemeyi devre dışı bırakmak için boş bırakın."
                 },
                 "description": "Bu seçeneklerden birini değiştirdikten sonra hizmeti yeniden yüklemeniz veya Home Assistant'ı yeniden başlatmanız gerekir.",
                 "title": "Pi-hole V6"
             }
         },
         "error": {
-            "invalid_update_interval": "Geçersiz veri yenileme sıklığı. 1 saniyeden büyük ve 3600 saniyeden küçük olmalıdır."
+            "invalid_update_interval_live": "Geçersiz gerçek zamanlı yenileme sıklığı. 1 saniyeden büyük ve 3600 saniyeden küçük olmalıdır.",
+            "invalid_update_interval_stats": "Geçersiz istatistik yenileme sıklığı. 60 ile 86400 saniye arasında ve gerçek zamanlı yenileme sıklığına eşit veya ondan büyük olmalıdır."
         }
     },
     "entity": {
         "binary_sensor": {
             "status": {
                 "name": "Durum"
+            }
+        },
+        "device_tracker": {
+            "network_device": {
+                "name": "Ağ cihazı"
             }
         },
         "button": {
@@ -135,6 +152,14 @@
             "configured_clients": {
                 "name": "Clients configurés",
                 "unit_of_measurement": "clients"
+            },
+            "dhcp_leases": {
+                "name": "Etkin DHCP kiralamaları",
+                "unit_of_measurement": "kiralama"
+            },
+            "auth_sessions": {
+                "name": "Etkin oturumlar",
+                "unit_of_measurement": "oturum"
             }
         },
         "switch": {
