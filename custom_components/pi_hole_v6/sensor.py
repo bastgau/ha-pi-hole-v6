@@ -13,7 +13,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import CONF_NAME, PERCENTAGE, EntityCategory, UnitOfTime
+from homeassistant.const import CONF_NAME, MATCH_ALL, PERCENTAGE, EntityCategory, UnitOfTime
 from homeassistant.helpers.event import async_track_time_interval
 
 from .common import sensor_update_timer
@@ -171,6 +171,10 @@ SENSOR_TYPES: tuple[PiHoleV6SensorEntityDescription, ...] = (
     ),
 )
 
+# Sensors whose attributes churn on every refresh (system metrics, active auth sessions) and bring no
+# useful history, so their attributes must never reach the recorder.
+UNRECORDED_ATTRIBUTES_KEYS: frozenset[str] = frozenset({"memory_use", "cpu_use", "auth_sessions"})
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -215,7 +219,7 @@ async def async_setup_entry(
         return [value for key, value in coordinators.items() if key != description.coordinator_key]
 
     sensors = [
-        PiHoleV6Sensor(
+        (PiHoleV6UnrecordedSensor if description.key in UNRECORDED_ATTRIBUTES_KEYS else PiHoleV6Sensor)(
             hole_data.api,
             coordinators[description.coordinator_key],
             entry.entry_id,
@@ -458,3 +462,9 @@ class PiHoleV6Sensor(PiHoleV6Entity, SensorEntity):  # pyright: ignore[reportInc
                 pass
 
         return None
+
+
+class PiHoleV6UnrecordedSensor(PiHoleV6Sensor):
+    """Pi-hole V6 sensor whose attributes must never be written to the recorder."""
+
+    _unrecorded_attributes = frozenset({MATCH_ALL})
