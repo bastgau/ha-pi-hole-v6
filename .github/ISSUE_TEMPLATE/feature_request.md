@@ -2,7 +2,7 @@
 name: 🚀 New feature proposal
 description: Propose a new feature
 about: Use this template to propose a new feature.
-labels: [enhancement, triage]
+labels: ["issue:enhancement", "issue:triage"]
 title: ''
 assignees: []
 ---

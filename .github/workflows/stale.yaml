@@ -7,7 +7,7 @@ on:
   issue_comment:
 
 env:
-  stale_label: stale
+  stale_label: "issue:stale"
 
 jobs:
   stale_action:
@@ -24,7 +24,7 @@ jobs:
           days-before-close: 2
           stale-issue-message: 'This issue is stale because it has been open 15 days with no activity. Please comment or update this issue or it will be closed in 2 days.'
           stale-issue-label: '${{ env.stale_label }}'
-          exempt-issue-labels: 'frequently asked questions, documentation, enhancement, bug'
+          exempt-issue-labels: 'issue:question, issue:documentation, issue:enhancement, issue:bug'
           exempt-all-issue-assignees: false
           operations-per-run: 300
           close-issue-reason: 'not_planned'
