@@ -2,8 +2,8 @@
 name: 🐞 Bug report
 description: Report an issue
 about: Use this template for tracking a bug.
-title: ''
-labels: ["issue:triage"]
+title: ""
+labels: ["issue:bug", "issue:triage"]
 assignees: []
 ---
 
