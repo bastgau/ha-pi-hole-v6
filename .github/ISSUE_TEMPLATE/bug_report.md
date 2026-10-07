@@ -2,8 +2,8 @@
 name: 🐞 Bug report
 description: Report an issue
 about: Use this template for tracking a bug.
-title: ''
-labels: [triage]
+title: ""
+labels: ["issue:bug", "issue:triage"]
 assignees: []
 ---
 
@@ -15,7 +15,7 @@ Note: The Pi-hole V6 integration is not compatible with versions of Home Assista
 Please specify your Home Assistant version.
 
 **Pi-hole V6 Integration version:**
-Please specify your Home Assistant version.
+Please specify your integration version.
 
 **Pi-hole version:**
 Please specify your Pi-hole (Core, FTL, Web Interface) version.
