@@ -8,4 +8,4 @@ assignees: []
 ---
 
 **Describe the feature**
-A clear and concise description of any alternative solutions or features you've considered.
+A clear and concise description of the feature you would like.
