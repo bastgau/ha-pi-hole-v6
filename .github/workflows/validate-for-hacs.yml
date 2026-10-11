@@ -3,6 +3,7 @@ name: Validate for HACS
 on:
   push: 
   pull_request:
+  workflow_dispatch:
 
 jobs:
   validate-hacs:
