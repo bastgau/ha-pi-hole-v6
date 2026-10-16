@@ -42,7 +42,7 @@ psutil-home-assistant==0.0.1
 pymicro-vad==1.0.1
 PyNaCl==1.6.2
 pyspeex-noise==1.0.2
-PyTurboJPEG==1.8.3
+PyTurboJPEG==2.5.0
 securetar==2026.4.1
 serialx==1.8.2
 SQLAlchemy==2.0.51
