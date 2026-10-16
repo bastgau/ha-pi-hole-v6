@@ -20,7 +20,7 @@ bluetooth-auto-recovery==1.6.4
 bluetooth-data-tools==1.29.18
 cached-ipaddress==1.1.2
 cronsim==2.7
-dbus-fast==5.0.22
+dbus-fast==5.2.0
 esphome-dashboard-api==1.3.0
 file-read-backwards==2.0.0
 fnv-hash-fast==2.0.3
