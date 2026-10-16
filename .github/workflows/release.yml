@@ -30,6 +30,6 @@ jobs:
           zip pi_hole_v6.zip -r ./
 
       - name: "Upload the ZIP file to the release"
-        uses: softprops/action-gh-release@v2.2.1
+        uses: softprops/action-gh-release@v3.0.3
         with:
           files: ${{ github.workspace }}/custom_components/pi_hole_v6/pi_hole_v6.zip
