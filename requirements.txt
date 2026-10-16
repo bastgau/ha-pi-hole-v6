@@ -35,7 +35,7 @@ ifaddr==0.2.0
 matter-ble-proxy==0.7.1
 matter-python-client==0.7.1
 mutagen==1.47.0
-numpy==2.3.2
+numpy==2.5.4
 openai==2.21.0
 Pillow==12.2.0
 psutil-home-assistant==0.0.1
