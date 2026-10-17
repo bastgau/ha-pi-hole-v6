@@ -220,13 +220,16 @@ async def async_setup_entry(
                 if mac not in tracked_macs:
                     tracked_macs.add(mac)
 
+                    # via_device_id expects the registry id of the server device
+                    server_device = device_registry.async_get_device(identifiers={(DOMAIN, server_unique_id)})
+
                     device_registry.async_get_or_create(
                         config_entry_id=entry.entry_id,
                         connections={(dr.CONNECTION_NETWORK_MAC, mac)},
                         manufacturer=device.get("macVendor") or None,
                         model="Network device",
                         name=_device_display_name(device),
-                        via_device=(DOMAIN, server_unique_id),
+                        via_device_id=server_device.id if server_device else None,
                     )
 
                     entity = PiHoleV6DeviceTracker(
