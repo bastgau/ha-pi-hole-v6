@@ -221,7 +221,14 @@ async def async_setup_entry(
                     tracked_macs.add(mac)
 
                     # via_device_id expects the registry id of the server device
-                    server_device = device_registry.async_get_device(identifiers={(DOMAIN, server_unique_id)})
+                    server_device = next(
+                        (
+                            device_entry
+                            for device_entry in dr.async_entries_for_config_entry(device_registry, entry.entry_id)
+                            if (DOMAIN, server_unique_id) in device_entry.identifiers
+                        ),
+                        None,
+                    )
 
                     device_registry.async_get_or_create(
                         config_entry_id=entry.entry_id,
