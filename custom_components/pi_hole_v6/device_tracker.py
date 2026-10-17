@@ -229,7 +229,7 @@ async def async_setup_entry(
                         manufacturer=device.get("macVendor") or None,
                         model="Network device",
                         name=_device_display_name(device),
-                        via_device_id=server_device.id if server_device else None,
+                        via_device_id=server_device.id if server_device else None,  # pyright: ignore[reportCallIssue]
                     )
 
                     entity = PiHoleV6DeviceTracker(
