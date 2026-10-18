@@ -34,7 +34,7 @@ home-assistant-intents==2026.6.24
 ifaddr==0.2.0
 matter-ble-proxy==0.7.1
 matter-python-client==0.7.1
-mutagen==1.47.0
+mutagen==1.48.1
 numpy==2.5.4
 openai==2.21.0
 Pillow==12.2.0
