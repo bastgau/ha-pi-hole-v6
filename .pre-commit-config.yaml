@@ -56,6 +56,6 @@ repos:
           - prettier@3.6.2
           - prettier-plugin-sort-json@4.2.0
         # .copier-answers.yml is written by Copier and must stay as it writes it.
-        # The other entries (prettier_excludes in .copier-answers.yml) are vendored or
-        # generated folders: reformatting them would rewrite every line.
-        exclude: ^(\.copier-answers\.yml$|(card)/)
+        # card/ is a vendored third-party card and bruno/ folders are generated API
+        # collections: reformatting them would rewrite every line.
+        exclude: ^\.copier-answers\.yml$|^card/|(^|/)bruno/
