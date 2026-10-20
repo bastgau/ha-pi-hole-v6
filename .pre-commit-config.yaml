@@ -57,4 +57,4 @@ repos:
           - prettier-plugin-sort-json@4.2.0
         # `card/` holds a vendored third-party card kept diffable against
         # upstream: reformatting it rewrites every line.
-        exclude: ^(card|custom_components/pi_hole_v6)/
+        exclude: ^(card)/
