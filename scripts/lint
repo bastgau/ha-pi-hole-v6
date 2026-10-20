@@ -1,75 +1,204 @@
 #!/bin/bash
 
-# Colors
-BLUE='\033[34m'
-GRAY='\033[0;90m'
-GREEN='\033[32m'
-MAGENTA='\033[0;35m'
-PURPLE='\033[1;35m'
-RED='\033[31m'
-YELLOW='\033[33m'
-NC='\033[0m' # No Color
+# Runs the same five checks as .github/workflows/lint.yml, over the same
+# scopes, so that a green run here predicts a green run there - plus prettier,
+# which the workflow does not run (the pre-commit hook is what enforces it).
+#
+# Usage: scripts/lint [scope ...]
+#
+#   client        the bundled API client (only if CLIENT_PACKAGE is set)
+#   integration   the Home Assistant side (never descends into the client)
+#   tests         the whole test suite
+#   repo          prettier over the repo's json/yaml/markdown
+#   src           shorthand for: client integration
+#   all           every scope (the default)
+#
+#   scripts/lint --list-scopes   the CI scopes, as a JSON array (for the workflow matrix)
+#   scripts/lint --paths SCOPE   the paths a scope covers
+#
+# `repo` sits apart from the Python scopes on purpose: it is the one check here
+# that writes (--write), so a commit is not rejected by the hook for a
+# reformat the author could not have predicted.
 
-PROJECT="$PROJECT_NAME"
+# shellcheck source=scripts/_common
+source "$(dirname "$0")/_common"
 
-cd "$(dirname "$0")/.."
+# Resolved from the project variables, never hard-coded: this file is shared by
+# every integration.
+scope_paths() {
+  case "$1" in
+    client)
+      [ -n "$CLIENT_PACKAGE" ] || return 1
+      echo "custom_components/${INTEGRATION_DOMAIN}/${CLIENT_PACKAGE}" ;;
+    # The glob is what separates this from the client scope: it matches the
+    # integration's own flat modules and never descends into the client.
+    integration) echo "custom_components/${INTEGRATION_DOMAIN}/*.py" ;;
+    tests)
+      [ -d tests ] || return 1
+      echo tests ;;
+    *) return 1 ;;
+  esac
+}
 
-echo -e "\n${YELLOW}> Determinate files changed :${NC}\n"
+ci_scopes() {
+  local scope scopes=()
+  for scope in client integration tests; do
+    scope_paths "$scope" > /dev/null && scopes+=("$scope")
+  done
+  printf '%s\n' "${scopes[@]}"
+}
 
-export files="$(find /workspaces/${PROJECT}/custom_components -name '*.py')"
+case "$1" in
+  --list-scopes)
+    ci_scopes | python3 -c 'import json, sys; print(json.dumps(sys.stdin.read().split()))'
+    exit 0
+    ;;
+  --paths)
+    scope_paths "$2" || { echo "Unknown or unavailable scope '$2'." >&2; exit 2; }
+    exit 0
+    ;;
+esac
 
-if [ -z "$files" ] ; then
-  echo "No python file changed.\n"
-  exit
-fi
+requested=("$@")
+[ ${#requested[@]} -eq 0 ] && requested=(all)
 
-printf "%s\n" $files
+scopes=()
+for arg in "${requested[@]}"; do
+  case "$arg" in
+    all) scopes+=(repo $(ci_scopes)) ;;
+    src) scopes+=($(ci_scopes | grep -v '^tests$')) ;;
+    client | integration | tests)
+      scope_paths "$arg" > /dev/null || { echo -e "${RED}Scope '$arg' does not exist in this repository.${NC}" >&2; exit 2; }
+      scopes+=("$arg") ;;
+    repo) scopes+=("$arg") ;;
+    *)
+      echo -e "${RED}Unknown scope '$arg'.${NC} Expected: client, integration, tests, repo, src or all." >&2
+      exit 2
+      ;;
+  esac
+done
 
 exit_code=0
 
-echo -e "\n${YELLOW}> Lint with Ruff :${NC}\n"
-prek run ruff-check --files $files
-ruff_exit=$?
-if [ $ruff_exit -eq 0 ]; then
-  echo -e "\n${BLUE}[ruff]${NC} ${GREEN}✓ Done.${NC}"
-else
-  echo -e "\n${BLUE}[ruff]${NC} ${RED}✗ Failed.${NC}"
-  exit_code=1
-fi
+# Runs one tool over one scope, printing the usual banner and recording the
+# failure without stopping: one invocation reports every problem at once, like
+# the workflow does.
+run_check() {
+  local label="$1" scope_name="$2"
+  shift 2
 
-echo -e "\n${YELLOW}> Lint with Pylint :${NC}"
+  echo -e "\n${YELLOW}> ${label} :${NC}\n"
+  "$@"
+  local status=$?
 
-pylint_files=$(echo "$files" | grep -v '^tests.*')
+  if [ $status -eq 0 ]; then
+    echo -e "\n${BLUE}[${label}]${NC} ${GREEN}✓ Done.${NC} ${PURPLE}(${scope_name})${NC}"
+  else
+    echo -e "\n${BLUE}[${label}]${NC} ${RED}✗ Failed.${NC} ${PURPLE}(${scope_name})${NC}"
+    exit_code=1
+  fi
+}
 
-if [ -z "$pylint_files" ] ; then
-  echo -e "\n${BLUE}[config]${NC} ${PURPLE}✗ Only test files changed. End.${NC}\n"
-  exit $exit_code
-else
-  pylint_output=$(pylint $pylint_files 2>&1)
-  pylint_exit=$?
-  echo "$pylint_output" | grep -v "^-\{10,\}$"
-  rating=$(echo "$pylint_output" | grep "Your code has been rated")
+# pylint's score is worth surfacing, so it gets its own wrapper.
+run_pylint() {
+  local scope_name="$1"
+  shift
+
+  echo -e "\n${YELLOW}> Lint with Pylint :${NC}"
+
+  local output status score rating
+  output=$(run pylint "$@" 2>&1)
+  status=$?
+  echo "$output" | grep -v "^-\{10,\}$"
+  rating=$(echo "$output" | grep "Your code has been rated")
   score=""
   if [ -n "$rating" ]; then
     score=$(echo "$rating" | grep -oP '\d+\.\d+/\d+' | head -1)
   fi
-  if [ $pylint_exit -eq 0 ]; then
-    echo -e "\n${BLUE}[pylint]${NC} Score: ${score} ${GREEN}✓ Done.${NC}"
+
+  if [ $status -eq 0 ]; then
+    echo -e "\n${BLUE}[Lint with Pylint]${NC} Score: ${score} ${GREEN}✓ Done.${NC} ${PURPLE}(${scope_name})${NC}"
   else
-    echo -e "\n${BLUE}[pylint]${NC} Score: ${score} ${RED}✗ Failed.${NC}"
+    echo -e "\n${BLUE}[Lint with Pylint]${NC} Score: ${score} ${RED}✗ Failed.${NC} ${PURPLE}(${scope_name})${NC}"
     exit_code=1
   fi
-fi
+}
 
-echo -e "\n${YELLOW}> Lint with Pyright :${NC}\n"
+# prettier is not a Python tool: scripts/setup installs it globally, pinned to
+# the version .pre-commit-config.yaml uses, so this script and the hook cannot
+# drift apart. npx is the fallback where setup has not run.
+#
+# Deliberately WITHOUT prettier-plugin-sort-json, even though the hook lists it
+# in additional_dependencies: nothing there passes --plugin and there is no
+# .prettierrc, so the hook never loads it. Enabling it here would sort every
+# JSON key alphabetically and scramble strings.json, whose block order Home
+# Assistant relies on. Matching the hook's real behaviour beats matching its
+# declaration.
+PRETTIER_VERSION="3.6.2"
+PRETTIER_GLOBS=("**/*.{json,yaml,yml,md}")
+IFS=',' read -ra excludes <<< "${PRETTIER_EXCLUDES}"
+for dir in "${excludes[@]}"; do
+  [ -n "$dir" ] && PRETTIER_GLOBS+=("!${dir}/**")
+done
 
-pyright $pylint_files
-pyright_exit=$?
-if [ $pyright_exit -eq 0 ]; then
-  echo -e "\n${BLUE}[pyright]${NC} ${GREEN}✓ Done.${NC}\n"
+run_prettier() {
+  local scope_name="$1"
+
+  echo -e "\n${YELLOW}> Format with Prettier :${NC}\n"
+
+  local runner=(npx --yes "prettier@${PRETTIER_VERSION}")
+  if [ "$(prettier --version 2> /dev/null)" = "$PRETTIER_VERSION" ]; then
+    runner=(prettier)
+  elif ! command -v npx > /dev/null 2>&1; then
+    echo "Neither prettier nor npx found - run scripts/setup (the pre-commit hook is unaffected)."
+    echo -e "\n${BLUE}[Format with Prettier]${NC} ${YELLOW}- Skipped.${NC} ${PURPLE}(${scope_name})${NC}"
+    return
+  fi
+
+  local output status
+  output=$("${runner[@]}" --write --log-level warn "${PRETTIER_GLOBS[@]}" 2>&1)
+  status=$?
+  # npx chatter is noise here; prettier's own findings are not.
+  echo "$output" | grep -vE "^npm (notice|warn)" | grep -v "^$"
+
+  if [ $status -eq 0 ]; then
+    echo -e "\n${BLUE}[Format with Prettier]${NC} ${GREEN}✓ Done.${NC} ${PURPLE}(${scope_name})${NC}"
+  else
+    echo -e "\n${BLUE}[Format with Prettier]${NC} ${RED}✗ Failed.${NC} ${PURPLE}(${scope_name})${NC}"
+    exit_code=1
+  fi
+}
+
+for scope in "${scopes[@]}"; do
+  if [ "$scope" = "repo" ]; then
+    echo -e "\n${YELLOW}==================== scope: repo ====================${NC}"
+    printf "%s\n" "json/yaml/markdown (excluding: ${PRETTIER_EXCLUDES:-nothing})"
+    run_prettier "repo"
+    continue
+  fi
+
+  paths=$(scope_paths "$scope")
+
+  echo -e "\n${YELLOW}==================== scope: ${scope} ====================${NC}"
+  # shellcheck disable=SC2086
+  printf "%s\n" $paths
+
+  # Word splitting is wanted: a scope is a path or a glob.
+  # shellcheck disable=SC2086
+  {
+    run_check "Lint with Ruff" "$scope" run ruff check $paths
+    run_check "Format with Ruff" "$scope" run ruff format --check $paths
+    run_pylint "$scope" $paths
+    run_check "Lint with Pyright" "$scope" run pyright $paths
+    run_check "Lint with docstring-linter" "$scope" run docstring-linter $paths
+  }
+done
+
+echo
+if [ $exit_code -eq 0 ]; then
+  echo -e "${GREEN}✓ All checks passed${NC} (${scopes[*]})"
 else
-  echo -e "\n${BLUE}[pyright]${NC} ${RED}✗ Failed.${NC}\n"
-  exit_code=1
+  echo -e "${RED}✗ Some checks failed${NC} (${scopes[*]})"
 fi
 
 exit $exit_code

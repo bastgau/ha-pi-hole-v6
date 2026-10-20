@@ -1,0 +1,46 @@
+---
+name: "Template drift"
+
+# Tells you when ha-dev-environment has moved on since the last `copier update`.
+# Failing is the notification: a scheduled run that goes red shows up in GitHub's
+# usual alerts, and nothing else here would ever tell you the shared tooling
+# changed.
+
+on:
+  schedule:
+    - cron: "0 7 * * 1"
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  template-drift:
+    name: "template-drift"
+    runs-on: "ubuntu-latest"
+    permissions:
+      contents: read
+    steps:
+      - uses: "actions/checkout@v7"
+        with:
+          fetch-depth: 0
+
+      - uses: "astral-sh/setup-uv@v7"
+
+      # Only needed while ha-dev-environment is a private repository: a token
+      # with read access to it, stored as the TEMPLATE_TOKEN secret.
+      - name: "Allow reading the template"
+        if: "env.TEMPLATE_TOKEN != ''"
+        env:
+          TEMPLATE_TOKEN: "${{ secrets.TEMPLATE_TOKEN }}"
+        run: git config --global url."https://x-access-token:${TEMPLATE_TOKEN}@github.com/".insteadOf "https://github.com/"
+
+      # --quiet: exit status 2 means a newer template version exists.
+      - name: "Check for a newer template version"
+        run: |
+          status=0
+          uvx --from copier copier check-update --quiet || status=$?
+          if [ "$status" -eq 2 ]; then
+            echo "::error::ha-dev-environment has a newer version. Run 'copier update' and review the diff."
+            exit 1
+          fi
+          exit "$status"

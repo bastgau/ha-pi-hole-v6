@@ -1,3 +1,4 @@
+---
 name: "Release"
 
 on:
@@ -17,19 +18,28 @@ jobs:
       - name: "Checkout the repository"
         uses: "actions/checkout@v7"
 
+      - name: "Load the project variables"
+        shell: "bash"
+        # .devcontainer/.common-env is the single source of truth for the
+        # integration domain and the client package; scripts/ read it too.
+        run: grep -E '^[A-Z_]+=' .devcontainer/.common-env >> "$GITHUB_ENV"
+
+      # Integration domain = custom_components/<domain> folder and released zip name.
       - name: "Adjust version number"
         shell: "bash"
         run: |
           yq -i -o json '.version="${{ github.event.release.tag_name }}"' \
-            "${{ github.workspace }}/custom_components/pi_hole_v6/manifest.json"
+            "${{ github.workspace }}/custom_components/${{ env.INTEGRATION_DOMAIN }}/manifest.json"
 
       - name: "ZIP the integration directory"
         shell: "bash"
         run: |
-          cd "${{ github.workspace }}/custom_components/pi_hole_v6"
-          zip pi_hole_v6.zip -r ./
+          cd "${{ github.workspace }}/custom_components/${{ env.INTEGRATION_DOMAIN }}"
+          # bruno/ folders (a client's API collection, openapi.json included) are
+          # development material: they have no business in users' custom_components.
+          zip ${{ env.INTEGRATION_DOMAIN }}.zip -r ./ -x "*.md" -x "*.bru" -x "bruno/*" -x "*/bruno/*"
 
       - name: "Upload the ZIP file to the release"
         uses: softprops/action-gh-release@v3.0.3
         with:
-          files: ${{ github.workspace }}/custom_components/pi_hole_v6/pi_hole_v6.zip
+          files: ${{ github.workspace }}/custom_components/${{ env.INTEGRATION_DOMAIN }}/${{ env.INTEGRATION_DOMAIN }}.zip

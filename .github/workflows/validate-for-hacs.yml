@@ -1,12 +1,21 @@
+---
 name: Validate for HACS
 
 on:
-  push: 
   pull_request:
+    branches:
+      - "main"
+  push:
+    branches:
+      - "main"
+  release:
+    types:
+      - "published"
   workflow_dispatch:
 
 jobs:
   validate-hacs:
+    if: github.actor != 'dependabot[bot]'
     runs-on: "ubuntu-latest"
     steps:
       - uses: "actions/checkout@v7"

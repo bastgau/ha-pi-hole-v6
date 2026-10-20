@@ -1,0 +1,115 @@
+---
+name: "Lint"
+
+on:
+  push:
+    tags-ignore:
+      - "v*"
+  pull_request:
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  # A required status check (branch protection) waits forever if its workflow
+  # never runs, which is what a top-level `paths:` filter causes on a PR that
+  # touches no .py file. This job always runs; the real jobs are skipped (and a
+  # skip satisfies a required check) when nothing relevant changed.
+  #
+  # It also asks scripts/lint which scopes exist in this repository, so the
+  # matrix below is never out of step with what a developer runs locally: the
+  # client scope appears only when CLIENT_PACKAGE is set, tests only if tests/
+  # exists.
+  changes:
+    name: "changes"
+    runs-on: "ubuntu-latest"
+    permissions:
+      contents: read
+    outputs:
+      python: "${{ steps.filter.outputs.python }}"
+      scopes: "${{ steps.scopes.outputs.scopes }}"
+    steps:
+      - uses: "actions/checkout@v7"
+
+      - name: "Load the project variables"
+        shell: "bash"
+        # .devcontainer/.common-env is the single source of truth for the
+        # integration domain and the client package; scripts/ read it too.
+        run: grep -E '^[A-Z_]+=' .devcontainer/.common-env >> "$GITHUB_ENV"
+
+      - id: "scopes"
+        run: echo "scopes=$(scripts/lint --list-scopes)" >> "$GITHUB_OUTPUT"
+
+      - uses: "dorny/paths-filter@v4"
+        id: "filter"
+        with:
+          filters: |
+            python:
+              - "custom_components/**/*.py"
+              - "tests/**/*.py"
+              - "pyproject.toml"
+              - "uv.lock"
+              - ".github/workflows/lint.yml"
+
+  # One job per scope rather than one over everything, so a failure names its
+  # own culprit instead of being buried in a single log.
+  lint:
+    name: "${{ matrix.scope }}"
+    needs: "changes"
+    if: "needs.changes.outputs.python == 'true'"
+    runs-on: "ubuntu-latest"
+    strategy:
+      fail-fast: false
+      matrix:
+        scope: "${{ fromJSON(needs.changes.outputs.scopes) }}"
+
+    steps:
+      - name: "Check out the repository"
+        uses: "actions/checkout@v7"
+
+      - name: "Load the project variables"
+        shell: "bash"
+        # .devcontainer/.common-env is the single source of truth for the
+        # integration domain and the client package; scripts/ read it too.
+        run: grep -E '^[A-Z_]+=' .devcontainer/.common-env >> "$GITHUB_ENV"
+
+      - name: "Install uv"
+        uses: "astral-sh/setup-uv@v7"
+        with:
+          enable-cache: true
+
+      # homeassistant is needed by every scope (pylint and pyright resolve the
+      # integration's imports). The tests scope also needs the test stack: every
+      # test module imports pytest, and pylint resolves imports for real.
+      # The default_config packages are not installed: nothing here reaches them.
+      - name: "Install the lint toolchain"
+        run: |
+          uv sync --frozen --no-default-groups --group lint --group homeassistant \
+            ${{ matrix.scope == 'tests' && '--group test' || '' }}
+
+      - name: "Resolve the scope's paths"
+        id: "paths"
+        run: echo "paths=$(scripts/lint --paths ${{ matrix.scope }})" >> "$GITHUB_OUTPUT"
+
+      # Every check runs even if an earlier one failed, so one push reports every
+      # problem at once. But `success()` on the first: a failed install must stop
+      # the chain instead of failing every tool with "command not found".
+      - name: "Lint with Ruff"
+        if: "success()"
+        run: uv run --no-sync ruff check --output-format=github ${{ steps.paths.outputs.paths }}
+
+      - name: "Format with Ruff"
+        if: "!cancelled()"
+        run: uv run --no-sync ruff format --check --diff ${{ steps.paths.outputs.paths }}
+
+      - name: "Lint with Pylint"
+        if: "!cancelled()"
+        run: uv run --no-sync pylint ${{ steps.paths.outputs.paths }}
+
+      - name: "Lint with Pyright"
+        if: "!cancelled()"
+        run: uv run --no-sync pyright ${{ steps.paths.outputs.paths }}
+
+      - name: "Lint with docstring-linter"
+        if: "!cancelled()"
+        run: uv run --no-sync docstring-linter ${{ steps.paths.outputs.paths }}

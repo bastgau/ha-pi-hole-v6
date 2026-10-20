@@ -1,74 +1,84 @@
 {
-    "name": "Pi-hole V6 Integration",
-    "dockerFile": "./Dockerfile",
-    "features": {
-        "ghcr.io/devcontainers/features/github-cli:1": {
-            "installDirectlyFromGitHubRelease": true,
-            "version": "latest"
-        },
-        "ghcr.io/devcontainers/features/node:1": {
-            "nodeGypDependencies": true,
-            "version": "lts"
-        },
-        "ghcr.io/devcontainers-extra/features/poetry:2": {
-            "version": "latest"
-        },
-        "ghcr.io/devcontainers/features/rust:1": {}
+  "name": "Pi-hole V6 Integration",
+  "dockerFile": "./Dockerfile",
+  "features": {
+    "ghcr.io/devcontainers/features/github-cli:1": {
+      "installDirectlyFromGitHubRelease": true,
+      "version": "latest"
     },
-    "postCreateCommand": "scripts/setup",
-    "mounts": [
-        "type=bind,source=${localEnv:HOME}${localEnv:USERPROFILE}/.ssh,target=/home/vscode/.ssh,readonly",
-        "type=volume,source=claude-config-pi-hole,target=/home/vscode/.claude"
-    ],
-    "runArgs": [
-        "--network=host",
-        "--env-file=${localWorkspaceFolder}/.devcontainer/.env"
-    ],
-    "forwardPorts": [
-        8123
-    ],
-    "portsAttributes": {
-        "8123": {
-            "label": "Home Assistant",
-            "onAutoForward": "notify"
-        }
+    "ghcr.io/devcontainers/features/node:1": {
+      "nodeGypDependencies": true,
+      "version": "lts"
     },
-    "customizations": {
-        "vscode": {
-            "extensions": [
-                "ms-python.python",
-                "ms-python.vscode-pylance",
-                "charliermarsh.ruff",
-                "ms-python.black-formatter",
-                "tamasfe.even-better-toml",
-                "mohsen1.prettify-json",
-                "ms-python.pylint"
-            ],
-            "settings": {
-                "files.insertFinalNewline": true,
-                "files.exclude": {
-                    ".ruff_cache": true,
-                    "**/__pycache__": true
-                },
-                "files.eol": "\n",
-                "editor.tabSize": 4,
-                "python.pythonPath": "/usr/bin/python3",
-                "python.analysis.autoSearchPaths": false,
-                "editor.formatOnPaste": false,
-                "editor.formatOnSave": true,
-                "editor.formatOnType": true,
-                "files.trimTrailingWhitespace": true,
-                "[markdown]": {
-                    "files.trimTrailingWhitespace": false
-                },
-                "[python]": {
-                    "editor.defaultFormatter": "charliermarsh.ruff",
-                    "editor.codeActionsOnSave": {
-                        "source.organizeImports": "explicit"
-                    }
-                }
-            }
-        }
-    },
-    "remoteUser": "vscode"
+    "ghcr.io/devcontainers/features/rust:1": {}
+  },
+  "postCreateCommand": "scripts/setup",
+  "mounts": [
+    "type=bind,source=${localEnv:HOME}${localEnv:USERPROFILE}/.ssh,target=/home/vscode/.ssh,readonly",
+    "type=volume,source=claude-config-ha-pi-hole-v6,target=/home/vscode/.claude"
+  ],
+  "runArgs": [
+    "--network=host",
+    "--env-file=${localWorkspaceFolder}/.devcontainer/.common-env"
+  ],
+  "containerEnv": {
+    "UV_LINK_MODE": "copy"
+  },
+  "remoteEnv": {
+    "GITHUB_PERSONAL_ACCESS_TOKEN": "${localEnv:GITHUB_PERSONAL_ACCESS_TOKEN}"
+  },
+  "forwardPorts": [8123],
+  "portsAttributes": {
+    "8123": {
+      "label": "Home Assistant",
+      "onAutoForward": "notify"
+    }
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "charliermarsh.ruff",
+        "ms-python.black-formatter",
+        "tamasfe.even-better-toml",
+        "mohsen1.prettify-json",
+        "ms-python.pylint",
+        "Anthropic.claude-code",
+        "Tyriar.sort-lines"
+      ],
+      "settings": {
+        "files.insertFinalNewline": true,
+        "files.exclude": {
+          ".ruff_cache": true,
+          "**/__pycache__": true,
+          "**/.mypy_cache": true,
+          "**/.pytest_cache": true
+        },
+        "files.eol": "\n",
+        "editor.tabSize": 4,
+        "python.defaultInterpreterPath": "${workspaceFolder}/.venv/bin/python",
+        "python.analysis.autoSearchPaths": false,
+        "editor.formatOnPaste": false,
+        "editor.formatOnSave": true,
+        "editor.formatOnType": true,
+        "files.trimTrailingWhitespace": true,
+        "[markdown]": {
+          "files.trimTrailingWhitespace": false
+        },
+        "[python]": {
+          "editor.defaultFormatter": "charliermarsh.ruff",
+          "editor.codeActionsOnSave": {
+            "source.organizeImports": "explicit"
+          }
+        },
+        "python.testing.pytestEnabled": true,
+        "python.testing.unittestEnabled": false,
+        "python.testing.pytestArgs": ["tests"]
+      }
+    }
+  },
+  "remoteUser": "vscode",
+  "workspaceMount": "source=${localWorkspaceFolder},target=/workspaces/ha-pi-hole-v6,type=bind",
+  "workspaceFolder": "/workspaces/ha-pi-hole-v6"
 }

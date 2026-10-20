@@ -1,0 +1,85 @@
+#!/bin/bash
+
+# Runs the same coverage-gated pytest invocations as .github/workflows/test.yml.
+#
+# Usage: scripts/test [scope ...]
+#
+#   client        the bundled API client's own tests (only if CLIENT_PACKAGE is set)
+#   integration   everything else under tests/
+#   all           every scope (the default)
+#
+#   scripts/test --list-scopes   the CI scopes, as a JSON array (for the workflow matrix)
+#
+# Each scope has its own 95% floor and covers what it owns *on its own*: if a
+# client branch is only ever reached by a Home Assistant test, that shows up as
+# a coverage drop instead of hiding in a combined run.
+#
+# To iterate on one test, call pytest directly (no coverage gate):
+#   uv run --no-sync pytest tests/test_x.py -q
+
+# shellcheck source=scripts/_common
+source "$(dirname "$0")/_common"
+
+scopes_available() {
+  [ -d tests ] || return 0
+  [ -n "$CLIENT_PACKAGE" ] && echo client
+  echo integration
+}
+
+if [ "$1" = "--list-scopes" ]; then
+  scopes_available | python3 -c 'import json, sys; print(json.dumps(sys.stdin.read().split()))'
+  exit 0
+fi
+
+requested=("$@")
+[ ${#requested[@]} -eq 0 ] && requested=(all)
+
+scopes=()
+for arg in "${requested[@]}"; do
+  case "$arg" in
+    all) mapfile -t -O "${#scopes[@]}" scopes < <(scopes_available) ;;
+    client | integration) scopes+=("$arg") ;;
+    *)
+      echo -e "${RED}Unknown scope '$arg'.${NC} Expected: client, integration or all." >&2
+      exit 2
+      ;;
+  esac
+done
+
+if [ ${#scopes[@]} -eq 0 ]; then
+  echo "No tests/ folder: nothing to run."
+  exit 0
+fi
+
+exit_code=0
+
+for scope in "${scopes[@]}"; do
+  echo -e "\n${YELLOW}> Running the ${scope} tests with coverage :${NC}\n"
+
+  # -o addopts="" keeps a project-wide option from leaking into a scoped run.
+  case "$scope" in
+    client)
+      [ -n "$CLIENT_PACKAGE" ] || { echo "No client in this repository." >&2; exit 2; }
+      args=("$CLIENT_TESTS_PATH" -o addopts="" --cov="custom_components/${INTEGRATION_DOMAIN}/${CLIENT_PACKAGE}") ;;
+    integration)
+      if [ -n "$CLIENT_PACKAGE" ]; then
+        # --cov-config subtracts the client from the measurement (see
+        # .coveragerc-integration); it also supplies the source.
+        args=(tests --ignore="$CLIENT_TESTS_PATH" -o addopts="" --cov --cov-config=.coveragerc-integration)
+      else
+        args=(tests -o addopts="" --cov="custom_components/${INTEGRATION_DOMAIN}")
+      fi ;;
+  esac
+
+  run pytest "${args[@]}" --cov-branch --cov-report=term-missing --cov-fail-under=95
+  status=$?
+
+  if [ $status -eq 0 ]; then
+    echo -e "\n${BLUE}[pytest]${NC} ${GREEN}✓ Done.${NC} ${PURPLE}(${scope})${NC}\n"
+  else
+    echo -e "\n${BLUE}[pytest]${NC} ${RED}✗ Failed.${NC} ${PURPLE}(${scope})${NC}\n"
+    exit_code=1
+  fi
+done
+
+exit $exit_code
