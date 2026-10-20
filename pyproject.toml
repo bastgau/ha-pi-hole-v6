@@ -114,8 +114,20 @@ max-complexity = 25
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = [
-  "S101", # Use of `assert` detected -- standard in pytest test bodies
-  "S105", # Possible hardcoded password -- fixture credentials, not real secrets
+  # Tests are written for readability, not for the strictest style: one shared list for every repository.
+  "ARG001",  # Unused function argument: pytest fixtures are requested for their side effects
+  "ARG005",  # Unused lambda argument
+  "B904",    # Use raise from to specify exception cause
+  "DTZ011",  # date.today() used: tests commonly use naive dates
+  "N806",    # Variable in function should be snake_case
+  "N815",    # Variable in class scope should not be mixedCase
+  "PLR0913", # Too many arguments: a parametrized test takes one per case column
+  "PLR0917", # Too many positional arguments: same reason
+  "RUF018",  # Avoid assignment expressions in assert statements
+  "S101",    # Use of `assert` detected -- standard in pytest test bodies
+  "S105",    # Possible hardcoded password -- fixture credentials, not real secrets
+  "S107",    # Possible hardcoded password assigned to a function default
+  "SLF001",  # Private member accessed: tests do test internals
 ]
 
 [tool.pylint."MESSAGES CONTROL"]
