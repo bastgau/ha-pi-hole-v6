@@ -6,7 +6,7 @@ from datetime import UTC, datetime, timedelta
 import logging
 from typing import TYPE_CHECKING, Any
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.helpers import config_validation as cv, entity_platform
@@ -114,7 +114,7 @@ async def async_setup_entry(
     platform.async_register_entity_service(
         SERVICE_DISABLE,
         {
-            vol.Optional(SERVICE_DISABLE_ATTR_DURATION): vol.All(cv.time_period_str, cv.positive_timedelta),
+            probatio.Optional(SERVICE_DISABLE_ATTR_DURATION): probatio.All(cv.time_period_str, cv.positive_timedelta),
         },
         "async_service_disable",
     )
