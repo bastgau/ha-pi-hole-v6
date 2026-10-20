@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, Any
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import (
@@ -53,27 +53,27 @@ if TYPE_CHECKING:
 _LOGGER = logging.getLogger(__name__)
 
 
-def _get_data_config_schema(user_input: Any) -> vol.Schema:
-    """Build and return the voluptuous schema for the main config flow form.
+def _get_data_config_schema(user_input: Any) -> probatio.Schema:
+    """Build and return the probatio schema for the main config flow form.
 
     Args:
         user_input (Any): Previously entered user input used to pre-fill default values.
 
     Returns:
-        vol.Schema: The schema to be used in the config flow form.
+        probatio.Schema: The schema to be used in the config flow form.
 
     """
-    return vol.Schema(
+    return probatio.Schema(
         {
-            vol.Required(
+            probatio.Required(
                 CONF_NAME,
                 default=user_input.get(CONF_NAME, DEFAULT_NAME),
             ): str,
-            vol.Required(
+            probatio.Required(
                 CONF_URL,
                 default=user_input.get(CONF_URL, DEFAULT_URL),
             ): str,
-            vol.Optional(
+            probatio.Optional(
                 CONF_PASSWORD,
                 default=user_input.get(CONF_PASSWORD, DEFAULT_PASSWORD),
             ): str,
@@ -173,9 +173,9 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         user_input = user_input or {}
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_PASSWORD,
                         default=user_input.get(CONF_PASSWORD, DEFAULT_PASSWORD),
                     ): str,
@@ -233,18 +233,18 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         return {}
 
 
-def _get_data_option_schema() -> vol.Schema:
-    """Build and return the voluptuous schema for the options flow form.
+def _get_data_option_schema() -> probatio.Schema:
+    """Build and return the probatio schema for the options flow form.
 
     Returns:
-        vol.Schema: The schema to be used in the options flow form.
+        probatio.Schema: The schema to be used in the options flow form.
 
     """
-    return vol.Schema(
+    return probatio.Schema(
         {
-            vol.Required(
+            probatio.Required(
                 CONF_UPDATE_INTERVAL_LIVE,
-            ): vol.All(
+            ): probatio.All(
                 selector.NumberSelector(  # pyright: ignore[reportUnknownMemberType]
                     selector.NumberSelectorConfig(
                         min=1,
@@ -253,11 +253,11 @@ def _get_data_option_schema() -> vol.Schema:
                         mode=selector.NumberSelectorMode.BOX,
                     )
                 ),
-                vol.Coerce(int),
+                probatio.Coerce(int),
             ),
-            vol.Required(
+            probatio.Required(
                 CONF_UPDATE_INTERVAL_STATS,
-            ): vol.All(
+            ): probatio.All(
                 selector.NumberSelector(  # pyright: ignore[reportUnknownMemberType]
                     selector.NumberSelectorConfig(
                         min=60,
@@ -266,27 +266,27 @@ def _get_data_option_schema() -> vol.Schema:
                         mode=selector.NumberSelectorMode.BOX,
                     )
                 ),
-                vol.Coerce(int),
+                probatio.Coerce(int),
             ),
-            vol.Required(
+            probatio.Required(
                 CONF_URL,
-            ): vol.All(
+            ): probatio.All(
                 selector.TextSelector(),  # pyright: ignore[reportUnknownMemberType]
-                vol.Coerce(str),
+                probatio.Coerce(str),
             ),
-            vol.Required(
+            probatio.Required(
                 CONF_ENABLE_DEVICE_TRACKER,
             ): selector.BooleanSelector(),  # pyright: ignore[reportUnknownMemberType]
-            vol.Required(
+            probatio.Required(
                 CONF_DEVICE_TRACKER_WHITELIST,
             ): selector.BooleanSelector(),  # pyright: ignore[reportUnknownMemberType]
-            vol.Optional(
+            probatio.Optional(
                 CONF_DEVICE_TRACKER_MAC_LIST,
-            ): vol.All(
+            ): probatio.All(
                 selector.TextSelector(  # pyright: ignore[reportUnknownMemberType]
                     selector.TextSelectorConfig(multiline=True)
                 ),
-                vol.Coerce(str),
+                probatio.Coerce(str),
             ),
         }
     )
