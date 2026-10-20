@@ -1,18 +1,14 @@
 {
   "domain": "pi_hole_v6",
   "name": "Pi-hole V6 Integration",
-  "codeowners": [
-    "@bastgau"
-  ],
+  "codeowners": ["@bastgau"],
   "config_flow": true,
   "dependencies": [],
   "documentation": "https://github.com/bastgau/ha-pi-hole-v6",
   "integration_type": "service",
   "iot_class": "local_polling",
   "issue_tracker": "https://github.com/bastgau/ha-pi-hole-V6/issues",
-  "loggers": [
-    "pi_hole_v6"
-  ],
+  "loggers": ["pi_hole_v6"],
   "requirements": [],
   "version": "v1.14.0"
 }

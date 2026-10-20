@@ -1,206 +1,206 @@
 {
-    "config": {
-        "abort": {
-            "already_configured": "Tjänsten är redan konfigurerad.",
-            "reauth_successful": "Omautentiseringen lyckades."
-        },
-        "error": {
-            "incorrect_data_expected": "Misslyckades hämta data i korrekt struktur.",
-            "cannot_connect": "Misslycakdes med att ansluta till servern. Säkerställ att serveradressen och porten stämmer.",
-            "invalid_auth": "Ogiltigt lösenord. Säkerställ att lösenordet är korrekt.",
-            "invalid_path": "Ogiltig API sökväg. Vänligen verifiera att adressen är korrekt."
-        },
-        "step": {
-            "user": {
-                "data": {
-                    "name": "Namn",
-                    "password": "Lösenord",
-                    "url": "Adress"
-                },
-                "data_description": {
-                    "password": "Lösenord för inloggning på Pi-hole",
-                    "url": "URL eller adress till din Pi-hole (tex: {example_url})"
-                },
-                "description": "Denna integrationen låter dig ta emot statistik samt interagera med ett Pi-hole V6 systen.",
-                "title": "Pi-hole V6"
-            },
-            "reauth_confirm": {
-                "data": {
-                    "password": "Lösenord"
-                },
-                "data_description": {
-                    "password": "Lösenord för inloggning på Pi-hole"
-                },
-                "description": "Från den här skärmen kan du ändra lösenordet för att få åtkomst till Pi-hole-instansen.",
-                "title": "Pi-hole V6"
-            }
-        }
+  "config": {
+    "abort": {
+      "already_configured": "Tjänsten är redan konfigurerad.",
+      "reauth_successful": "Omautentiseringen lyckades."
     },
-    "options": {
-        "step": {
-            "init": {
-                "data": {
-                    "update_interval_live": "Uppdateringsfrekvens i realtid (sekunder)",
-                    "update_interval_stats": "Uppdateringsfrekvens för statistik (sekunder)",
-                    "enable_device_tracker": "Aktivera spårning av nätverksenheter",
-                    "device_tracker_whitelist": "Använd adresslistan som vitlista",
-                    "device_tracker_mac_list": "Filtrerade adresser"
-                },
-                "data_description": {
-                    "update_interval_live": "Hur ofta de entiteter som speglar din Pi-holes aktuella tillstånd uppdateras: tjänste- och blockeringsstatus, brytare och realtidsindikatorer. Ett lägre värde gör panelen mer responsiv, till priset av fler förfrågningar till din Pi-hole. Standard är 120 sekunder.",
-                    "update_interval_stats": "Hur ofta de kumulativa räknarna och de periodiska kontrollerna uppdateras. Deras värden ändras hela tiden men är bara meningsfulla som trend, så ett längre intervall minskar antalet rader som skrivs till recorder-databasen utan att data går förlorade. Måste vara större än eller lika med uppdateringsfrekvensen i realtid. Standard är 300 sekunder.",
-                    "enable_device_tracker": "Inaktiverat som standard. När det är aktiverat hämtas listan över nätverksenheter från Pi-hole för att skapa device_tracker-entiteter.",
-                    "device_tracker_whitelist": "När det är aktiverat spåras endast de angivna adresserna. När det är inaktiverat utesluts de angivna adresserna och alla övriga spåras.",
-                    "device_tracker_mac_list": "En MAC-adress (eller Pi-hole pseudo-MAC, t.ex. IP-192.168.1.10) eller IP-adress per rad, eller separerade med kommatecken. IP-adresser matchar en enhets aktuella IP och kan sluta matcha om den ändras. Lämna tomt för att inaktivera filtrering."
-                },
-                "description": "Efter att ha ändrat något av dessa alternativ måste du ladda om tjänsten eller starta om Home Assistant.",
-                "title": "Pi-hole V6"
-            }
-        },
-        "error": {
-            "invalid_update_interval_live": "Ogiltig uppdateringsfrekvens i realtid. Måste vara högre än 1 sekund och lägre än 3600 sekunder.",
-            "invalid_update_interval_stats": "Ogiltig uppdateringsfrekvens för statistik. Måste vara mellan 60 och 86400 sekunder och större än eller lika med uppdateringsfrekvensen i realtid."
-        }
+    "error": {
+      "incorrect_data_expected": "Misslyckades hämta data i korrekt struktur.",
+      "cannot_connect": "Misslycakdes med att ansluta till servern. Säkerställ att serveradressen och porten stämmer.",
+      "invalid_auth": "Ogiltigt lösenord. Säkerställ att lösenordet är korrekt.",
+      "invalid_path": "Ogiltig API sökväg. Vänligen verifiera att adressen är korrekt."
     },
-    "entity": {
-        "binary_sensor": {
-            "status": {
-                "name": "Status"
-            }
+    "step": {
+      "user": {
+        "data": {
+          "name": "Namn",
+          "password": "Lösenord",
+          "url": "Adress"
         },
-        "device_tracker": {
-            "network_device": {
-                "name": "Nätverksenhet"
-            }
+        "data_description": {
+          "password": "Lösenord för inloggning på Pi-hole",
+          "url": "URL eller adress till din Pi-hole (tex: {example_url})"
         },
-        "button": {
-            "action_flush_arp": {
-                "name": "Rensa nätverkstabellen"
-            },
-            "action_flush_logs": {
-                "name": "Rensa DNS-loggarna"
-            },
-            "action_gravity": {
-                "name": "Kör gravity"
-            },
-            "action_restartdns": {
-                "name": "Starta om pihole-FTL"
-            },
-            "action_refresh_data": {
-                "name": "Uppdatera data"
-            },
-            "action_ftl_purge_diagnosis_messages": {
-                "name": "Purge FTL diagnosis messages"
-            }
+        "description": "Denna integrationen låter dig ta emot statistik samt interagera med ett Pi-hole V6 systen.",
+        "title": "Pi-hole V6"
+      },
+      "reauth_confirm": {
+        "data": {
+          "password": "Lösenord"
         },
-        "sensor": {
-            "ads_blocked_today": {
-                "name": "Annonser blockerade idag",
-                "unit_of_measurement": "ads"
-            },
-            "ads_percentage_blocked_today": {
-                "name": "Procent annonser blockerade idag"
-            },
-            "seen_clients": {
-                "name": "Klienter",
-                "unit_of_measurement": "clients"
-            },
-            "dns_queries_today": {
-                "name": "DNS frågor idag",
-                "unit_of_measurement": "queries"
-            },
-            "domains_blocked": {
-                "name": "Domäner blockerade",
-                "unit_of_measurement": "domains"
-            },
-            "dns_queries_frequency": {
-                "name": "Average number of DNS queries",
-                "unit_of_measurement": "queries/min"
-            },
-            "dns_queries_cached": {
-                "name": "DNS frågor cachade",
-                "unit_of_measurement": "queries"
-            },
-            "dns_queries_forwarded": {
-                "name": "DNS frågor vidarebefordrade",
-                "unit_of_measurement": "queries"
-            },
-            "dns_unique_clients": {
-                "name": "Unika klienter",
-                "unit_of_measurement": "clients"
-            },
-            "dns_unique_domains": {
-                "name": "Unika domäner",
-                "unit_of_measurement": "domains"
-            },
-            "remaining_until_blocking_mode": {
-                "name": "Återstående tid tills blockering"
-            },
-            "latest_data_refresh": {
-                "name": "Senaste datauppdateringen"
-            },
-            "cpu_use": {
-                "name": "CPU usage"
-            },
-            "memory_use": {
-                "name": "Memory usage"
-            },
-            "ftl_info_message_count": {
-                "name": "FTL diagnosis messages count",
-                "unit_of_measurement": "messages"
-            },
-            "configured_clients": {
-                "name": "Clients configurés",
-                "unit_of_measurement": "clients"
-            },
-            "dhcp_leases": {
-                "name": "Aktiva DHCP-leasar",
-                "unit_of_measurement": "leasar"
-            },
-            "auth_sessions": {
-                "name": "Aktiva sessioner",
-                "unit_of_measurement": "sessioner"
-            }
+        "data_description": {
+          "password": "Lösenord för inloggning på Pi-hole"
         },
-        "switch": {
-            "group": {
-                "name": "Grupp {group_name}"
-            }
-        },
-        "update": {
-            "core_update_available": {
-                "name": "Core uppdatering"
-            },
-            "docker_update_available": {
-                "name": "Docker uppdatering"
-            },
-            "ftl_update_available": {
-                "name": "FTL uppdatering"
-            },
-            "web_update_available": {
-                "name": "Webb uppdatering"
-            }
-        }
-    },
-    "services": {
-        "disable": {
-            "name": "Inaktivera",
-            "description": "Inaktiverar Pi-hole för en given tid.",
-            "fields": {
-                "duration": {
-                    "description": "Tid i sekunder att inaktivera Pi-hole.",
-                    "name": "Varaktighet"
-                }
-            }
-        },
-        "enable": {
-            "name": "Aktiv",
-            "description": "Aktiverar Pi-hole."
-        }
-    },
-    "exceptions": {
-        "unable_to_launch_action": {
-            "message": "Det går inte att starta åtgärden *{action}*: {exception}."
-        }
+        "description": "Från den här skärmen kan du ändra lösenordet för att få åtkomst till Pi-hole-instansen.",
+        "title": "Pi-hole V6"
+      }
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "update_interval_live": "Uppdateringsfrekvens i realtid (sekunder)",
+          "update_interval_stats": "Uppdateringsfrekvens för statistik (sekunder)",
+          "enable_device_tracker": "Aktivera spårning av nätverksenheter",
+          "device_tracker_whitelist": "Använd adresslistan som vitlista",
+          "device_tracker_mac_list": "Filtrerade adresser"
+        },
+        "data_description": {
+          "update_interval_live": "Hur ofta de entiteter som speglar din Pi-holes aktuella tillstånd uppdateras: tjänste- och blockeringsstatus, brytare och realtidsindikatorer. Ett lägre värde gör panelen mer responsiv, till priset av fler förfrågningar till din Pi-hole. Standard är 120 sekunder.",
+          "update_interval_stats": "Hur ofta de kumulativa räknarna och de periodiska kontrollerna uppdateras. Deras värden ändras hela tiden men är bara meningsfulla som trend, så ett längre intervall minskar antalet rader som skrivs till recorder-databasen utan att data går förlorade. Måste vara större än eller lika med uppdateringsfrekvensen i realtid. Standard är 300 sekunder.",
+          "enable_device_tracker": "Inaktiverat som standard. När det är aktiverat hämtas listan över nätverksenheter från Pi-hole för att skapa device_tracker-entiteter.",
+          "device_tracker_whitelist": "När det är aktiverat spåras endast de angivna adresserna. När det är inaktiverat utesluts de angivna adresserna och alla övriga spåras.",
+          "device_tracker_mac_list": "En MAC-adress (eller Pi-hole pseudo-MAC, t.ex. IP-192.168.1.10) eller IP-adress per rad, eller separerade med kommatecken. IP-adresser matchar en enhets aktuella IP och kan sluta matcha om den ändras. Lämna tomt för att inaktivera filtrering."
+        },
+        "description": "Efter att ha ändrat något av dessa alternativ måste du ladda om tjänsten eller starta om Home Assistant.",
+        "title": "Pi-hole V6"
+      }
+    },
+    "error": {
+      "invalid_update_interval_live": "Ogiltig uppdateringsfrekvens i realtid. Måste vara högre än 1 sekund och lägre än 3600 sekunder.",
+      "invalid_update_interval_stats": "Ogiltig uppdateringsfrekvens för statistik. Måste vara mellan 60 och 86400 sekunder och större än eller lika med uppdateringsfrekvensen i realtid."
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "status": {
+        "name": "Status"
+      }
+    },
+    "device_tracker": {
+      "network_device": {
+        "name": "Nätverksenhet"
+      }
+    },
+    "button": {
+      "action_flush_arp": {
+        "name": "Rensa nätverkstabellen"
+      },
+      "action_flush_logs": {
+        "name": "Rensa DNS-loggarna"
+      },
+      "action_gravity": {
+        "name": "Kör gravity"
+      },
+      "action_restartdns": {
+        "name": "Starta om pihole-FTL"
+      },
+      "action_refresh_data": {
+        "name": "Uppdatera data"
+      },
+      "action_ftl_purge_diagnosis_messages": {
+        "name": "Purge FTL diagnosis messages"
+      }
+    },
+    "sensor": {
+      "ads_blocked_today": {
+        "name": "Annonser blockerade idag",
+        "unit_of_measurement": "ads"
+      },
+      "ads_percentage_blocked_today": {
+        "name": "Procent annonser blockerade idag"
+      },
+      "seen_clients": {
+        "name": "Klienter",
+        "unit_of_measurement": "clients"
+      },
+      "dns_queries_today": {
+        "name": "DNS frågor idag",
+        "unit_of_measurement": "queries"
+      },
+      "domains_blocked": {
+        "name": "Domäner blockerade",
+        "unit_of_measurement": "domains"
+      },
+      "dns_queries_frequency": {
+        "name": "Average number of DNS queries",
+        "unit_of_measurement": "queries/min"
+      },
+      "dns_queries_cached": {
+        "name": "DNS frågor cachade",
+        "unit_of_measurement": "queries"
+      },
+      "dns_queries_forwarded": {
+        "name": "DNS frågor vidarebefordrade",
+        "unit_of_measurement": "queries"
+      },
+      "dns_unique_clients": {
+        "name": "Unika klienter",
+        "unit_of_measurement": "clients"
+      },
+      "dns_unique_domains": {
+        "name": "Unika domäner",
+        "unit_of_measurement": "domains"
+      },
+      "remaining_until_blocking_mode": {
+        "name": "Återstående tid tills blockering"
+      },
+      "latest_data_refresh": {
+        "name": "Senaste datauppdateringen"
+      },
+      "cpu_use": {
+        "name": "CPU usage"
+      },
+      "memory_use": {
+        "name": "Memory usage"
+      },
+      "ftl_info_message_count": {
+        "name": "FTL diagnosis messages count",
+        "unit_of_measurement": "messages"
+      },
+      "configured_clients": {
+        "name": "Clients configurés",
+        "unit_of_measurement": "clients"
+      },
+      "dhcp_leases": {
+        "name": "Aktiva DHCP-leasar",
+        "unit_of_measurement": "leasar"
+      },
+      "auth_sessions": {
+        "name": "Aktiva sessioner",
+        "unit_of_measurement": "sessioner"
+      }
+    },
+    "switch": {
+      "group": {
+        "name": "Grupp {group_name}"
+      }
+    },
+    "update": {
+      "core_update_available": {
+        "name": "Core uppdatering"
+      },
+      "docker_update_available": {
+        "name": "Docker uppdatering"
+      },
+      "ftl_update_available": {
+        "name": "FTL uppdatering"
+      },
+      "web_update_available": {
+        "name": "Webb uppdatering"
+      }
+    }
+  },
+  "services": {
+    "disable": {
+      "name": "Inaktivera",
+      "description": "Inaktiverar Pi-hole för en given tid.",
+      "fields": {
+        "duration": {
+          "description": "Tid i sekunder att inaktivera Pi-hole.",
+          "name": "Varaktighet"
+        }
+      }
+    },
+    "enable": {
+      "name": "Aktiv",
+      "description": "Aktiverar Pi-hole."
+    }
+  },
+  "exceptions": {
+    "unable_to_launch_action": {
+      "message": "Det går inte att starta åtgärden *{action}*: {exception}."
+    }
+  }
 }

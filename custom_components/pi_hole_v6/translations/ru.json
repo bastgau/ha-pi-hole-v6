@@ -1,206 +1,206 @@
 {
-    "config": {
-        "abort": {
-            "already_configured": "Служба уже настроена.",
-            "reauth_successful": "Повторная аутентификация прошла успешно."
-        },
-        "error": {
-            "incorrect_data_expected": "Не получилось получить данные в корректном формате.",
-            "cannot_connect": "Не получилось подключиться к серверу. Удостоверьтесь что адрес сервера и порт корректные.",
-            "invalid_auth": "Предоставлен неверный пароль. Проверьте что пароль правильный.",
-            "invalid_path": "Неверный путь до API. Пожалуйста проверьте ссылку."
-        },
-        "step": {
-            "user": {
-                "data": {
-                    "name": "Имя",
-                    "password": "Пароль",
-                    "url": "Адрес"
-                },
-                "data_description": {
-                    "password": "Пароль, который используется для входа",
-                    "url": "Ссылка на ваш экземпляр Pi-hole (пример: {example_url})"
-                },
-                "description": "Эта интеграция позволяет вам получить статистику и взаимодействовать с Pi-hole V6.",
-                "title": "Pi-hole V6"
-            },
-            "reauth_confirm": {
-                "data": {
-                    "password": "Пароль"
-                },
-                "data_description": {
-                    "password": "Пароль, который используется для входа"
-                },
-                "description": "С этого экрана вы можете изменить пароль для доступа к экземпляру Pi-hole.",
-                "title": "Pi-hole V6"
-            }
-        }
+  "config": {
+    "abort": {
+      "already_configured": "Служба уже настроена.",
+      "reauth_successful": "Повторная аутентификация прошла успешно."
     },
-    "options": {
-        "step": {
-            "init": {
-                "data": {
-                    "update_interval_live": "Частота обновления в реальном времени (секунды)",
-                    "update_interval_stats": "Частота обновления статистики (секунды)",
-                    "enable_device_tracker": "Включить отслеживание сетевых устройств",
-                    "device_tracker_whitelist": "Использовать список адресов как белый список",
-                    "device_tracker_mac_list": "Фильтруемые адреса"
-                },
-                "data_description": {
-                    "update_interval_live": "Как часто обновляются сущности, отражающие текущее состояние вашего Pi-hole: состояние службы и блокировки, переключатели и индикаторы реального времени. Уменьшение значения повышает отзывчивость панели ценой большего числа запросов к Pi-hole. По умолчанию 120 секунд.",
-                    "update_interval_stats": "Как часто обновляются накопительные счётчики и периодические проверки. Их значения меняются постоянно, но имеют смысл только как тенденция, поэтому больший интервал сокращает число строк, записываемых в базу данных recorder, без потери данных. Должна быть больше или равна частоте обновления в реальном времени. По умолчанию 300 секунд.",
-                    "enable_device_tracker": "По умолчанию отключено. При включении из Pi-hole загружается список сетевых устройств для создания сущностей device_tracker.",
-                    "device_tracker_whitelist": "Если включено, отслеживаются только перечисленные адреса. Если отключено, перечисленные адреса исключаются, а все остальные отслеживаются.",
-                    "device_tracker_mac_list": "По одному MAC-адресу (или псевдо-MAC Pi-hole, например IP-192.168.1.10) или IP-адресу в строке, либо через запятую. IP-адреса сопоставляются с текущим IP устройства и могут перестать совпадать при его изменении. Оставьте поле пустым, чтобы отключить фильтрацию."
-                },
-                "description": "После изменения одной из этих опций необходимо перезагрузить службу или перезапустить Home Assistant.",
-                "title": "Pi-hole V6"
-            }
-        },
-        "error": {
-            "invalid_update_interval_live": "Недопустимая частота обновления в реальном времени. Должна быть выше 1 секунды и ниже 3600 секунд.",
-            "invalid_update_interval_stats": "Недопустимая частота обновления статистики. Должна быть от 60 до 86400 секунд и не меньше частоты обновления в реальном времени."
-        }
+    "error": {
+      "incorrect_data_expected": "Не получилось получить данные в корректном формате.",
+      "cannot_connect": "Не получилось подключиться к серверу. Удостоверьтесь что адрес сервера и порт корректные.",
+      "invalid_auth": "Предоставлен неверный пароль. Проверьте что пароль правильный.",
+      "invalid_path": "Неверный путь до API. Пожалуйста проверьте ссылку."
     },
-    "entity": {
-        "binary_sensor": {
-            "status": {
-                "name": "Состояние"
-            }
+    "step": {
+      "user": {
+        "data": {
+          "name": "Имя",
+          "password": "Пароль",
+          "url": "Адрес"
         },
-        "device_tracker": {
-            "network_device": {
-                "name": "Сетевое устройство"
-            }
+        "data_description": {
+          "password": "Пароль, который используется для входа",
+          "url": "Ссылка на ваш экземпляр Pi-hole (пример: {example_url})"
         },
-        "button": {
-            "action_flush_arp": {
-                "name": "Очистить сетевую таблицу"
-            },
-            "action_flush_logs": {
-                "name": "Очистить журналы DNS"
-            },
-            "action_gravity": {
-                "name": "Запустить gravity"
-            },
-            "action_restartdns": {
-                "name": "Перезапустить pihole-FTL"
-            },
-            "action_refresh_data": {
-                "name": "Обновить данные"
-            },
-            "action_ftl_purge_diagnosis_messages": {
-                "name": "Purge FTL diagnosis messages"
-            }
+        "description": "Эта интеграция позволяет вам получить статистику и взаимодействовать с Pi-hole V6.",
+        "title": "Pi-hole V6"
+      },
+      "reauth_confirm": {
+        "data": {
+          "password": "Пароль"
         },
-        "sensor": {
-            "ads_blocked_today": {
-                "name": "Заблокировано сегодня реклам",
-                "unit_of_measurement": "реклам"
-            },
-            "ads_percentage_blocked_today": {
-                "name": "Заблокировано сегодня реклам в процентах"
-            },
-            "seen_clients": {
-                "name": "Клиентов замечено",
-                "unit_of_measurement": "клиентов"
-            },
-            "dns_queries_today": {
-                "name": "DNS запросов сегодня",
-                "unit_of_measurement": "запросов"
-            },
-            "domains_blocked": {
-                "name": "Заблокировано доменов",
-                "unit_of_measurement": "доменов"
-            },
-            "dns_queries_frequency": {
-                "name": "Average number of DNS queries",
-                "unit_of_measurement": "queries/min"
-            },
-            "dns_queries_cached": {
-                "name": "Закешированных DNS запросов",
-                "unit_of_measurement": "запросов"
-            },
-            "dns_queries_forwarded": {
-                "name": "Перенаправленных DNS запросов",
-                "unit_of_measurement": "запросов"
-            },
-            "dns_unique_clients": {
-                "name": "Уникальных клиентов у DNS",
-                "unit_of_measurement": "клиентов"
-            },
-            "dns_unique_domains": {
-                "name": "Уникальных доменов в DNS",
-                "unit_of_measurement": "доменов"
-            },
-            "remaining_until_blocking_mode": {
-                "name": "Осталось до режима блокировки"
-            },
-            "latest_data_refresh": {
-                "name": "Последнее обновление данных"
-            },
-            "cpu_use": {
-                "name": "CPU usage"
-            },
-            "memory_use": {
-                "name": "Memory usage"
-            },
-            "ftl_info_message_count": {
-                "name": "FTL diagnosis messages count",
-                "unit_of_measurement": "messages"
-            },
-            "configured_clients": {
-                "name": "Clients configurés",
-                "unit_of_measurement": "clients"
-            },
-            "dhcp_leases": {
-                "name": "Активные аренды DHCP",
-                "unit_of_measurement": "аренды"
-            },
-            "auth_sessions": {
-                "name": "Активные сессии",
-                "unit_of_measurement": "сессии"
-            }
+        "data_description": {
+          "password": "Пароль, который используется для входа"
         },
-        "switch": {
-            "group": {
-                "name": "Группа {group_name}"
-            }
-        },
-        "update": {
-            "core_update_available": {
-                "name": "Oбновление ядра"
-            },
-            "docker_update_available": {
-                "name": "Oбновление Docker"
-            },
-            "ftl_update_available": {
-                "name": "Oбновление FTL"
-            },
-            "web_update_available": {
-                "name": "Веб-обновление"
-            }
-        }
-    },
-    "services": {
-        "disable": {
-            "name": "Выключить",
-            "description": "Выключает сконфигурированный Pi-hole на определенное время.",
-            "fields": {
-                "duration": {
-                    "description": "Время в секундах на которое Pi-hole будет выключен.",
-                    "name": "Длительность"
-                }
-            }
-        },
-        "enable": {
-            "name": "Включить",
-            "description": "Выключает сконфигурированный Pi-hole."
-        }
-    },
-    "exceptions": {
-        "unable_to_launch_action": {
-            "message": "Не удается запустить действие *{action}*: {exception}."
-        }
+        "description": "С этого экрана вы можете изменить пароль для доступа к экземпляру Pi-hole.",
+        "title": "Pi-hole V6"
+      }
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "update_interval_live": "Частота обновления в реальном времени (секунды)",
+          "update_interval_stats": "Частота обновления статистики (секунды)",
+          "enable_device_tracker": "Включить отслеживание сетевых устройств",
+          "device_tracker_whitelist": "Использовать список адресов как белый список",
+          "device_tracker_mac_list": "Фильтруемые адреса"
+        },
+        "data_description": {
+          "update_interval_live": "Как часто обновляются сущности, отражающие текущее состояние вашего Pi-hole: состояние службы и блокировки, переключатели и индикаторы реального времени. Уменьшение значения повышает отзывчивость панели ценой большего числа запросов к Pi-hole. По умолчанию 120 секунд.",
+          "update_interval_stats": "Как часто обновляются накопительные счётчики и периодические проверки. Их значения меняются постоянно, но имеют смысл только как тенденция, поэтому больший интервал сокращает число строк, записываемых в базу данных recorder, без потери данных. Должна быть больше или равна частоте обновления в реальном времени. По умолчанию 300 секунд.",
+          "enable_device_tracker": "По умолчанию отключено. При включении из Pi-hole загружается список сетевых устройств для создания сущностей device_tracker.",
+          "device_tracker_whitelist": "Если включено, отслеживаются только перечисленные адреса. Если отключено, перечисленные адреса исключаются, а все остальные отслеживаются.",
+          "device_tracker_mac_list": "По одному MAC-адресу (или псевдо-MAC Pi-hole, например IP-192.168.1.10) или IP-адресу в строке, либо через запятую. IP-адреса сопоставляются с текущим IP устройства и могут перестать совпадать при его изменении. Оставьте поле пустым, чтобы отключить фильтрацию."
+        },
+        "description": "После изменения одной из этих опций необходимо перезагрузить службу или перезапустить Home Assistant.",
+        "title": "Pi-hole V6"
+      }
+    },
+    "error": {
+      "invalid_update_interval_live": "Недопустимая частота обновления в реальном времени. Должна быть выше 1 секунды и ниже 3600 секунд.",
+      "invalid_update_interval_stats": "Недопустимая частота обновления статистики. Должна быть от 60 до 86400 секунд и не меньше частоты обновления в реальном времени."
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "status": {
+        "name": "Состояние"
+      }
+    },
+    "device_tracker": {
+      "network_device": {
+        "name": "Сетевое устройство"
+      }
+    },
+    "button": {
+      "action_flush_arp": {
+        "name": "Очистить сетевую таблицу"
+      },
+      "action_flush_logs": {
+        "name": "Очистить журналы DNS"
+      },
+      "action_gravity": {
+        "name": "Запустить gravity"
+      },
+      "action_restartdns": {
+        "name": "Перезапустить pihole-FTL"
+      },
+      "action_refresh_data": {
+        "name": "Обновить данные"
+      },
+      "action_ftl_purge_diagnosis_messages": {
+        "name": "Purge FTL diagnosis messages"
+      }
+    },
+    "sensor": {
+      "ads_blocked_today": {
+        "name": "Заблокировано сегодня реклам",
+        "unit_of_measurement": "реклам"
+      },
+      "ads_percentage_blocked_today": {
+        "name": "Заблокировано сегодня реклам в процентах"
+      },
+      "seen_clients": {
+        "name": "Клиентов замечено",
+        "unit_of_measurement": "клиентов"
+      },
+      "dns_queries_today": {
+        "name": "DNS запросов сегодня",
+        "unit_of_measurement": "запросов"
+      },
+      "domains_blocked": {
+        "name": "Заблокировано доменов",
+        "unit_of_measurement": "доменов"
+      },
+      "dns_queries_frequency": {
+        "name": "Average number of DNS queries",
+        "unit_of_measurement": "queries/min"
+      },
+      "dns_queries_cached": {
+        "name": "Закешированных DNS запросов",
+        "unit_of_measurement": "запросов"
+      },
+      "dns_queries_forwarded": {
+        "name": "Перенаправленных DNS запросов",
+        "unit_of_measurement": "запросов"
+      },
+      "dns_unique_clients": {
+        "name": "Уникальных клиентов у DNS",
+        "unit_of_measurement": "клиентов"
+      },
+      "dns_unique_domains": {
+        "name": "Уникальных доменов в DNS",
+        "unit_of_measurement": "доменов"
+      },
+      "remaining_until_blocking_mode": {
+        "name": "Осталось до режима блокировки"
+      },
+      "latest_data_refresh": {
+        "name": "Последнее обновление данных"
+      },
+      "cpu_use": {
+        "name": "CPU usage"
+      },
+      "memory_use": {
+        "name": "Memory usage"
+      },
+      "ftl_info_message_count": {
+        "name": "FTL diagnosis messages count",
+        "unit_of_measurement": "messages"
+      },
+      "configured_clients": {
+        "name": "Clients configurés",
+        "unit_of_measurement": "clients"
+      },
+      "dhcp_leases": {
+        "name": "Активные аренды DHCP",
+        "unit_of_measurement": "аренды"
+      },
+      "auth_sessions": {
+        "name": "Активные сессии",
+        "unit_of_measurement": "сессии"
+      }
+    },
+    "switch": {
+      "group": {
+        "name": "Группа {group_name}"
+      }
+    },
+    "update": {
+      "core_update_available": {
+        "name": "Oбновление ядра"
+      },
+      "docker_update_available": {
+        "name": "Oбновление Docker"
+      },
+      "ftl_update_available": {
+        "name": "Oбновление FTL"
+      },
+      "web_update_available": {
+        "name": "Веб-обновление"
+      }
+    }
+  },
+  "services": {
+    "disable": {
+      "name": "Выключить",
+      "description": "Выключает сконфигурированный Pi-hole на определенное время.",
+      "fields": {
+        "duration": {
+          "description": "Время в секундах на которое Pi-hole будет выключен.",
+          "name": "Длительность"
+        }
+      }
+    },
+    "enable": {
+      "name": "Включить",
+      "description": "Выключает сконфигурированный Pi-hole."
+    }
+  },
+  "exceptions": {
+    "unable_to_launch_action": {
+      "message": "Не удается запустить действие *{action}*: {exception}."
+    }
+  }
 }

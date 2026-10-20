@@ -1,206 +1,206 @@
 {
-    "config": {
-        "abort": {
-            "already_configured": "Služba je již nakonfigurována.",
-            "reauth_successful": "Re-autentizace byla úspěšná."
-        },
-        "error": {
-            "incorrect_data_expected": "Nepodařilo se načíst data ve správné struktuře.",
-            "cannot_connect": "Nepodařilo se připojit k serveru. Ujistěte se, že adresa serveru a port jsou správné.",
-            "invalid_auth": "Zadané heslo není správné. Zkontrolujte vaše heslo.",
-            "invalid_path": "Zadaná URL adresa API není správná. Zkontrolujte URL adresu."
-        },
-        "step": {
-            "user": {
-                "data": {
-                    "name": "Jméno",
-                    "password": "Heslo",
-                    "url": "URL adresa"
-                },
-                "data_description": {
-                    "password": "Heslo pro přihlášení",
-                    "url": "URL adresa vašeho Pi-hole (např.: {example_url})"
-                },
-                "description": "Tato integrace vám umožňuje získat statistiky a interagovat se systémem Pi-hole V6.",
-                "title": "Pi-hole V6"
-            },
-            "reauth_confirm": {
-                "data": {
-                    "password": "Heslo"
-                },
-                "data_description": {
-                    "password": "Heslo pro přihlášení"
-                },
-                "description": "Z této obrazovky můžete změnit heslo pro přístup k instanci Pi-hole.",
-                "title": "Pi-hole V6"
-            }
-        }
+  "config": {
+    "abort": {
+      "already_configured": "Služba je již nakonfigurována.",
+      "reauth_successful": "Re-autentizace byla úspěšná."
     },
-    "options": {
-        "step": {
-            "init": {
-                "data": {
-                    "update_interval_live": "Frekvence obnovování v reálném čase (sekundy)",
-                    "update_interval_stats": "Frekvence obnovování statistik (sekundy)",
-                    "enable_device_tracker": "Povolit sledování síťových zařízení",
-                    "device_tracker_whitelist": "Použít seznam adres jako seznam povolených",
-                    "device_tracker_mac_list": "Filtrované adresy"
-                },
-                "data_description": {
-                    "update_interval_live": "Jak často se obnovují entity odrážející aktuální stav vašeho Pi-hole: stav služby a blokování, přepínače a ukazatele v reálném čase. Snížení hodnoty zrychlí odezvu ovládacího panelu za cenu více požadavků na Pi-hole. Výchozí hodnota je 120 sekund.",
-                    "update_interval_stats": "Jak často se obnovují kumulativní čítače a pravidelné kontroly. Jejich hodnoty se neustále mění, ale mají význam pouze jako trend, takže delší interval sníží počet řádků zapsaných do databáze recorderu bez ztráty dat. Musí být větší nebo rovna frekvenci obnovování v reálném čase. Výchozí hodnota je 300 sekund.",
-                    "enable_device_tracker": "Ve výchozím nastavení vypnuto. Pokud je zapnuto, načte z Pi-hole seznam síťových zařízení a vytvoří entity device_tracker.",
-                    "device_tracker_whitelist": "Pokud je zapnuto, sledují se pouze uvedené adresy. Pokud je vypnuto, uvedené adresy se vyloučí a sledují se všechny ostatní.",
-                    "device_tracker_mac_list": "Jedna MAC adresa (nebo pseudo-MAC Pi-hole, např. IP-192.168.1.10) nebo IP adresa na řádek, případně oddělené čárkami. IP adresy odpovídají aktuální IP zařízení a při její změně nemusí dále odpovídat. Ponechte prázdné pro vypnutí filtrování."
-                },
-                "description": "Po změně jedné z těchto možností je nutné znovu načíst službu nebo restartovat Home Assistant.",
-                "title": "Pi-hole V6"
-            }
-        },
-        "error": {
-            "invalid_update_interval_live": "Neplatná frekvence obnovování v reálném čase. Musí být vyšší než 1 sekunda a nižší než 3600 sekund.",
-            "invalid_update_interval_stats": "Neplatná frekvence obnovování statistik. Musí být mezi 60 a 86400 sekundami a větší nebo rovna frekvenci obnovování v reálném čase."
-        }
+    "error": {
+      "incorrect_data_expected": "Nepodařilo se načíst data ve správné struktuře.",
+      "cannot_connect": "Nepodařilo se připojit k serveru. Ujistěte se, že adresa serveru a port jsou správné.",
+      "invalid_auth": "Zadané heslo není správné. Zkontrolujte vaše heslo.",
+      "invalid_path": "Zadaná URL adresa API není správná. Zkontrolujte URL adresu."
     },
-    "entity": {
-        "binary_sensor": {
-            "status": {
-                "name": "Stav"
-            }
+    "step": {
+      "user": {
+        "data": {
+          "name": "Jméno",
+          "password": "Heslo",
+          "url": "URL adresa"
         },
-        "device_tracker": {
-            "network_device": {
-                "name": "Síťové zařízení"
-            }
+        "data_description": {
+          "password": "Heslo pro přihlášení",
+          "url": "URL adresa vašeho Pi-hole (např.: {example_url})"
         },
-        "button": {
-            "action_flush_arp": {
-                "name": "Vyprázdnit síťovou tabulku"
-            },
-            "action_flush_logs": {
-                "name": "Vyprázdnit DNS logy"
-            },
-            "action_gravity": {
-                "name": "Spustit gravity"
-            },
-            "action_restartdns": {
-                "name": "Restartovat pihole-FTL"
-            },
-            "action_refresh_data": {
-                "name": "Obnovit data"
-            },
-            "action_ftl_purge_diagnosis_messages": {
-                "name": "Purge FTL diagnosis messages"
-            }
+        "description": "Tato integrace vám umožňuje získat statistiky a interagovat se systémem Pi-hole V6.",
+        "title": "Pi-hole V6"
+      },
+      "reauth_confirm": {
+        "data": {
+          "password": "Heslo"
         },
-        "sensor": {
-            "ads_blocked_today": {
-                "name": "Dnes zablokované reklamy",
-                "unit_of_measurement": "reklam"
-            },
-            "ads_percentage_blocked_today": {
-                "name": "Poměr dnes zablokovaných reklam"
-            },
-            "seen_clients": {
-                "name": "Vidění klienti",
-                "unit_of_measurement": "klientů"
-            },
-            "dns_queries_today": {
-                "name": "DNS dotazy dnes",
-                "unit_of_measurement": "dotazů"
-            },
-            "domains_blocked": {
-                "name": "Zablokované domény",
-                "unit_of_measurement": "domén"
-            },
-            "dns_queries_frequency": {
-                "name": "Average number of DNS queries",
-                "unit_of_measurement": "queries/min"
-            },
-            "dns_queries_cached": {
-                "name": "DNS dotazy uložené ve vyrovnávací paměti",
-                "unit_of_measurement": "dotazů"
-            },
-            "dns_queries_forwarded": {
-                "name": "Přesměrované DNS dotazy",
-                "unit_of_measurement": "dotazů"
-            },
-            "dns_unique_clients": {
-                "name": "Unikátní DNS klienti",
-                "unit_of_measurement": "klientů"
-            },
-            "dns_unique_domains": {
-                "name": "Unikátní DNS domény",
-                "unit_of_measurement": "domén"
-            },
-            "remaining_until_blocking_mode": {
-                "name": "Zbývající čas do blokování"
-            },
-            "latest_data_refresh": {
-                "name": "Poslední aktualizace dat"
-            },
-            "cpu_use": {
-                "name": "CPU usage"
-            },
-            "memory_use": {
-                "name": "Memory usage"
-            },
-            "ftl_info_message_count": {
-                "name": "FTL diagnosis messages count",
-                "unit_of_measurement": "messages"
-            },
-            "configured_clients": {
-                "name": "Configured clients",
-                "unit_of_measurement": "clients"
-            },
-            "dhcp_leases": {
-                "name": "Aktivní zápůjčky DHCP",
-                "unit_of_measurement": "zápůjčky"
-            },
-            "auth_sessions": {
-                "name": "Aktivní relace",
-                "unit_of_measurement": "relace"
-            }
+        "data_description": {
+          "password": "Heslo pro přihlášení"
         },
-        "switch": {
-            "group": {
-                "name": "Skupina {group_name}"
-            }
-        },
-        "update": {
-            "core_update_available": {
-                "name": "Aktualizace Core"
-            },
-            "docker_update_available": {
-                "name": "Aktualizace Docker"
-            },
-            "ftl_update_available": {
-                "name": "Aktualizace FTL"
-            },
-            "web_update_available": {
-                "name": "Aktualizace Web interface"
-            }
-        }
-    },
-    "services": {
-        "disable": {
-            "name": "Zakázat",
-            "description": "Zakáže Pi-hole na určitý čas.",
-            "fields": {
-                "duration": {
-                    "description": "Čas, po který má být Pi-hole zakázán.",
-                    "name": "Trvání"
-                }
-            }
-        },
-        "enable": {
-            "name": "Povolit",
-            "description": "Povolí Pi-hole."
-        }
-    },
-    "exceptions": {
-        "unable_to_launch_action": {
-            "message": "Nelze spustit akci *{action}*: {exception}."
-        }
+        "description": "Z této obrazovky můžete změnit heslo pro přístup k instanci Pi-hole.",
+        "title": "Pi-hole V6"
+      }
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "update_interval_live": "Frekvence obnovování v reálném čase (sekundy)",
+          "update_interval_stats": "Frekvence obnovování statistik (sekundy)",
+          "enable_device_tracker": "Povolit sledování síťových zařízení",
+          "device_tracker_whitelist": "Použít seznam adres jako seznam povolených",
+          "device_tracker_mac_list": "Filtrované adresy"
+        },
+        "data_description": {
+          "update_interval_live": "Jak často se obnovují entity odrážející aktuální stav vašeho Pi-hole: stav služby a blokování, přepínače a ukazatele v reálném čase. Snížení hodnoty zrychlí odezvu ovládacího panelu za cenu více požadavků na Pi-hole. Výchozí hodnota je 120 sekund.",
+          "update_interval_stats": "Jak často se obnovují kumulativní čítače a pravidelné kontroly. Jejich hodnoty se neustále mění, ale mají význam pouze jako trend, takže delší interval sníží počet řádků zapsaných do databáze recorderu bez ztráty dat. Musí být větší nebo rovna frekvenci obnovování v reálném čase. Výchozí hodnota je 300 sekund.",
+          "enable_device_tracker": "Ve výchozím nastavení vypnuto. Pokud je zapnuto, načte z Pi-hole seznam síťových zařízení a vytvoří entity device_tracker.",
+          "device_tracker_whitelist": "Pokud je zapnuto, sledují se pouze uvedené adresy. Pokud je vypnuto, uvedené adresy se vyloučí a sledují se všechny ostatní.",
+          "device_tracker_mac_list": "Jedna MAC adresa (nebo pseudo-MAC Pi-hole, např. IP-192.168.1.10) nebo IP adresa na řádek, případně oddělené čárkami. IP adresy odpovídají aktuální IP zařízení a při její změně nemusí dále odpovídat. Ponechte prázdné pro vypnutí filtrování."
+        },
+        "description": "Po změně jedné z těchto možností je nutné znovu načíst službu nebo restartovat Home Assistant.",
+        "title": "Pi-hole V6"
+      }
+    },
+    "error": {
+      "invalid_update_interval_live": "Neplatná frekvence obnovování v reálném čase. Musí být vyšší než 1 sekunda a nižší než 3600 sekund.",
+      "invalid_update_interval_stats": "Neplatná frekvence obnovování statistik. Musí být mezi 60 a 86400 sekundami a větší nebo rovna frekvenci obnovování v reálném čase."
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "status": {
+        "name": "Stav"
+      }
+    },
+    "device_tracker": {
+      "network_device": {
+        "name": "Síťové zařízení"
+      }
+    },
+    "button": {
+      "action_flush_arp": {
+        "name": "Vyprázdnit síťovou tabulku"
+      },
+      "action_flush_logs": {
+        "name": "Vyprázdnit DNS logy"
+      },
+      "action_gravity": {
+        "name": "Spustit gravity"
+      },
+      "action_restartdns": {
+        "name": "Restartovat pihole-FTL"
+      },
+      "action_refresh_data": {
+        "name": "Obnovit data"
+      },
+      "action_ftl_purge_diagnosis_messages": {
+        "name": "Purge FTL diagnosis messages"
+      }
+    },
+    "sensor": {
+      "ads_blocked_today": {
+        "name": "Dnes zablokované reklamy",
+        "unit_of_measurement": "reklam"
+      },
+      "ads_percentage_blocked_today": {
+        "name": "Poměr dnes zablokovaných reklam"
+      },
+      "seen_clients": {
+        "name": "Vidění klienti",
+        "unit_of_measurement": "klientů"
+      },
+      "dns_queries_today": {
+        "name": "DNS dotazy dnes",
+        "unit_of_measurement": "dotazů"
+      },
+      "domains_blocked": {
+        "name": "Zablokované domény",
+        "unit_of_measurement": "domén"
+      },
+      "dns_queries_frequency": {
+        "name": "Average number of DNS queries",
+        "unit_of_measurement": "queries/min"
+      },
+      "dns_queries_cached": {
+        "name": "DNS dotazy uložené ve vyrovnávací paměti",
+        "unit_of_measurement": "dotazů"
+      },
+      "dns_queries_forwarded": {
+        "name": "Přesměrované DNS dotazy",
+        "unit_of_measurement": "dotazů"
+      },
+      "dns_unique_clients": {
+        "name": "Unikátní DNS klienti",
+        "unit_of_measurement": "klientů"
+      },
+      "dns_unique_domains": {
+        "name": "Unikátní DNS domény",
+        "unit_of_measurement": "domén"
+      },
+      "remaining_until_blocking_mode": {
+        "name": "Zbývající čas do blokování"
+      },
+      "latest_data_refresh": {
+        "name": "Poslední aktualizace dat"
+      },
+      "cpu_use": {
+        "name": "CPU usage"
+      },
+      "memory_use": {
+        "name": "Memory usage"
+      },
+      "ftl_info_message_count": {
+        "name": "FTL diagnosis messages count",
+        "unit_of_measurement": "messages"
+      },
+      "configured_clients": {
+        "name": "Configured clients",
+        "unit_of_measurement": "clients"
+      },
+      "dhcp_leases": {
+        "name": "Aktivní zápůjčky DHCP",
+        "unit_of_measurement": "zápůjčky"
+      },
+      "auth_sessions": {
+        "name": "Aktivní relace",
+        "unit_of_measurement": "relace"
+      }
+    },
+    "switch": {
+      "group": {
+        "name": "Skupina {group_name}"
+      }
+    },
+    "update": {
+      "core_update_available": {
+        "name": "Aktualizace Core"
+      },
+      "docker_update_available": {
+        "name": "Aktualizace Docker"
+      },
+      "ftl_update_available": {
+        "name": "Aktualizace FTL"
+      },
+      "web_update_available": {
+        "name": "Aktualizace Web interface"
+      }
+    }
+  },
+  "services": {
+    "disable": {
+      "name": "Zakázat",
+      "description": "Zakáže Pi-hole na určitý čas.",
+      "fields": {
+        "duration": {
+          "description": "Čas, po který má být Pi-hole zakázán.",
+          "name": "Trvání"
+        }
+      }
+    },
+    "enable": {
+      "name": "Povolit",
+      "description": "Povolí Pi-hole."
+    }
+  },
+  "exceptions": {
+    "unable_to_launch_action": {
+      "message": "Nelze spustit akci *{action}*: {exception}."
+    }
+  }
 }
