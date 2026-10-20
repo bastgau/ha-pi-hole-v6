@@ -1,206 +1,206 @@
 {
-    "config": {
-        "abort": {
-            "already_configured": "Usługa jest już skonfigurowana.",
-            "reauth_successful": "Ponowne uwierzytelnienie się powiodło."
-        },
-        "error": {
-            "incorrect_data_expected": "Nie udało się pobrać danych w poprawnej strukturze.",
-            "cannot_connect": "Nie udało się połączyć z serwerem. Upewnij się, że adres serwera i port są poprawne.",
-            "invalid_auth": "Podano nieprawidłowe hasło. Upewnij się, że Twoje hasło jest poprawne.",
-            "invalid_path": "Podano nieprawidłową ścieżkę API. Zweryfikuj adres URL punktu końcowego."
-        },
-        "step": {
-            "user": {
-                "data": {
-                    "name": "Nazwa",
-                    "password": "Hasło",
-                    "url": "Adres URL"
-                },
-                "data_description": {
-                    "password": "Hasło używane do logowania",
-                    "url": "URL lub adres Twojego Pi-hole (np.: {example_url})"
-                },
-                "description": "Ta integracja pozwala na pobieranie statystyk i interakcję z systemem Pi-hole V6.",
-                "title": "Pi-hole V6"
-            },
-            "reauth_confirm": {
-                "data": {
-                    "password": "Hasło"
-                },
-                "data_description": {
-                    "password": "Hasło używane do logowania"
-                },
-                "description": "Z tego ekranu można zmienić hasło dostępu do instancji Pi-hole.",
-                "title": "Pi-hole V6"
-            }
-        }
+  "config": {
+    "abort": {
+      "already_configured": "Usługa jest już skonfigurowana.",
+      "reauth_successful": "Ponowne uwierzytelnienie się powiodło."
     },
-    "options": {
-        "step": {
-            "init": {
-                "data": {
-                    "update_interval_live": "Częstotliwość odświeżania w czasie rzeczywistym (sekundy)",
-                    "update_interval_stats": "Częstotliwość odświeżania statystyk (sekundy)",
-                    "enable_device_tracker": "Włącz śledzenie urządzeń sieciowych",
-                    "device_tracker_whitelist": "Użyj listy adresów jako białej listy",
-                    "device_tracker_mac_list": "Filtrowane adresy"
-                },
-                "data_description": {
-                    "update_interval_live": "Jak często odświeżane są encje odzwierciedlające bieżący stan Pi-hole: stan usługi i blokowania, przełączniki oraz wskaźniki czasu rzeczywistego. Zmniejszenie tej wartości zwiększa responsywność pulpitu kosztem większej liczby zapytań do Pi-hole. Domyślnie 120 sekund.",
-                    "update_interval_stats": "Jak często odświeżane są liczniki skumulowane i okresowe sprawdzenia. Ich wartości zmieniają się nieustannie, ale mają znaczenie tylko jako trend, więc dłuższy interwał zmniejsza liczbę wierszy zapisywanych w bazie danych recordera bez utraty danych. Musi być większa lub równa częstotliwości odświeżania w czasie rzeczywistym. Domyślnie 300 sekund.",
-                    "enable_device_tracker": "Domyślnie wyłączone. Po włączeniu pobiera z Pi-hole listę urządzeń sieciowych, aby utworzyć encje device_tracker.",
-                    "device_tracker_whitelist": "Po włączeniu śledzone są tylko wymienione adresy. Po wyłączeniu wymienione adresy są pomijane, a śledzone są wszystkie pozostałe.",
-                    "device_tracker_mac_list": "Jeden adres MAC (lub pseudo-MAC Pi-hole, np. IP-192.168.1.10) albo adres IP w wierszu, lub oddzielone przecinkami. Adresy IP odpowiadają bieżącemu adresowi IP urządzenia i mogą przestać pasować po jego zmianie. Pozostaw puste, aby wyłączyć filtrowanie."
-                },
-                "description": "Po zmianie jednej z tych opcji konieczne jest ponowne załadowanie usługi lub ponowne uruchomienie Home Assistant.",
-                "title": "Pi-hole V6"
-            }
-        },
-        "error": {
-            "invalid_update_interval_live": "Nieprawidłowa częstotliwość odświeżania w czasie rzeczywistym. Musi być większa niż 1 sekunda i mniejsza niż 3600 sekund.",
-            "invalid_update_interval_stats": "Nieprawidłowa częstotliwość odświeżania statystyk. Musi mieścić się między 60 a 86400 sekundami i być większa lub równa częstotliwości odświeżania w czasie rzeczywistym."
-        }
+    "error": {
+      "incorrect_data_expected": "Nie udało się pobrać danych w poprawnej strukturze.",
+      "cannot_connect": "Nie udało się połączyć z serwerem. Upewnij się, że adres serwera i port są poprawne.",
+      "invalid_auth": "Podano nieprawidłowe hasło. Upewnij się, że Twoje hasło jest poprawne.",
+      "invalid_path": "Podano nieprawidłową ścieżkę API. Zweryfikuj adres URL punktu końcowego."
     },
-    "entity": {
-        "binary_sensor": {
-            "status": {
-                "name": "Status"
-            }
+    "step": {
+      "user": {
+        "data": {
+          "name": "Nazwa",
+          "password": "Hasło",
+          "url": "Adres URL"
         },
-        "device_tracker": {
-            "network_device": {
-                "name": "Urządzenie sieciowe"
-            }
+        "data_description": {
+          "password": "Hasło używane do logowania",
+          "url": "URL lub adres Twojego Pi-hole (np.: {example_url})"
         },
-        "button": {
-            "action_flush_arp": {
-                "name": "Wyczyść tablicę sieciową"
-            },
-            "action_flush_logs": {
-                "name": "Wyczyść logi DNS"
-            },
-            "action_gravity": {
-                "name": "Uruchom gravity"
-            },
-            "action_restartdns": {
-                "name": "Restartuj pihole-FTL"
-            },
-            "action_refresh_data": {
-                "name": "Odśwież dane"
-            },
-            "action_ftl_purge_diagnosis_messages": {
-                "name": "Purge FTL diagnosis messages"
-            }
+        "description": "Ta integracja pozwala na pobieranie statystyk i interakcję z systemem Pi-hole V6.",
+        "title": "Pi-hole V6"
+      },
+      "reauth_confirm": {
+        "data": {
+          "password": "Hasło"
         },
-        "sensor": {
-            "ads_blocked_today": {
-                "name": "Reklamy zablokowane dzisiaj",
-                "unit_of_measurement": "reklamy"
-            },
-            "ads_percentage_blocked_today": {
-                "name": "Procent zablokowanych reklam dzisiaj"
-            },
-            "seen_clients": {
-                "name": "Widoczni klienci",
-                "unit_of_measurement": "klienci"
-            },
-            "dns_queries_today": {
-                "name": "Zapytania DNS dzisiaj",
-                "unit_of_measurement": "zapytania"
-            },
-            "domains_blocked": {
-                "name": "Zablokowane domeny",
-                "unit_of_measurement": "domeny"
-            },
-            "dns_queries_frequency": {
-                "name": "Average number of DNS queries",
-                "unit_of_measurement": "queries/min"
-            },
-            "dns_queries_cached": {
-                "name": "Zapytania DNS w cache",
-                "unit_of_measurement": "zapytania"
-            },
-            "dns_queries_forwarded": {
-                "name": "Przekazane zapytania DNS",
-                "unit_of_measurement": "zapytania"
-            },
-            "dns_unique_clients": {
-                "name": "Unikalni klienci DNS",
-                "unit_of_measurement": "klienci"
-            },
-            "dns_unique_domains": {
-                "name": "Unikalne domeny DNS",
-                "unit_of_measurement": "domeny"
-            },
-            "remaining_until_blocking_mode": {
-                "name": "Pozostały czas do trybu blokowania"
-            },
-            "latest_data_refresh": {
-                "name": "Ostatnia aktualizacja danych"
-            },
-            "cpu_use": {
-                "name": "CPU usage"
-            },
-            "memory_use": {
-                "name": "Memory usage"
-            },
-            "ftl_info_message_count": {
-                "name": "FTL diagnosis messages count",
-                "unit_of_measurement": "messages"
-            },
-            "configured_clients": {
-                "name": "Clients configurés",
-                "unit_of_measurement": "clients"
-            },
-            "dhcp_leases": {
-                "name": "Aktywne dzierżawy DHCP",
-                "unit_of_measurement": "dzierżawy"
-            },
-            "auth_sessions": {
-                "name": "Aktywne sesje",
-                "unit_of_measurement": "sesje"
-            }
+        "data_description": {
+          "password": "Hasło używane do logowania"
         },
-        "switch": {
-            "group": {
-                "name": "Grupa {group_name}"
-            }
-        },
-        "update": {
-            "core_update_available": {
-                "name": "Aktualizacja Rdzenia"
-            },
-            "docker_update_available": {
-                "name": "Aktualizacja Dockera"
-            },
-            "ftl_update_available": {
-                "name": "Aktualizacja FTL"
-            },
-            "web_update_available": {
-                "name": "Aktualizacja interfejsu webowego"
-            }
-        }
-    },
-    "services": {
-        "disable": {
-            "name": "Wyłącz",
-            "description": "Wyłącza skonfigurowany Pi-hole na określony czas.",
-            "fields": {
-                "duration": {
-                    "description": "Czas, na jaki Pi-hole powinien być wyłączony.",
-                    "name": "Czas trwania"
-                }
-            }
-        },
-        "enable": {
-            "name": "Aktywuj",
-            "description": "Włącza skonfigurowany Pi-hole."
-        }
-    },
-    "exceptions": {
-        "unable_to_launch_action": {
-            "message": "Nie można uruchomić akcji *{action}*: {exception}."
-        }
+        "description": "Z tego ekranu można zmienić hasło dostępu do instancji Pi-hole.",
+        "title": "Pi-hole V6"
+      }
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "update_interval_live": "Częstotliwość odświeżania w czasie rzeczywistym (sekundy)",
+          "update_interval_stats": "Częstotliwość odświeżania statystyk (sekundy)",
+          "enable_device_tracker": "Włącz śledzenie urządzeń sieciowych",
+          "device_tracker_whitelist": "Użyj listy adresów jako białej listy",
+          "device_tracker_mac_list": "Filtrowane adresy"
+        },
+        "data_description": {
+          "update_interval_live": "Jak często odświeżane są encje odzwierciedlające bieżący stan Pi-hole: stan usługi i blokowania, przełączniki oraz wskaźniki czasu rzeczywistego. Zmniejszenie tej wartości zwiększa responsywność pulpitu kosztem większej liczby zapytań do Pi-hole. Domyślnie 120 sekund.",
+          "update_interval_stats": "Jak często odświeżane są liczniki skumulowane i okresowe sprawdzenia. Ich wartości zmieniają się nieustannie, ale mają znaczenie tylko jako trend, więc dłuższy interwał zmniejsza liczbę wierszy zapisywanych w bazie danych recordera bez utraty danych. Musi być większa lub równa częstotliwości odświeżania w czasie rzeczywistym. Domyślnie 300 sekund.",
+          "enable_device_tracker": "Domyślnie wyłączone. Po włączeniu pobiera z Pi-hole listę urządzeń sieciowych, aby utworzyć encje device_tracker.",
+          "device_tracker_whitelist": "Po włączeniu śledzone są tylko wymienione adresy. Po wyłączeniu wymienione adresy są pomijane, a śledzone są wszystkie pozostałe.",
+          "device_tracker_mac_list": "Jeden adres MAC (lub pseudo-MAC Pi-hole, np. IP-192.168.1.10) albo adres IP w wierszu, lub oddzielone przecinkami. Adresy IP odpowiadają bieżącemu adresowi IP urządzenia i mogą przestać pasować po jego zmianie. Pozostaw puste, aby wyłączyć filtrowanie."
+        },
+        "description": "Po zmianie jednej z tych opcji konieczne jest ponowne załadowanie usługi lub ponowne uruchomienie Home Assistant.",
+        "title": "Pi-hole V6"
+      }
+    },
+    "error": {
+      "invalid_update_interval_live": "Nieprawidłowa częstotliwość odświeżania w czasie rzeczywistym. Musi być większa niż 1 sekunda i mniejsza niż 3600 sekund.",
+      "invalid_update_interval_stats": "Nieprawidłowa częstotliwość odświeżania statystyk. Musi mieścić się między 60 a 86400 sekundami i być większa lub równa częstotliwości odświeżania w czasie rzeczywistym."
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "status": {
+        "name": "Status"
+      }
+    },
+    "device_tracker": {
+      "network_device": {
+        "name": "Urządzenie sieciowe"
+      }
+    },
+    "button": {
+      "action_flush_arp": {
+        "name": "Wyczyść tablicę sieciową"
+      },
+      "action_flush_logs": {
+        "name": "Wyczyść logi DNS"
+      },
+      "action_gravity": {
+        "name": "Uruchom gravity"
+      },
+      "action_restartdns": {
+        "name": "Restartuj pihole-FTL"
+      },
+      "action_refresh_data": {
+        "name": "Odśwież dane"
+      },
+      "action_ftl_purge_diagnosis_messages": {
+        "name": "Purge FTL diagnosis messages"
+      }
+    },
+    "sensor": {
+      "ads_blocked_today": {
+        "name": "Reklamy zablokowane dzisiaj",
+        "unit_of_measurement": "reklamy"
+      },
+      "ads_percentage_blocked_today": {
+        "name": "Procent zablokowanych reklam dzisiaj"
+      },
+      "seen_clients": {
+        "name": "Widoczni klienci",
+        "unit_of_measurement": "klienci"
+      },
+      "dns_queries_today": {
+        "name": "Zapytania DNS dzisiaj",
+        "unit_of_measurement": "zapytania"
+      },
+      "domains_blocked": {
+        "name": "Zablokowane domeny",
+        "unit_of_measurement": "domeny"
+      },
+      "dns_queries_frequency": {
+        "name": "Average number of DNS queries",
+        "unit_of_measurement": "queries/min"
+      },
+      "dns_queries_cached": {
+        "name": "Zapytania DNS w cache",
+        "unit_of_measurement": "zapytania"
+      },
+      "dns_queries_forwarded": {
+        "name": "Przekazane zapytania DNS",
+        "unit_of_measurement": "zapytania"
+      },
+      "dns_unique_clients": {
+        "name": "Unikalni klienci DNS",
+        "unit_of_measurement": "klienci"
+      },
+      "dns_unique_domains": {
+        "name": "Unikalne domeny DNS",
+        "unit_of_measurement": "domeny"
+      },
+      "remaining_until_blocking_mode": {
+        "name": "Pozostały czas do trybu blokowania"
+      },
+      "latest_data_refresh": {
+        "name": "Ostatnia aktualizacja danych"
+      },
+      "cpu_use": {
+        "name": "CPU usage"
+      },
+      "memory_use": {
+        "name": "Memory usage"
+      },
+      "ftl_info_message_count": {
+        "name": "FTL diagnosis messages count",
+        "unit_of_measurement": "messages"
+      },
+      "configured_clients": {
+        "name": "Clients configurés",
+        "unit_of_measurement": "clients"
+      },
+      "dhcp_leases": {
+        "name": "Aktywne dzierżawy DHCP",
+        "unit_of_measurement": "dzierżawy"
+      },
+      "auth_sessions": {
+        "name": "Aktywne sesje",
+        "unit_of_measurement": "sesje"
+      }
+    },
+    "switch": {
+      "group": {
+        "name": "Grupa {group_name}"
+      }
+    },
+    "update": {
+      "core_update_available": {
+        "name": "Aktualizacja Rdzenia"
+      },
+      "docker_update_available": {
+        "name": "Aktualizacja Dockera"
+      },
+      "ftl_update_available": {
+        "name": "Aktualizacja FTL"
+      },
+      "web_update_available": {
+        "name": "Aktualizacja interfejsu webowego"
+      }
+    }
+  },
+  "services": {
+    "disable": {
+      "name": "Wyłącz",
+      "description": "Wyłącza skonfigurowany Pi-hole na określony czas.",
+      "fields": {
+        "duration": {
+          "description": "Czas, na jaki Pi-hole powinien być wyłączony.",
+          "name": "Czas trwania"
+        }
+      }
+    },
+    "enable": {
+      "name": "Aktywuj",
+      "description": "Włącza skonfigurowany Pi-hole."
+    }
+  },
+  "exceptions": {
+    "unable_to_launch_action": {
+      "message": "Nie można uruchomić akcji *{action}*: {exception}."
+    }
+  }
 }
