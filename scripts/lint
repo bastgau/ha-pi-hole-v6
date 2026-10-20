@@ -135,7 +135,9 @@ run_pylint() {
 # Assistant relies on. Matching the hook's real behaviour beats matching its
 # declaration.
 PRETTIER_VERSION="3.6.2"
-PRETTIER_GLOBS=("**/*.{json,yaml,yml,md}")
+# .copier-answers.yml is written by Copier; reformatting it would make every
+# `copier update` fight Prettier over quotes and indentation.
+PRETTIER_GLOBS=("**/*.{json,yaml,yml,md}" "!.copier-answers.yml")
 IFS=',' read -ra excludes <<< "${PRETTIER_EXCLUDES}"
 for dir in "${excludes[@]}"; do
   [ -n "$dir" ] && PRETTIER_GLOBS+=("!${dir}/**")
