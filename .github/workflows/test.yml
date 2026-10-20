@@ -1,0 +1,83 @@
+---
+name: "Test"
+
+on:
+  push:
+    tags-ignore:
+      - "v*"
+  pull_request:
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  # Same always-reporting job as in lint.yml, for the same reason; it also asks
+  # scripts/test which scopes exist (client + integration, or integration only,
+  # or none while the repository has no tests/).
+  changes:
+    name: "changes"
+    runs-on: "ubuntu-latest"
+    permissions:
+      contents: read
+    outputs:
+      python: "${{ steps.filter.outputs.python }}"
+      scopes: "${{ steps.scopes.outputs.scopes }}"
+    steps:
+      - uses: "actions/checkout@v7"
+
+      - name: "Load the project variables"
+        shell: "bash"
+        # .devcontainer/.common-env is the single source of truth for the
+        # integration domain and the client package; scripts/ read it too.
+        run: grep -E '^[A-Z_]+=' .devcontainer/.common-env >> "$GITHUB_ENV"
+
+      - id: "scopes"
+        run: echo "scopes=$(scripts/test --list-scopes)" >> "$GITHUB_OUTPUT"
+
+      - uses: "dorny/paths-filter@v4"
+        id: "filter"
+        with:
+          filters: |
+            python:
+              - "custom_components/**/*.py"
+              - "tests/**/*.py"
+              - "pyproject.toml"
+              - "uv.lock"
+              - ".coveragerc*"
+              - ".github/workflows/test.yml"
+
+  # Each scope covers 100% of what it owns, alone, with its own 95% floor.
+  test:
+    name: "${{ matrix.scope }}"
+    needs: "changes"
+    if: "needs.changes.outputs.python == 'true' && needs.changes.outputs.scopes != '[]'"
+    runs-on: "ubuntu-latest"
+    strategy:
+      fail-fast: false
+      matrix:
+        scope: "${{ fromJSON(needs.changes.outputs.scopes) }}"
+
+    steps:
+      - name: "Check out the repository"
+        uses: "actions/checkout@v7"
+
+      - name: "Load the project variables"
+        shell: "bash"
+        # .devcontainer/.common-env is the single source of truth for the
+        # integration domain and the client package; scripts/ read it too.
+        run: grep -E '^[A-Z_]+=' .devcontainer/.common-env >> "$GITHUB_ENV"
+
+      - name: "Install uv"
+        uses: "astral-sh/setup-uv@v7"
+        with:
+          enable-cache: true
+
+      # The client's tests never start Home Assistant, so they get a smaller
+      # environment than the integration's (see test-client in pyproject.toml).
+      - name: "Install the test environment"
+        run: |
+          uv sync --frozen --no-default-groups --group homeassistant \
+            ${{ matrix.scope == 'client' && '--group test-client' || '--group test' }}
+
+      - name: "Run the ${{ matrix.scope }} tests"
+        run: scripts/test ${{ matrix.scope }}

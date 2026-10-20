@@ -1,0 +1,180 @@
+#!/usr/bin/env python3
+"""Strip non-pertinent response headers from Bruno example blocks.
+
+Only meaningful when the bundled API client ships a Bruno collection, in
+`custom_components/<domain>/<client>/bruno/`. Without a client, or without that
+folder, there is nothing to clean and the script exits successfully, so it is
+safe to keep (and to run from a hook) in every repository.
+
+Bruno records the *actual* HTTP response headers when an example is
+generated/updated, which drags in noise that must never be pushed to git:
+request timestamps, Cloudflare ray/proxy metadata, internal backend IPs, and
+partial API key/token fingerprints.
+
+This only touches lines inside a `headers: { ... }` block that is itself
+nested directly under a `response: { ... }` block (the captured example
+response), never the request headers (which only ever hold `{{variables}}`).
+JSON body content inside `'''...'''` is left untouched.
+
+Usage:
+    scripts/clean_bruno_headers [--check] [path ...]
+
+With no path, scans every *.bru file in the collection. With --check, reports
+files that would change and exits 1 without writing (for CI/pre-commit use).
+"""
+
+from __future__ import annotations
+
+import argparse
+from pathlib import Path
+import re
+import sys
+
+REPO_ROOT = Path(__file__).resolve().parent.parent
+
+
+def load_project_variables() -> dict[str, str]:
+    """Read .devcontainer/.common-env (KEY=value lines, values may contain spaces)."""
+    variables: dict[str, str] = {}
+    for line in (REPO_ROOT / ".devcontainer" / ".common-env").read_text(encoding="utf-8").splitlines():
+        key, separator, value = line.partition("=")
+        if separator and re.fullmatch(r"[A-Z_]+", key):
+            variables[key] = value
+    return variables
+
+
+def collection_dir() -> Path | None:
+    """Return the client's Bruno folder, or None when this repository has none."""
+    variables = load_project_variables()
+    domain = variables.get("INTEGRATION_DOMAIN", "")
+    client = variables.get("CLIENT_PACKAGE", "")
+    if not domain or not client:
+        return None
+    directory = REPO_ROOT / "custom_components" / domain / client / "bruno"
+    return directory if directory.is_dir() else None
+
+# Response headers that are non-reproducible, internal, or leak
+# credential fragments. Never pertinent to a versioned API example.
+NOISY_HEADERS = {
+    "date",
+    "transfer-encoding",
+    "connection",
+    "server",
+    "vary",
+    "x-betaseries-key",
+    "x-betaseries-token",
+    "x-backend-server",
+    "cf-cache-status",
+    "cf-ray",
+    "report-to",
+    "nel",
+    "alt-svc",
+}
+
+BLOCK_OPEN_RE = re.compile(r"^\s*(?P<name>.+?)\s*\{\s*$")
+RAW_STRING_OPEN_RE = re.compile(r"^\s*[\w:.\[\]-]+:\s*'''\s*$")
+
+
+def clean_lines(lines: list[str]) -> list[str]:
+    """Drop noisy header lines from response {} headers {} blocks only."""
+    out: list[str] = []
+    stack: list[str] = []
+    in_raw_string = False
+
+    for line in lines:
+        stripped = line.strip()
+
+        if in_raw_string:
+            out.append(line)
+            if stripped == "'''":
+                in_raw_string = False
+            continue
+
+        if RAW_STRING_OPEN_RE.match(line):
+            out.append(line)
+            in_raw_string = True
+            continue
+
+        if stripped == "}":
+            if stack:
+                stack.pop()
+            out.append(line)
+            continue
+
+        block_open = BLOCK_OPEN_RE.match(line)
+        if block_open:
+            name = block_open.group("name").strip().removesuffix(":")
+            stack.append(name)
+            out.append(line)
+            continue
+
+        in_response_headers = (
+            len(stack) >= 2 and stack[-1] == "headers" and stack[-2] == "response"
+        )
+        if in_response_headers:
+            header_name = stripped.split(":", 1)[0].strip().lower()
+            if header_name in NOISY_HEADERS:
+                continue
+
+        out.append(line)
+
+    return out
+
+
+def clean_file(path: Path) -> tuple[bool, list[str]]:
+    """Return whether `path` would change, and its cleaned lines."""
+    original = path.read_text(encoding="utf-8").splitlines(keepends=True)
+    cleaned = clean_lines(original)
+    return cleaned != original, cleaned
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "paths",
+        nargs="*",
+        type=Path,
+        help="*.bru files or directories to clean (default: the client's bruno/ folder)",
+    )
+    parser.add_argument(
+        "--check",
+        action="store_true",
+        help="only report files that would change; exit 1 if any would",
+    )
+    args = parser.parse_args()
+
+    default_dir = collection_dir()
+    if not args.paths and default_dir is None:
+        print("No Bruno collection in the client: nothing to clean.")
+        return 0
+
+    targets = args.paths or [default_dir]
+    files: list[Path] = []
+    for target in targets:
+        if target.is_dir():
+            files.extend(sorted(target.rglob("*.bru")))
+        else:
+            files.append(target)
+
+    changed: list[Path] = []
+    for path in files:
+        would_change, cleaned = clean_file(path)
+        if not would_change:
+            continue
+        changed.append(path)
+        if not args.check:
+            path.write_text("".join(cleaned), encoding="utf-8")
+
+    if not changed:
+        print("No noisy response headers found.")
+        return 0
+
+    verb = "Would clean" if args.check else "Cleaned"
+    for path in changed:
+        print(f"{verb}: {path.relative_to(REPO_ROOT)}")
+
+    return 1 if args.check else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

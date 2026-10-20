@@ -1,41 +1,63 @@
-[tool.poetry]
-authors = ["Bastien Gautier <contact@bastiengautier.com>"]
+[project]
+name = "ha-pi-hole-v6"
+version = "0.0.0"
+description = "This custom integration restores compatibility between Home Assistant and Pi-hole, which is no longer supported by the native integration due to API changes."
+readme = "README.md"
+license = "MIT"
+# One minor only (devcontainer, CI and Home Assistant all target it); the floor
+# is whatever the pinned homeassistant requires.
+requires-python = ">=3.14.2,<3.15"
+authors = [{ name = "Bastien Gautier", email = "contact@bastiengautier.com" }]
+maintainers = [{ name = "Bastien Gautier", email = "contact@bastiengautier.com" }]
 classifiers = [
   "Development Status :: 5 - Production/Stable",
   "Framework :: AsyncIO",
   "Intended Audience :: Developers",
   "Natural Language :: English",
-  "Programming Language :: Python :: 3.14",
   "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.14",
 ]
-description = "This custom integration restores compatibility between Home Assistant and Pi-hole, which is no longer supported by the native integration due to API changes. "
-documentation = "https://github.com/bastgau/ha-pi-hole-v6"
-homepage = "https://github.com/bastgau/ha-pi-hole-v6"
-license = "MIT"
-maintainers = ["Bastien Gautier <contact@bastiengautier.com>"]
-name = "Pi-hole V6 for Home Assistant"
-packages = []
-readme = "README.md"
-repository = "https://github.com/bastgau/ha-pi-hole-v6"
-version = "0.0.0"
+dependencies = []
 
-[tool.poetry.urls]
+[project.urls]
+Homepage = "https://github.com/bastgau/ha-pi-hole-v6"
+Documentation = "https://github.com/bastgau/ha-pi-hole-v6"
+Repository = "https://github.com/bastgau/ha-pi-hole-v6"
 "Bug Tracker" = "https://github.com/bastgau/ha-pi-hole-v6/issues"
 Changelog = "https://github.com/bastgau/ha-pi-hole-v6/releases"
 
-[tool.poetry.dependencies]
-homeassistant = "2026.2.1"
-python = ">=3.14.2,<3.15"
+# Groups rather than one flat list so that CI installs only what each job needs.
+# The ~45 packages `default_config` pulls in for a local `hass` are deliberately
+# NOT here: they live in .devcontainer/requirements-default-config.txt (see
+# scripts/update_requirements), which keeps them out of uv.lock and out of
+# Dependabot's pull requests.
+[dependency-groups]
+# Must match the homeassistant pin that pytest-homeassistant-custom-component
+# depends on, or `uv lock` fails to resolve.
+homeassistant = ["homeassistant==2026.10.1"]
+lint = [
+  "prek==0.5.5",
+  "pylint==4.1.3",
+  "pyright==1.1.414",
+  "ruff==0.17.0",
+  # Not on PyPI: installed straight from its GitHub release.
+  "docstring-linter @ https://github.com/bastgau/docstring-linter/releases/download/v0.9.0/docstring_linter-0.9.0-py3-none-any.whl",
+]
+test = ["pytest-homeassistant-custom-component==0.13.372"]
 
-[tool.poetry.group.dev.dependencies]
-prek = "0.2.28"
-pylint = "4.0.4"
-pyright = "1.1.411"
-ruff = "0.17.0"
+[tool.uv]
+package = false
+default-groups = ["homeassistant", "lint", "test"]
 
-[build-system]
-build-backend = "poetry.core.masonry.api"
-requires = ["poetry-core"]
+[tool.ruff]
+# NOTE: runtime target is Python 3.14, but ruff's target-version is intentionally
+# pinned to py313 to avoid a known ruff 0.15.x formatter bug that rewrites
+# `except (A, B):` into the PEP 758 form `except A, B:` (invalid on Python <=3.13).
+# Bump back to "py314" once the ruff formatter fix ships.
+target-version = "py313"
+line-length = 120
+indent-width = 4
+src = ["custom_components/pi_hole_v6"]
 
 [tool.ruff.lint]
 ignore = [
@@ -45,8 +67,6 @@ ignore = [
   "TID252",  # Relative imports
   "RUF012",  # Just broken
   "D202",    # No blank lines allowed after function docstring
-  "D203",    # 1 blank line required before class docstring
-  "D213",    # Multi-line docstring summary should start at the second line
   "D404",    # First word of the docstring should not be This
   "D406",    # Section name should end with a newline
   "D407",    # Section name underlining
@@ -58,16 +78,16 @@ ignore = [
   "FBT002",  # Boolean-typed positional argument in function definition
   "ARG002",  # Unused method argument: `kwargs`
   "PLR0911", # Too many return statements (19 > 6)
-  "PLR0912", # Too many branches"
-  "PLR0915", # Too many statements (58 > 50)"
+  "PLR0912", # Too many branches
+  "PLR0915", # Too many statements (58 > 50)
   "BLE001",  # Do not catch blind exception: `Exception`
-  "S110",    # `try`-`except`-`pass` detected, consider logging the exception"
+  "S110",    # `try`-`except`-`pass` detected, consider logging the exception
+  "CPY001",  # No copyright header convention in this project
 
   # Formatter conflicts
   "COM812",
   "COM819",
   "D206",
-  "E501",
   "ISC001",
   "Q000",
   "Q001",
@@ -83,63 +103,82 @@ select = ["ALL"]
 "homeassistant.helpers.device_registry" = "dr"
 "homeassistant.helpers.entity_registry" = "er"
 "homeassistant.helpers.issue_registry" = "ir"
-voluptuous = "vol"
 
 [tool.ruff.lint.isort]
 force-sort-within-sections = true
 known-first-party = ["homeassistant"]
 combine-as-imports = true
 
+[tool.ruff.lint.mccabe]
+max-complexity = 25
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = [
+  "S101", # Use of `assert` detected -- standard in pytest test bodies
+  "S105", # Possible hardcoded password -- fixture credentials, not real secrets
+]
+
 [tool.pylint."MESSAGES CONTROL"]
 # Reasons disabled:
 # format - handled by ruff
 # duplicate-code - unavoidable
 # used-before-assignment - false positives with TYPE_CHECKING structures
+# wrong-import-order - pylint has no equivalent to ruff's known-first-party;
+#   homeassistant is treated as first-party by ruff/isort (see [tool.ruff.lint.isort]),
+#   which pylint's import checker cannot be configured to match.
 disable = [
   "abstract-method",
   "duplicate-code",
   "format",
   "unexpected-keyword-arg",
   "used-before-assignment",
+  "wrong-import-order",
 ]
 max-args = 6
 max-positional-arguments = 6
 
-[tool.mypy]
-# Specify the target platform details in config, so your developers are
-# free to run mypy on Windows, Linux, or macOS and get consistent
-# results.
-platform = "linux"
-python_version = "3.13"
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+# pytest-homeassistant-custom-component's autouse fixture
+# `enable_event_loop_debug` is declared with @pytest.fixture despite being
+# async, which pytest-asyncio only tolerates in "auto" mode ("strict" raises
+# PytestRemovedIn9Warning: async fixture with no plugin/hook handling it).
+asyncio_mode = "auto"
+# Coverage is NOT in addopts: scripts/test (and CI) pass it per scope, so a bare
+# `pytest` from VSCode or while iterating on one test is never gated.
 
-# show error messages from unrelated files
-follow_imports = "normal"
+[tool.coverage.run]
+source = ["custom_components/pi_hole_v6"]
+# VSCode's Python Testing extension invokes pytest with its own --cov=.
+# argument, overriding `source` above. `omit` still applies afterwards, so
+# it keeps tests/ out of the coverage report regardless of how pytest-cov
+# was invoked (scripts/test, VSCode, CI, ...).
+omit = ["tests/*"]
 
-# suppress errors about unsatisfied imports
-ignore_missing_imports = true
+[tool.coverage.report]
+exclude_lines = ["pragma: no cover", "if TYPE_CHECKING:"]
 
-# be strict
-# check_untyped_defs = true
-# disallow_any_generics = true
-# disallow_incomplete_defs = true
-# disallow_subclassing_any = true
-# disallow_untyped_calls = true
-# disallow_untyped_decorators = true
-# disallow_untyped_defs = true
-# no_implicit_optional = true
-# strict_optional = true
-# warn_incomplete_stub = true
-# warn_no_return = true
-# warn_redundant_casts = true
-# warn_return_any = true
-# warn_unused_configs = true
-# warn_unused_ignores = true
+[tool.docstring-linter]
+style = "google"
+select = ["ALL"]
+ignore_placeholder_docstrings = false
+workers = 1
+summary_max_length = 120
 
-[tool.ruff.lint.mccabe]
-max-complexity = 25
+[[tool.docstring-linter.overrides]]
+ignore = ["imperative_mood"]
+paths = ["tests/**"]
+args_section = "forbidden"
+returns_section = "forbidden"
+yields_section = "forbidden"
+raises_section = "forbidden"
+attributes_section = "forbidden"
+description_section = "optional"
+examples_section = "forbidden"
+notes_section = "forbidden"
+todo_section = "forbidden"
+blank_lines_before_closing_quotes = 0
 
-[tool.ruff]
-target-version = "py313"
-line-length = 120
-indent-width = 4
-src = ["custom_components/pi_hole_v6"]
+[[tool.docstring-linter.overrides]]
+paths = ["custom_components/pi_hole_v6/*.py"]
+summary_max_length = 120

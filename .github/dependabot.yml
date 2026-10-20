@@ -1,6 +1,6 @@
 version: 2
 updates:
-  - package-ecosystem: pip
+  - package-ecosystem: uv
     directory: "/"
     schedule:
       interval: cron
@@ -9,6 +9,13 @@ updates:
       - "pr:chore"
     commit-message:
       prefix: "chore"
+    groups:
+      # pytest-homeassistant-custom-component pins homeassistant exactly, so the
+      # two cannot move separately: one bumped alone makes `uv lock` fail.
+      homeassistant:
+        patterns:
+          - "homeassistant"
+          - "pytest-homeassistant-custom-component"
 
   - package-ecosystem: github-actions
     directory: "/"

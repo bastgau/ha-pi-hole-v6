@@ -1,0 +1,25 @@
+# Sourced by the other scripts: colours, the repository root, and the project
+# variables from .devcontainer/.common-env (the same file the devcontainer
+# hands to Docker, and the workflows load into $GITHUB_ENV).
+
+BLUE='\033[34m'
+GREEN='\033[32m'
+PURPLE='\033[1;35m'
+RED='\033[31m'
+YELLOW='\033[33m'
+NC='\033[0m' # No Color
+
+cd "$(dirname "${BASH_SOURCE[0]}")/.." || exit 1
+
+# Parsed line by line instead of `source`d: a value such as
+# INTEGRATION_NAME=Device Link Tools is valid for Docker but not for bash.
+while IFS='=' read -r key value; do
+  [[ "$key" =~ ^[A-Z_]+$ ]] && export "$key=$value"
+done < .devcontainer/.common-env
+
+# Tools come from the project environment that `scripts/setup` (or `uv sync` in
+# CI) has already built. --no-sync keeps a check from silently reinstalling
+# packages - notably the default_config ones, which are not in uv.lock.
+run() {
+  uv run --no-sync "$@"
+}

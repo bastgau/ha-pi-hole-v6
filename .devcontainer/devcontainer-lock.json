@@ -1,10 +1,5 @@
 {
   "features": {
-    "ghcr.io/devcontainers-extra/features/poetry:2": {
-      "version": "2.0.18",
-      "resolved": "ghcr.io/devcontainers-extra/features/poetry@sha256:7b5f2c66d25d8b3cc5d601af6b81b720c77dd315f24d5e6f84b342cccc3c9228",
-      "integrity": "sha256:7b5f2c66d25d8b3cc5d601af6b81b720c77dd315f24d5e6f84b342cccc3c9228"
-    },
     "ghcr.io/devcontainers/features/github-cli:1": {
       "version": "1.1.0",
       "resolved": "ghcr.io/devcontainers/features/github-cli@sha256:d22f50b70ed75339b4eed1ba9ecde3a1791f90e88d37936517e3bace0bbad671",
