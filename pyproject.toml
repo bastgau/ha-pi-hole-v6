@@ -58,6 +58,8 @@ target-version = "py313"
 line-length = 120
 indent-width = 4
 src = ["custom_components/pi_hole_v6"]
+# Home Assistant test scaffolding some repositories carry in tests/ (absent elsewhere, so harmless).
+exclude = ["tests/testing_config/*", "tests/typing.py"]
 
 [tool.ruff.lint]
 ignore = [
@@ -130,6 +132,11 @@ max-complexity = 25
   "SLF001",  # Private member accessed: tests do test internals
 ]
 
+
+
+[tool.pylint.MASTER]
+ignore-paths = ["(.*/)?tests/typing.py", "(.*/)?tests/testing_config/.*"]
+
 [tool.pylint."MESSAGES CONTROL"]
 # Reasons disabled:
 # format - handled by ruff
@@ -176,6 +183,7 @@ select = ["ALL"]
 ignore_placeholder_docstrings = false
 workers = 1
 summary_max_length = 120
+exclude = ["testing_config", "tests/typing.py"]
 
 [[tool.docstring-linter.overrides]]
 ignore = ["imperative_mood"]

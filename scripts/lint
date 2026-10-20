@@ -137,11 +137,8 @@ run_pylint() {
 PRETTIER_VERSION="3.6.2"
 # .copier-answers.yml is written by Copier; reformatting it would make every
 # `copier update` fight Prettier over quotes and indentation.
-PRETTIER_GLOBS=("**/*.{json,yaml,yml,md}" "!.copier-answers.yml")
-IFS=',' read -ra excludes <<< "${PRETTIER_EXCLUDES}"
-for dir in "${excludes[@]}"; do
-  [ -n "$dir" ] && PRETTIER_GLOBS+=("!${dir}/**")
-done
+# card/ is a vendored third-party card and bruno/ folders are generated API collections.
+PRETTIER_GLOBS=("**/*.{json,yaml,yml,md}" "!.copier-answers.yml" "!card/**" "!**/bruno/**")
 
 run_prettier() {
   local scope_name="$1"
@@ -174,7 +171,7 @@ run_prettier() {
 for scope in "${scopes[@]}"; do
   if [ "$scope" = "repo" ]; then
     echo -e "\n${YELLOW}==================== scope: repo ====================${NC}"
-    printf "%s\n" "json/yaml/markdown (excluding: ${PRETTIER_EXCLUDES:-nothing})"
+    printf "%s\n" "json/yaml/markdown (excluding: card/, bruno/)"
     run_prettier "repo"
     continue
   fi

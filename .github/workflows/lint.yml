@@ -25,6 +25,8 @@ jobs:
     runs-on: "ubuntu-latest"
     permissions:
       contents: read
+      # dorny/paths-filter lists the files of the pull request through the API.
+      pull-requests: read
     outputs:
       python: "${{ steps.filter.outputs.python }}"
       scopes: "${{ steps.scopes.outputs.scopes }}"
