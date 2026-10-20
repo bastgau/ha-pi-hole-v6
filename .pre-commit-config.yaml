@@ -55,6 +55,7 @@ repos:
         additional_dependencies:
           - prettier@3.6.2
           - prettier-plugin-sort-json@4.2.0
-        # `card/` holds a vendored third-party card kept diffable against
-        # upstream: reformatting it rewrites every line.
-        exclude: ^(card)/
+        # .copier-answers.yml is written by Copier and must stay as it writes it.
+        # The other entries (prettier_excludes in .copier-answers.yml) are vendored or
+        # generated folders: reformatting them would rewrite every line.
+        exclude: ^(\.copier-answers\.yml$|(card)/)
