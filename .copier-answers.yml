@@ -1,5 +1,5 @@
 # Changes here will be overwritten by Copier; NEVER EDIT MANUALLY
-_commit: v0.8.0
+_commit: v0.9.0
 _src_path: gh:bastgau/ha-dev-environment
 client_package: ''
 description: This custom integration restores compatibility between Home Assistant

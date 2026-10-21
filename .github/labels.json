@@ -1,0 +1,72 @@
+[
+  {
+    "name": "pr:feat",
+    "color": "fa36bc",
+    "description": "New feature added"
+  },
+  {
+    "name": "pr:fix",
+    "color": "a95695",
+    "description": "Bug fix applied"
+  },
+  {
+    "name": "pr:docs",
+    "color": "2c1eba",
+    "description": "Documentation update only"
+  },
+  {
+    "name": "pr:style",
+    "color": "ab8aa1",
+    "description": "Code style or formatting"
+  },
+  {
+    "name": "pr:refactor",
+    "color": "684bbe",
+    "description": "Code restructured, no behavior change"
+  },
+  {
+    "name": "pr:test",
+    "color": "c0cc21",
+    "description": "Tests added or updated"
+  },
+  {
+    "name": "pr:chore",
+    "color": "e5d0cb",
+    "description": "Maintenance or tooling change"
+  },
+  {
+    "name": "pr:release",
+    "color": "9c7199",
+    "description": "Release version to main"
+  },
+  {
+    "name": "issue:bug",
+    "color": "d73a4a",
+    "description": "Something isn't working"
+  },
+  {
+    "name": "issue:enhancement",
+    "color": "a2eeef",
+    "description": "New feature or request"
+  },
+  {
+    "name": "issue:triage",
+    "color": "0052cc",
+    "description": "Initial evaluation needed."
+  },
+  {
+    "name": "issue:stale",
+    "color": "cfd3d7",
+    "description": "No recent activity."
+  },
+  {
+    "name": "issue:question",
+    "color": "d876e3",
+    "description": "Further information is requested"
+  },
+  {
+    "name": "issue:documentation",
+    "color": "0075ca",
+    "description": "Improvements or additions to documentation"
+  }
+]
