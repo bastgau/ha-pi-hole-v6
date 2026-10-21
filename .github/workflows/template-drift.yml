@@ -26,23 +26,6 @@ jobs:
 
       - uses: "astral-sh/setup-uv@v7"
 
-      # Only needed while ha-dev-environment is a private repository: a token
-      # with read access to it, stored as the TEMPLATE_TOKEN secret.
-      - name: "Allow reading the template"
-        if: "env.TEMPLATE_TOKEN != ''"
-        env:
-          TEMPLATE_TOKEN: "${{ secrets.TEMPLATE_TOKEN }}"
-        run: git config --global url."https://x-access-token:${TEMPLATE_TOKEN}@github.com/".insteadOf "https://github.com/"
-
-      # Without access, `copier check-update` fails with a cryptic git error: say what to do.
-      - name: "Check that the template can be read"
-        run: |
-          source_repo=$(sed -n 's/^_src_path: gh://p' .copier-answers.yml)
-          if ! GIT_TERMINAL_PROMPT=0 git ls-remote --exit-code "https://github.com/${source_repo}" HEAD > /dev/null 2>&1; then
-            echo "::error::Cannot read ${source_repo}. While it is private, add a TEMPLATE_TOKEN secret (a token with read access to it) to this repository, or make ${source_repo} public."
-            exit 1
-          fi
-
       # --quiet: exit status 2 means a newer template version exists.
       - name: "Check for a newer template version"
         run: |
