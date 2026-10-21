@@ -128,7 +128,7 @@ def _purge_network_devices(
     for device_entry in dr.async_entries_for_config_entry(device_registry, entry.entry_id):
         device_macs = {mac for conn_type, mac in device_entry.connections if conn_type == dr.CONNECTION_NETWORK_MAC}
         if device_macs and not any(is_mac_allowed(mac) for mac in device_macs):
-            device_registry.async_update_device(device_entry.id, remove_config_entry_id=entry.entry_id)
+            device_registry.async_remove_device(device_entry.id)
 
 
 def _device_display_name(device: dict[str, Any]) -> str:
