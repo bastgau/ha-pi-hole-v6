@@ -60,6 +60,9 @@ jobs:
     needs: "changes"
     if: "needs.changes.outputs.python == 'true'"
     runs-on: "ubuntu-latest"
+    permissions:
+      # The workflow grants nothing by default; a private repository cannot be checked out without it.
+      contents: read
     strategy:
       fail-fast: false
       matrix:
