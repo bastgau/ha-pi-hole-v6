@@ -10,5 +10,5 @@
   "issue_tracker": "https://github.com/bastgau/ha-pi-hole-V6/issues",
   "loggers": ["pi_hole_v6"],
   "requirements": [],
-  "version": "v1.14.0"
+  "version": "0.0.0"
 }
