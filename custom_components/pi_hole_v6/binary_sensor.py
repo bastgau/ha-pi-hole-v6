@@ -7,10 +7,10 @@ import logging
 from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.binary_sensor import (
-    BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
+from homeassistant.components.binary_sensor.const import BinarySensorDeviceClass
 
 from .entity import PiHoleV6Entity
 from .helper import create_entity_id_name
@@ -30,11 +30,10 @@ _LOGGER = logging.getLogger(__name__)
 
 @dataclass(frozen=True, kw_only=True)
 class PiHoleV6BinarySensorEntityDescription(BinarySensorEntityDescription):
-    """Describes PiHole binary sensor entity.
+    """Describe PiHole binary sensor entity.
 
     Attributes:
-        state_value (Callable[[PiholeAPI], Any]): A callable that takes the API client
-            and returns the current state value of the sensor.
+        state_value (Callable[[PiholeAPI], Any]): A callable that takes the API client and returns the current state value of the sensor.
 
     """
 
@@ -81,7 +80,14 @@ async def async_setup_entry(
 
 
 class PiHoleV6BinarySensor(PiHoleV6Entity, BinarySensorEntity):  # pyright: ignore[reportIncompatibleVariableOverride]
-    """Representation of a Pi-hole V6 binary sensor."""
+    """Representation of a Pi-hole V6 binary sensor.
+
+    Attributes:
+        entity_description (EntityDescription): The description of the entity.
+        _attr_unique_id (str): The unique identifier of the entity.
+        entity_id (str): The entity id of the entity.
+
+    """
 
     entity_description: PiHoleV6BinarySensorEntityDescription
 
