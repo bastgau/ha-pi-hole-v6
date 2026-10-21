@@ -24,7 +24,7 @@ if TYPE_CHECKING:
 
 @dataclass(frozen=True)
 class PiHoleV6UpdateEntityDescription(UpdateEntityDescription):
-    """Describes PiHoleV6 update entity.
+    """Describe PiHoleV6 update entity.
 
     Attributes:
         installed_version (Callable[[dict[str, Any]], str] | None): A callable that takes the versions dict and returns the currently installed version string.
@@ -112,7 +112,16 @@ async def async_setup_entry(
 
 
 class PiHoleV6UpdateEntity(PiHoleV6Entity, UpdateEntity):  # pyright: ignore[reportIncompatibleVariableOverride]
-    """Representation of a Pi-hole update entity."""
+    """Representation of a Pi-hole update entity.
+
+    Attributes:
+        entity_description (EntityDescription): The description of the entity.
+        _attr_unique_id (str): The unique identifier of the entity.
+        entity_id (str): The entity id of the entity.
+        entity_registry_enabled_default (Any): TODO
+        _attr_title (Any): TODO
+
+    """
 
     entity_description: PiHoleV6UpdateEntityDescription
 
@@ -211,8 +220,7 @@ class PiHoleV6UpdateEntity(PiHoleV6Entity, UpdateEntity):  # pyright: ignore[rep
         """Return the release notes URL built from the base URL and the latest version.
 
         Returns:
-            str | None: The full release URL combining release_base_url and latest_version,
-                or None if no latest version is available.
+            str | None: The full release URL combining release_base_url and latest_version, or None if no latest version is available.
 
         """
 

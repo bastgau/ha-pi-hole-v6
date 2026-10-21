@@ -82,7 +82,12 @@ def _get_data_config_schema(user_input: Any) -> probatio.Schema:
 
 
 class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
-    """Handle a Pi-hole V6 config flow."""
+    """Handle a Pi-hole V6 config flow.
+
+    Attributes:
+        _config (Any): TODO
+
+    """
 
     VERSION = CONFIG_ENTRY_VERSION
 
@@ -314,7 +319,7 @@ async def _async_validate_input(
 
 
 class OptionsFlowHandler(OptionsFlow):
-    """Options flow used to change configuration (options) of existing instance of integration."""
+    """Change the configuration (options) of an existing instance of the integration."""
 
     async def async_step_init(self, user_input: Any) -> ConfigFlowResult:
         """Handle the initial step of the options flow.

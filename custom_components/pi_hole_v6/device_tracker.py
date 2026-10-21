@@ -51,8 +51,7 @@ def _build_mac_filter(entry: PiHoleV6ConfigEntry) -> Callable[[str], bool]:
         entry (PiHoleV6ConfigEntry): The config entry providing the filter options.
 
     Returns:
-        Callable[[str], bool]: A predicate returning True if the given (lowercase)
-            MAC address should be tracked.
+        Callable[[str], bool]: A predicate returning True if the given (lowercase) MAC address should be tracked.
 
     """
     address_list = parse_mac_list(entry.data.get(CONF_DEVICE_TRACKER_MAC_LIST, DEFAULT_DEVICE_TRACKER_MAC_LIST))
@@ -79,8 +78,7 @@ def _build_device_filter(entry: PiHoleV6ConfigEntry) -> Callable[[dict[str, Any]
         entry (PiHoleV6ConfigEntry): The config entry providing the filter options.
 
     Returns:
-        Callable[[dict[str, Any]], bool]: A predicate returning True if the given
-            device should be tracked.
+        Callable[[dict[str, Any]], bool]: A predicate returning True if the given device should be tracked.
 
     """
     address_list = parse_mac_list(entry.data.get(CONF_DEVICE_TRACKER_MAC_LIST, DEFAULT_DEVICE_TRACKER_MAC_LIST))
@@ -112,9 +110,7 @@ def _purge_network_devices(
     Args:
         hass (HomeAssistant): The Home Assistant instance.
         entry (PiHoleV6ConfigEntry): The config entry owning the entities and devices.
-        is_mac_allowed (Callable[[str], bool]): Predicate deciding whether a MAC address
-            should still be tracked. Defaults to always False, removing every network
-            device (used when device tracking is fully disabled).
+        is_mac_allowed (Callable[[str], bool]): Predicate deciding whether a MAC address should still be tracked. Defaults to always False, removing every network device (used when device tracking is fully disabled).
 
     Returns:
         None
@@ -316,6 +312,15 @@ class PiHoleV6DeviceTracker(  # pyright: ignore[reportIncompatibleVariableOverri
 
     Attributes:
         api (PiholeAPI): The Pi-hole API client instance.
+        _attr_attribution (str): The attribution displayed with the entity state.
+        _attr_has_entity_name (bool): Whether the entity name is relative to its device.
+        _attr_translation_key (str): The translation key of the entity name.
+        _unrecorded_attributes (frozenset[str]): The state attributes excluded from the recorder.
+        _mac (str): The MAC address of the tracked device.
+        _hostname (str): The hostname of the tracked device.
+        _ip_address (str): The IP address of the tracked device.
+        _attr_unique_id (str): The unique identifier of the entity.
+        entity_id (str): The entity id of the entity.
 
     """
 
@@ -346,11 +351,7 @@ class PiHoleV6DeviceTracker(  # pyright: ignore[reportIncompatibleVariableOverri
             api (PiholeAPI): The Pi-hole API client instance.
             coordinator (DataUpdateCoordinator[None]): The data update coordinator.
             server_unique_id (str): A unique identifier for the server entry.
-            device (dict[str, Any]): The network device data dict containing hwaddr,
-                macVendor, ips, lastQuery, and other fields.
-
-        Returns:
-            None
+            device (dict[str, Any]): The network device data dict containing hwaddr, macVendor, ips, lastQuery, and other fields.
 
         """
         super().__init__(coordinator)
@@ -477,8 +478,7 @@ class PiHoleV6DeviceTracker(  # pyright: ignore[reportIncompatibleVariableOverri
         network device data. IP, MAC, and hostname are surfaced by ScannerEntity.
 
         Returns:
-            dict[str, Any] | None: A dictionary of extra attributes, or None if the
-                device is not found in the current network data.
+            dict[str, Any] | None: A dictionary of extra attributes, or None if the device is not found in the current network data.
 
         """
         device = self._find_device()

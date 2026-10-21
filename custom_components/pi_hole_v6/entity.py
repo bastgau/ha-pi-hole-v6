@@ -23,6 +23,10 @@ class PiHoleV6Entity(CoordinatorEntity[DataUpdateCoordinator[None]]):
 
     Attributes:
         api (PiholeAPI): The Pi-hole API client instance.
+        _attr_attribution (str): The attribution displayed with the entity state.
+        _attr_has_entity_name (bool): Whether the entity name is relative to its device.
+        _name (str): The name of the Pi-hole instance.
+        _server_unique_id (str): The unique identifier of the server entry.
 
     """
 
