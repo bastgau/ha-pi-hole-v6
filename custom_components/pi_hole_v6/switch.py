@@ -52,9 +52,6 @@ async def async_setup_entry(
         entry (PiHoleV6ConfigEntry): The config entry providing runtime data.
         async_add_entities (AddConfigEntryEntitiesCallback): Callback to register new entities.
 
-    Returns:
-        None
-
     """
     hole_data = entry.runtime_data
 
@@ -100,9 +97,6 @@ async def async_setup_entry(
 
         Args:
             _ (Any): The time event (unused).
-
-        Returns:
-            None
 
         """
         await switch_update_timer(hass, name)
@@ -195,9 +189,6 @@ class PiHoleV6Switch(PiHoleV6Entity, SwitchEntity):  # pyright: ignore[reportInc
         Args:
             **kwargs (Any): Additional keyword arguments (unused).
 
-        Returns:
-            None
-
         """
         await self.async_turn_switch(action="enable")
 
@@ -206,9 +197,6 @@ class PiHoleV6Switch(PiHoleV6Entity, SwitchEntity):  # pyright: ignore[reportInc
 
         Args:
             **kwargs (Any): Additional keyword arguments (unused).
-
-        Returns:
-            None
 
         """
         await self.async_turn_switch(action="disable")
@@ -220,9 +208,6 @@ class PiHoleV6Switch(PiHoleV6Entity, SwitchEntity):  # pyright: ignore[reportInc
             action (str): The action to perform, either "enable" or "disable".
             duration (Any): Optional duration in seconds for which blocking should be disabled. If None, disables indefinitely. Only relevant when action is "disable".
             with_update (bool): If True, triggers a state update after the action. Defaults to True.
-
-        Returns:
-            None
 
         """
 
@@ -273,20 +258,12 @@ class PiHoleV6Switch(PiHoleV6Entity, SwitchEntity):  # pyright: ignore[reportInc
             duration (Any): Optional duration as a timedelta or int (seconds) for which
             blocking should be disabled. If None, disables indefinitely.
 
-        Returns:
-            None
-
         """
         duration_seconds: int | None = calculate_duration(duration, self._name)
         await self.async_turn_switch(action="disable", duration=duration_seconds)
 
     async def async_service_enable(self) -> None:
-        """Enable the Pi-hole blocking via the service call.
-
-        Returns:
-            None
-
-        """
+        """Enable the Pi-hole blocking via the service call."""
         _LOGGER.debug("Enabling Pi-hole '%s'", self.name)
         await self.async_turn_switch(action="enable")
 
@@ -301,9 +278,6 @@ class PiHoleV6Switch(PiHoleV6Entity, SwitchEntity):  # pyright: ignore[reportInc
             action (str): The action to perform, either "enable" or "disable".
             duration (Any): Optional duration in seconds for which blocking should be disabled. Only relevant when action is "disable". Defaults to None.
             with_update (bool): If True, triggers a state update after the action. Defaults to True.
-
-        Returns:
-            None
 
         """
 
@@ -376,9 +350,6 @@ class PiHoleV6Group(PiHoleV6Entity, SwitchEntity):  # pyright: ignore[reportInco
         Args:
             **kwargs (Any): Additional keyword arguments (unused).
 
-        Returns:
-            None
-
         """
         await self.async_turn_group(action="enable")
 
@@ -387,9 +358,6 @@ class PiHoleV6Group(PiHoleV6Entity, SwitchEntity):  # pyright: ignore[reportInco
 
         Args:
             **kwargs (Any): Additional keyword arguments (unused).
-
-        Returns:
-            None
 
         """
         await self.async_turn_group(action="disable")
@@ -400,9 +368,6 @@ class PiHoleV6Group(PiHoleV6Entity, SwitchEntity):  # pyright: ignore[reportInco
         Args:
             action (str): The action to perform, either "enable" or "disable".
             with_update (bool): If True, triggers a state update after the action. Defaults to True.
-
-        Returns:
-            None
 
         """
 
@@ -436,12 +401,7 @@ class PiHoleV6Group(PiHoleV6Entity, SwitchEntity):  # pyright: ignore[reportInco
             _LOGGER.exception("Unable to %s Pi-hole V6 group %s", action, self.group_name)
 
     async def async_service_enable(self) -> None:
-        """Enable the Pi-hole group blocking via the service call.
-
-        Returns:
-            None
-
-        """
+        """Enable the Pi-hole group blocking via the service call."""
         _LOGGER.debug("Enabling Pi-hole '%s'", self.name)
         await self.async_turn_service(action="enable")
 
@@ -451,9 +411,6 @@ class PiHoleV6Group(PiHoleV6Entity, SwitchEntity):  # pyright: ignore[reportInco
         Args:
             duration (Any): Optional duration as a timedelta or int (seconds) for which
             the group should be disabled. If None, disables indefinitely.
-
-        Returns:
-            None
 
         """
         duration_seconds: int | None = calculate_duration(duration, f"group/{self.group_name}")
@@ -466,9 +423,6 @@ class PiHoleV6Group(PiHoleV6Entity, SwitchEntity):  # pyright: ignore[reportInco
             action (str): The action to perform, either "enable" or "disable".
             duration (Any): Optional duration in seconds for which the group should be disabled. Only relevant when action is "disable". Defaults to None.
             with_update (bool): If True, triggers a state update after the action. Defaults to True.
-
-        Returns:
-            None
 
         """
 

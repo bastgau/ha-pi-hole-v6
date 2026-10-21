@@ -257,9 +257,6 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
         Args:
             action (str): The name of the action being performed, used to determine authentication behavior.
 
-        Returns:
-            None
-
         """
         await self._check_authentification(action)
         await self._abort_logout(action)
@@ -273,9 +270,6 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
 
         Args:
             action (str): The name of the action being performed.
-
-        Returns:
-            None
 
         """
 
@@ -303,9 +297,6 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
         Args:
             action (str): The name of the action being performed, used to skip the check for auth-related actions.
 
-        Returns:
-            None
-
         """
 
         try:
@@ -331,9 +322,6 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
         Args:
             action (str): The name of the action being performed.
 
-        Returns:
-            None
-
         """
 
         if action != "login" and self._sid is None:
@@ -347,9 +335,6 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
 
         Args:
             action (str): The name of the action being performed.
-
-        Returns:
-            None
 
         Raises:
             AbortLogoutError: If a logout is attempted with no active session.
@@ -979,9 +964,6 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
 
         Args:
             data_name (str): The name of the cache to reset. Currently supports "ftl_info_messages".
-
-        Returns:
-            None
 
         """
 

@@ -84,9 +84,6 @@ async def check_result(result: Any, api_client: PiholeAPI, endpoint: str) -> Non
         api_client (PiholeAPI): The Pi-hole API client instance used to call logout.
         endpoint (str): The name of the API call that produced the result, used to identify the faulty endpoint in the logs and in the raised exception.
 
-    Returns:
-        None
-
     Raises:
         DataStructureError: If the result is not a dictionary.
 
@@ -110,9 +107,6 @@ async def async_get_live_data(api_client: PiholeAPI, *, enable_device_tracker: b
     Args:
         api_client (PiholeAPI): The Pi-hole API client instance used to perform the calls.
         enable_device_tracker (bool): Whether to also fetch network devices for the device_tracker platform.
-
-    Returns:
-        None
 
     """
 
@@ -154,9 +148,6 @@ async def async_get_stats_data(api_client: PiholeAPI) -> None:
     Args:
         api_client (PiholeAPI): The Pi-hole API client instance used to perform the calls.
 
-    Returns:
-        None
-
     """
 
     result = await api_client.call_get_ftl_info_messages_count()
@@ -173,9 +164,6 @@ def migrate_legacy_update_interval(hass: HomeAssistant, entry: PiHoleV6ConfigEnt
     Args:
         hass (HomeAssistant): The Home Assistant instance.
         entry (PiHoleV6ConfigEntry): The config entry to migrate.
-
-    Returns:
-        None
 
     """
 
@@ -248,9 +236,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: PiHoleV6ConfigEntry) -> 
         Args:
             _ (Event): The Home Assistant stop event (unused).
 
-        Returns:
-            None
-
         """
         await api_client.call_logout()
 
@@ -272,6 +257,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: PiHoleV6ConfigEntry) -> 
 
         Raises:
             ConfigEntryAuthFailed: If the credentials are invalid or expired.
+            DataStructureError: If an API call returns an unexpected data structure.
             UpdateFailed: If the Pi-hole is unreachable or the API returns an error, so the coordinator marks the entities unavailable and retries.
 
         """

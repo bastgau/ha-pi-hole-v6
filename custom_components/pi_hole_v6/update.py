@@ -93,9 +93,6 @@ async def async_setup_entry(
         entry (PiHoleV6ConfigEntry): The config entry providing runtime data.
         async_add_entities (AddConfigEntryEntitiesCallback): Callback to register new entities.
 
-    Returns:
-        None
-
     """
 
     hole_data = entry.runtime_data
