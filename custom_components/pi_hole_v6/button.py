@@ -70,9 +70,6 @@ async def async_setup_entry(
         entry (PiHoleV6ConfigEntry): The config entry providing runtime data.
         async_add_entities (AddConfigEntryEntitiesCallback): Callback to register new entities.
 
-    Returns:
-        None
-
     """
 
     hole_data = entry.runtime_data
@@ -138,9 +135,6 @@ class PiHoleV6Button(PiHoleV6Entity, ButtonEntity):  # pyright: ignore[reportInc
 
     async def async_press(self) -> None:
         """Press the button.
-
-        Returns:
-            None
 
         Raises:
             ActionExecutionError: If the Pi-hole answers the action with an error code.

@@ -112,9 +112,6 @@ def _purge_network_devices(
         entry (PiHoleV6ConfigEntry): The config entry owning the entities and devices.
         is_mac_allowed (Callable[[str], bool]): Predicate deciding whether a MAC address should still be tracked. Defaults to always False, removing every network device (used when device tracking is fully disabled).
 
-    Returns:
-        None
-
     """
     entity_registry = er.async_get(hass)
     for entity_entry in er.async_entries_for_config_entry(entity_registry, entry.entry_id):
@@ -169,9 +166,6 @@ async def async_setup_entry(
         entry (PiHoleV6ConfigEntry): The config entry providing runtime data.
         async_add_entities (AddConfigEntryEntitiesCallback): Callback to register new entities.
 
-    Returns:
-        None
-
     """
     if not entry.data.get(CONF_ENABLE_DEVICE_TRACKER, DEFAULT_ENABLE_DEVICE_TRACKER):
         _purge_network_devices(hass, entry)
@@ -195,9 +189,6 @@ async def async_setup_entry(
         naturally reports as not_home. Only devices rejected by the whitelist or
         blacklist filter (matched against MAC and current IP addresses) are actively
         removed.
-
-        Returns:
-            None
 
         """
         async with _add_lock:
@@ -263,12 +254,7 @@ async def async_setup_entry(
 
     @callback
     def _schedule_add_remove_trackers() -> None:
-        """Schedule adding and removing trackers when coordinator updates.
-
-        Returns:
-            None
-
-        """
+        """Schedule adding and removing trackers when coordinator updates."""
         hass.async_create_task(_async_add_remove_trackers())
 
     entry.async_on_unload(hole_data.coordinator.async_add_listener(_schedule_add_remove_trackers))
@@ -284,9 +270,6 @@ async def async_setup_entry(
 
         Args:
             event (Event[EventDeviceRegistryUpdatedData]): The device registry update event.
-
-        Returns:
-            None
 
         """
         if event.data["action"] != "remove":
@@ -399,7 +382,7 @@ class PiHoleV6DeviceTracker(  # pyright: ignore[reportIncompatibleVariableOverri
         return None
 
     @property
-    def name(self) -> str | None:  # pyright: ignore[reportIncompatibleVariableOverride]
+    def name(self) -> str | None:  # pyright: ignore[reportIncompatibleVariableOverride]  # pylint: disable=redundant-returns-doc
         """Return the name of the entity within the device.
 
         Returns None so the entity uses the device name directly,

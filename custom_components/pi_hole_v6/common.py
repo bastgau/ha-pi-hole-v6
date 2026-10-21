@@ -109,9 +109,6 @@ async def sensor_update_timer(hass: HomeAssistant, name: str) -> None:
         hass (HomeAssistant): The Home Assistant instance.
         name (str): The name of the Pi-hole instance used to scope the entity lookup.
 
-    Returns:
-        None
-
     """
 
     entity = find_entity_sensor(hass, "remaining_until_blocking_mode", name)
@@ -155,9 +152,6 @@ async def switch_update_timer(hass: HomeAssistant, name: str) -> None:
     Args:
         hass (HomeAssistant): The Home Assistant instance.
         name (str): The name of the Pi-hole instance used to scope the entity lookup.
-
-    Returns:
-        None
 
     """
 

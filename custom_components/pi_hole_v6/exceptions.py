@@ -276,9 +276,6 @@ def handle_status(status_code: int) -> None:
     Args:
         status_code (int): Represents the status code and handles it based on the provided mapping.
 
-    Returns:
-        None: Returns immediately if the status code is less than 400.
-
     Raises:
         UnexpectedStatusError: If the status code is not mapped.
 

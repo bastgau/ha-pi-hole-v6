@@ -186,9 +186,6 @@ async def async_setup_entry(
         entry (PiHoleV6ConfigEntry): The config entry providing runtime data.
         async_add_entities (AddConfigEntryEntitiesCallback): Callback to register new entities.
 
-    Returns:
-        None
-
     """
     name = entry.data[CONF_NAME]
     hole_data = entry.runtime_data
@@ -236,9 +233,6 @@ async def async_setup_entry(
 
         Args:
             _ (Any): The time event (unused).
-
-        Returns:
-            None
 
         """
         await sensor_update_timer(hass, name)
@@ -299,12 +293,7 @@ class PiHoleV6Sensor(PiHoleV6Entity, SensorEntity):  # pyright: ignore[reportInc
         self.entity_id = create_entity_id_name(raw_name)
 
     async def async_added_to_hass(self) -> None:
-        """Subscribe to the coordinators the sensor is not attached to.
-
-        Returns:
-            None
-
-        """
+        """Subscribe to the coordinators the sensor is not attached to."""
 
         await super().async_added_to_hass()
 
