@@ -39,7 +39,7 @@ lint = [
   "prek==0.5.5",
   "pylint==4.1.3",
   "pyright==1.1.414",
-  "ruff==0.17.0",
+  "ruff==0.17.1",
   # Not on PyPI: installed straight from its GitHub release.
   "docstring-linter @ https://github.com/bastgau/docstring-linter/releases/download/v0.9.0/docstring_linter-0.9.0-py3-none-any.whl",
 ]
