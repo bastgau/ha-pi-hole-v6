@@ -36,6 +36,8 @@ Changelog = "https://github.com/bastgau/ha-pi-hole-v6/releases"
 # depends on, or `uv lock` fails to resolve.
 homeassistant = ["homeassistant==2026.10.1"]
 lint = [
+  # Runs `copier update` against ha-dev-environment, the template this file comes from.
+  "copier==9.19.1",
   "prek==0.5.5",
   "pylint==4.1.3",
   "pyright==1.1.414",
