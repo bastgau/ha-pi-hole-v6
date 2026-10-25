@@ -1,27 +1,27 @@
 {
-    "version": "2.0.0",
-    "tasks": [
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Run Home Assistant on port 8123",
+      "type": "shell",
+      "command": "scripts/develop",
+      "problemMatcher": []
+    }
+  ],
+  "configurations": [
+    {
+      // Example of attaching to local debug server
+      "name": "Python: Attach Local",
+      "type": "python",
+      "request": "attach",
+      "port": 5678,
+      "host": "localhost",
+      "pathMappings": [
         {
-            "label": "Run Home Assistant on port 8123",
-            "type": "shell",
-            "command": "scripts/develop",
-            "problemMatcher": []
+          "localRoot": "${workspaceFolder}",
+          "remoteRoot": "."
         }
-    ],
-    "configurations": [
-        {
-            // Example of attaching to local debug server
-            "name": "Python: Attach Local",
-            "type": "python",
-            "request": "attach",
-            "port": 5678,
-            "host": "localhost",
-            "pathMappings": [
-                {
-                    "localRoot": "${workspaceFolder}",
-                    "remoteRoot": "."
-                }
-            ],
-        }
-    ]
+      ]
+    }
+  ]
 }

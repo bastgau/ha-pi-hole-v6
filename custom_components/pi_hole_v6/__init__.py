@@ -64,11 +64,8 @@ class PiHoleV6Data:
 
     Attributes:
         api (PiholeAPI): The Pi-hole API client instance.
-        coordinator (DataUpdateCoordinator[Any]): The "live" coordinator, driving the entities that
-            must reflect the current state of the Pi-hole instance.
-        coordinator_stats (DataUpdateCoordinator[Any]): The "stats" coordinator, driving the cumulative
-            counters and the periodic checks, whose values only matter as a trend. Some of its entities
-            read caches filled by the live coordinator and are simply paced by this slower rhythm.
+        coordinator (DataUpdateCoordinator[Any]): The "live" coordinator, driving the entities that must reflect the current state of the Pi-hole instance.
+        coordinator_stats (DataUpdateCoordinator[Any]): The "stats" coordinator, driving the cumulative counters and the periodic checks, whose values only matter as a trend. Some of its entities read caches filled by the live coordinator and are simply paced by this slower rhythm.
 
     """
 
@@ -86,9 +83,6 @@ async def check_result(result: Any, api_client: PiholeAPI, endpoint: str) -> Non
         result (Any): The result returned by the API call.
         api_client (PiholeAPI): The Pi-hole API client instance used to call logout.
         endpoint (str): The name of the API call that produced the result, used to identify the faulty endpoint in the logs and in the raised exception.
-
-    Returns:
-        None
 
     Raises:
         DataStructureError: If the result is not a dictionary.
@@ -108,16 +102,11 @@ async def async_get_live_data(api_client: PiholeAPI, *, enable_device_tracker: b
     other entities reading the same cache are attached to the stats coordinator: the caches are
     shared, only the state writes are paced.
 
+    The errors of the underlying call propagate unchanged: DataStructureError (if any API call returns an unexpected data structure).
+
     Args:
         api_client (PiholeAPI): The Pi-hole API client instance used to perform the calls.
-        enable_device_tracker (bool): Whether to also fetch network devices for the
-            device_tracker platform.
-
-    Returns:
-        None
-
-    Raises:
-        DataStructureError: If any API call returns an unexpected data structure.
+        enable_device_tracker (bool): Whether to also fetch network devices for the device_tracker platform.
 
     """
 
@@ -154,14 +143,10 @@ async def async_get_stats_data(api_client: PiholeAPI) -> None:
     coordinator may still read caches filled by the live coordinator; what this rhythm paces is when
     they write their state, which is what keeps them out of the recorder on every cycle.
 
+    The errors of the underlying call propagate unchanged: DataStructureError (if any API call returns an unexpected data structure).
+
     Args:
         api_client (PiholeAPI): The Pi-hole API client instance used to perform the calls.
-
-    Returns:
-        None
-
-    Raises:
-        DataStructureError: If any API call returns an unexpected data structure.
 
     """
 
@@ -179,9 +164,6 @@ def migrate_legacy_update_interval(hass: HomeAssistant, entry: PiHoleV6ConfigEnt
     Args:
         hass (HomeAssistant): The Home Assistant instance.
         entry (PiHoleV6ConfigEntry): The config entry to migrate.
-
-    Returns:
-        None
 
     """
 
@@ -221,15 +203,14 @@ def get_update_interval(entry: PiHoleV6ConfigEntry, conf_key: str, default: time
 async def async_setup_entry(hass: HomeAssistant, entry: PiHoleV6ConfigEntry) -> bool:
     """Set up Pi-hole V6 entry.
 
+    The errors of the underlying call propagate unchanged: ConfigEntryAuthFailed (if the credentials are invalid or expired).
+
     Args:
         hass (HomeAssistant): The Home Assistant instance.
         entry (PiHoleV6ConfigEntry): The config entry to set up.
 
     Returns:
         bool: True if the setup succeeded.
-
-    Raises:
-        ConfigEntryAuthFailed: If the credentials are invalid or expired.
 
     """
 
@@ -255,9 +236,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: PiHoleV6ConfigEntry) -> 
         Args:
             _ (Event): The Home Assistant stop event (unused).
 
-        Returns:
-            None
-
         """
         await api_client.call_logout()
 
@@ -279,6 +257,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: PiHoleV6ConfigEntry) -> 
 
         Raises:
             ConfigEntryAuthFailed: If the credentials are invalid or expired.
+            DataStructureError: If an API call returns an unexpected data structure.
             UpdateFailed: If the Pi-hole is unreachable or the API returns an error, so the coordinator marks the entities unavailable and retries.
 
         """

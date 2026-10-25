@@ -1,9 +1,9 @@
 {
-    "name": "Pi-hole V6 Integration",
-    "filename": "pi_hole_v6.zip",
-    "hacs": "2.0.0",
-    "hide_default_branch": true,
-    "homeassistant": "2025.3",
-    "render_readme": true,
-    "zip_release": true
+  "name": "Pi-hole V6 Integration",
+  "filename": "pi_hole_v6.zip",
+  "hacs": "2.0.0",
+  "hide_default_branch": true,
+  "homeassistant": "2026.10.0",
+  "render_readme": true,
+  "zip_release": true
 }

@@ -21,7 +21,7 @@ Due to major changes in the Pi-hole API, the native integration with Home Assist
 
 The 'Pi-hole V6 Integration' added compatibility with the new API in Home Assistant. This integration aimed to restore compatibility and provide Pi-hole management directly from Home Assistant.
 
-> [!NOTE] 
+> [!NOTE]
 > **Today, this integration remains active and not only restores full functionality but also offers additional and complementary features to the native integration. Users can now enjoy enhanced capabilities and a seamless experience when managing Pi-hole through Home Assistant.**
 
 ## Features
@@ -73,7 +73,6 @@ The integration is currently translated in few langages :
 
 [![Add Integration](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=pi_hole_v6)
 
-
 ### Manual Installation
 
 1. Download the integration files from the GitHub repository.
@@ -85,7 +84,7 @@ The integration is currently translated in few langages :
 
 ## Pi-hole Card
 
-After installing this integration, you can enhance your Home Assistant setup with the `Pi-hole Card`.  
+After installing this integration, you can enhance your Home Assistant setup with the `Pi-hole Card`.
 
 This lovelace card offers a comprehensive and user-friendly dashboard designed specifically for managing and monitoring your Pi-hole DNS ad blocker. It provides real-time statistics and intuitive controls, all presented in a visually appealing interface that aligns with Pi-hole's design aesthetics.
 
@@ -138,54 +137,54 @@ I listed the implemented features in the **HA Pi-hole V6 Integration** and the *
 
 #### Compatibility
 
-| Compatibility                                               | Pi-hole V6 Integration                 |Core Integration|
-|-----------------------------------------------------------|:---------------------------------:|:--------------:|
-| Pi-hole v5 (Latest release: December 29, 2024)                               |           ❌           |  ✅       |          
-| Pi-hole v6 (current version)                                |           ✅           |  ✅       |          
+| Compatibility                                  | Pi-hole V6 Integration | Core Integration |
+| ---------------------------------------------- | :--------------------: | :--------------: |
+| Pi-hole v5 (Latest release: December 29, 2024) |           ❌           |        ✅        |
+| Pi-hole v6 (current version)                   |           ✅           |        ✅        |
 
 #### Features
 
-| Category     |Entity Type                                               | Pi-hole V6 Integration                 |Core Integration|
-|--------------|----------------------------------------------------------|:---------------------------------:|:--------------:|
-| Binary Sensor|[Status](https://github.com/bastgau/ha-pi-hole-v6/blob/develop/docs/guide-explained-entities.md#--status)                                                    |                ✅                 |       ✅       |
-| Button       |[Flush the DNS logs](https://github.com/bastgau/ha-pi-hole-v6/blob/develop/docs/guide-explained-entities.md#--flush-the-dns-logs)                                        |                ✅                 |       ❌       |
-|              |[Flush the network table](https://github.com/bastgau/ha-pi-hole-v6/blob/develop/docs/guide-explained-entities.md#--flush-the-network-table)                                   |                ✅                 |       ❌       |
-|              |[Purge FTL diagnosis messages](https://github.com/bastgau/ha-pi-hole-v6/blob/develop/docs/guide-explained-entities.md#--purge-ftl-diagnosis-messages)                              |                ✅                 |       ❌       |
-|              |[Refresh data](https://github.com/bastgau/ha-pi-hole-v6/blob/develop/docs/guide-explained-entities.md#--refresh-data)                                              |                ✅                 |       ❌       |
-|              |[Restart pihole-FTL](https://github.com/bastgau/ha-pi-hole-v6/blob/develop/docs/guide-explained-entities.md#--restart-pihole-ftl)                                        |                ✅                 |       ❌       |
-|              |[Run gravity](https://github.com/bastgau/ha-pi-hole-v6/blob/develop/docs/guide-explained-entities.md#--run-gravity)                                               |                ✅                 |       ❌       |
-| Device Tracker|[Network device](https://github.com/bastgau/ha-pi-hole-v6/blob/develop/docs/guide-explained-entities.md#--network-device) (disabled by default, filterable)                             |                ✅ + ℹ️                |       ❌       |
-| Sensor       |[Active DHCP leases](https://github.com/bastgau/ha-pi-hole-v6/blob/develop/docs/guide-explained-entities.md#--active-dhcp-leases)                                        |              ✅ + ℹ️              |       ❌       |
-|              |[Active sessions](https://github.com/bastgau/ha-pi-hole-v6/blob/develop/docs/guide-explained-entities.md#--active-sessions)                                           |             ✅ + ℹ️               |       ❌       |
-|              |[Ads blocked during the last 24 hours](https://github.com/bastgau/ha-pi-hole-v6/blob/develop/docs/guide-explained-entities.md#--ads-blocked-during-the-last-24-hours)                      |                ✅                 |       ✅       |
-|              |[Ads percentage blocked during the last 24h](https://github.com/bastgau/ha-pi-hole-v6/blob/develop/docs/guide-explained-entities.md#--ads-percentage-blocked-during-the-last-24-hours)                |                ✅                 |       ✅       |
-|              |[Average number of DNS queries (queries/min)](https://github.com/bastgau/ha-pi-hole-v6/blob/develop/docs/guide-explained-entities.md#--average-number-of-dns-queries)               |                ✅                 |       ❌       |
-|              |[Configured clients](https://github.com/bastgau/ha-pi-hole-v6/blob/develop/docs/guide-explained-entities.md#--configured-clients)                                        |              ✅ + ℹ️              |       ❌       |
-|              |[CPU usage](https://github.com/bastgau/ha-pi-hole-v6/blob/develop/docs/guide-explained-entities.md#--cpu-usage)                                                 |              ✅ + ℹ️              |       ❌       |
-|              |[DNS queries cached](https://github.com/bastgau/ha-pi-hole-v6/blob/develop/docs/guide-explained-entities.md#--dns-queries-cached)                                        |                ✅                 |       ✅       |
-|              |[DNS queries during the last 24 hours](https://github.com/bastgau/ha-pi-hole-v6/blob/develop/docs/guide-explained-entities.md#--dns-queries-during-the-last-24-hours)                      |                ✅                 |       ✅       |
-|              |[DNS queries forwarded](https://github.com/bastgau/ha-pi-hole-v6/blob/develop/docs/guide-explained-entities.md#--dns-queries-forwarded)                                     |                ✅                 |       ✅       |
-|              |[DNS unique clients](https://github.com/bastgau/ha-pi-hole-v6/blob/develop/docs/guide-explained-entities.md#--dns-unique-clients)                                        |                ✅                 |       ✅       |
-|              |[DNS unique domains](https://github.com/bastgau/ha-pi-hole-v6/blob/develop/docs/guide-explained-entities.md#--dns-unique-domains)                                        |                ✅                 |       ✅       |
-|              |[Domains blocked](https://github.com/bastgau/ha-pi-hole-v6/blob/develop/docs/guide-explained-entities.md#--domains-blocked)                                           |                ✅                 |       ✅       |
-|              |[FTL diagnosis messages count](https://github.com/bastgau/ha-pi-hole-v6/blob/develop/docs/guide-explained-entities.md#--ftl-diagnosis-messages-count)                              |             ✅ + ℹ️               |       ❌       |
-|              |[Latest data refresh](https://github.com/bastgau/ha-pi-hole-v6/blob/develop/docs/guide-explained-entities.md#--latest-data-refresh)                                       |                ✅                 |       ❌       |
-|              |[Memory usage](https://github.com/bastgau/ha-pi-hole-v6/blob/develop/docs/guide-explained-entities.md#--memory-usage)                                              |                ✅                 |       ❌       |
-|              |[Remaining until blocking mode](https://github.com/bastgau/ha-pi-hole-v6/blob/develop/docs/guide-explained-entities.md#--remaining-until-blocking-mode)                             |            ✅ + 🕜             |       ❌       |
-|              |[Seen clients](https://github.com/bastgau/ha-pi-hole-v6/blob/develop/docs/guide-explained-entities.md#--seen-clients)                                              |                ✅                 |       ✅       |
-| Switch       |[Global](https://github.com/bastgau/ha-pi-hole-v6/blob/develop/docs/guide-explained-entities.md#--global-switch)                                                   |                ✅                 |       ✅       |
-|              |[Group](https://github.com/bastgau/ha-pi-hole-v6/blob/develop/docs/guide-explained-entities.md#--group-switch-one-switch-per-group) {group_name}                                        |           ✅ + ℹ️ + 🕜        |       ❌       |
-| Update       |[Core update](https://github.com/bastgau/ha-pi-hole-v6/blob/develop/docs/guide-explained-entities.md#--core-update)                                               |                ✅                 |       ✅       |
-|              |[Docker update](https://github.com/bastgau/ha-pi-hole-v6/blob/develop/docs/guide-explained-entities.md#--docker-update)                                             |                ✅                 |       ❌       |
-|              |[FTL update](https://github.com/bastgau/ha-pi-hole-v6/blob/develop/docs/guide-explained-entities.md#--ftl-update)                                                |                ✅                 |       ✅       |
-|              |[Web interface update](https://github.com/bastgau/ha-pi-hole-v6/blob/develop/docs/guide-explained-entities.md#--web-interface-update)                                      |                ✅                 |       ✅       |
-| Services     |[Disable](https://github.com/bastgau/ha-pi-hole-v6/blob/develop/docs/guide-explained-entities.md#--disable-blocking) / [Enable](https://github.com/bastgau/ha-pi-hole-v6/blob/develop/docs/guide-explained-entities.md#--enable-blocking) Global (with duration field)             |                ✅                 |       ✅       |
-|              |[Disable](https://github.com/bastgau/ha-pi-hole-v6/blob/develop/docs/guide-explained-entities.md#--disable-blocking) / [Enable](https://github.com/bastgau/ha-pi-hole-v6/blob/develop/docs/guide-explained-entities.md#--enable-blocking) Group {group_name} (with duration field) |                ✅                 |       ❌       |
+| Category       | Entity Type                                                                                                                                                                                                                                                                        | Pi-hole V6 Integration | Core Integration |
+| -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :--------------------: | :--------------: |
+| Binary Sensor  | [Status](https://github.com/bastgau/ha-pi-hole-v6/blob/develop/docs/guide-explained-entities.md#--status)                                                                                                                                                                          |           ✅           |        ✅        |
+| Button         | [Flush the DNS logs](https://github.com/bastgau/ha-pi-hole-v6/blob/develop/docs/guide-explained-entities.md#--flush-the-dns-logs)                                                                                                                                                  |           ✅           |        ❌        |
+|                | [Flush the network table](https://github.com/bastgau/ha-pi-hole-v6/blob/develop/docs/guide-explained-entities.md#--flush-the-network-table)                                                                                                                                        |           ✅           |        ❌        |
+|                | [Purge FTL diagnosis messages](https://github.com/bastgau/ha-pi-hole-v6/blob/develop/docs/guide-explained-entities.md#--purge-ftl-diagnosis-messages)                                                                                                                              |           ✅           |        ❌        |
+|                | [Refresh data](https://github.com/bastgau/ha-pi-hole-v6/blob/develop/docs/guide-explained-entities.md#--refresh-data)                                                                                                                                                              |           ✅           |        ❌        |
+|                | [Restart pihole-FTL](https://github.com/bastgau/ha-pi-hole-v6/blob/develop/docs/guide-explained-entities.md#--restart-pihole-ftl)                                                                                                                                                  |           ✅           |        ❌        |
+|                | [Run gravity](https://github.com/bastgau/ha-pi-hole-v6/blob/develop/docs/guide-explained-entities.md#--run-gravity)                                                                                                                                                                |           ✅           |        ❌        |
+| Device Tracker | [Network device](https://github.com/bastgau/ha-pi-hole-v6/blob/develop/docs/guide-explained-entities.md#--network-device) (disabled by default, filterable)                                                                                                                        |        ✅ + ℹ️         |        ❌        |
+| Sensor         | [Active DHCP leases](https://github.com/bastgau/ha-pi-hole-v6/blob/develop/docs/guide-explained-entities.md#--active-dhcp-leases)                                                                                                                                                  |        ✅ + ℹ️         |        ❌        |
+|                | [Active sessions](https://github.com/bastgau/ha-pi-hole-v6/blob/develop/docs/guide-explained-entities.md#--active-sessions)                                                                                                                                                        |        ✅ + ℹ️         |        ❌        |
+|                | [Ads blocked during the last 24 hours](https://github.com/bastgau/ha-pi-hole-v6/blob/develop/docs/guide-explained-entities.md#--ads-blocked-during-the-last-24-hours)                                                                                                              |           ✅           |        ✅        |
+|                | [Ads percentage blocked during the last 24h](https://github.com/bastgau/ha-pi-hole-v6/blob/develop/docs/guide-explained-entities.md#--ads-percentage-blocked-during-the-last-24-hours)                                                                                             |           ✅           |        ✅        |
+|                | [Average number of DNS queries (queries/min)](https://github.com/bastgau/ha-pi-hole-v6/blob/develop/docs/guide-explained-entities.md#--average-number-of-dns-queries)                                                                                                              |           ✅           |        ❌        |
+|                | [Configured clients](https://github.com/bastgau/ha-pi-hole-v6/blob/develop/docs/guide-explained-entities.md#--configured-clients)                                                                                                                                                  |        ✅ + ℹ️         |        ❌        |
+|                | [CPU usage](https://github.com/bastgau/ha-pi-hole-v6/blob/develop/docs/guide-explained-entities.md#--cpu-usage)                                                                                                                                                                    |        ✅ + ℹ️         |        ❌        |
+|                | [DNS queries cached](https://github.com/bastgau/ha-pi-hole-v6/blob/develop/docs/guide-explained-entities.md#--dns-queries-cached)                                                                                                                                                  |           ✅           |        ✅        |
+|                | [DNS queries during the last 24 hours](https://github.com/bastgau/ha-pi-hole-v6/blob/develop/docs/guide-explained-entities.md#--dns-queries-during-the-last-24-hours)                                                                                                              |           ✅           |        ✅        |
+|                | [DNS queries forwarded](https://github.com/bastgau/ha-pi-hole-v6/blob/develop/docs/guide-explained-entities.md#--dns-queries-forwarded)                                                                                                                                            |           ✅           |        ✅        |
+|                | [DNS unique clients](https://github.com/bastgau/ha-pi-hole-v6/blob/develop/docs/guide-explained-entities.md#--dns-unique-clients)                                                                                                                                                  |           ✅           |        ✅        |
+|                | [DNS unique domains](https://github.com/bastgau/ha-pi-hole-v6/blob/develop/docs/guide-explained-entities.md#--dns-unique-domains)                                                                                                                                                  |           ✅           |        ✅        |
+|                | [Domains blocked](https://github.com/bastgau/ha-pi-hole-v6/blob/develop/docs/guide-explained-entities.md#--domains-blocked)                                                                                                                                                        |           ✅           |        ✅        |
+|                | [FTL diagnosis messages count](https://github.com/bastgau/ha-pi-hole-v6/blob/develop/docs/guide-explained-entities.md#--ftl-diagnosis-messages-count)                                                                                                                              |        ✅ + ℹ️         |        ❌        |
+|                | [Latest data refresh](https://github.com/bastgau/ha-pi-hole-v6/blob/develop/docs/guide-explained-entities.md#--latest-data-refresh)                                                                                                                                                |           ✅           |        ❌        |
+|                | [Memory usage](https://github.com/bastgau/ha-pi-hole-v6/blob/develop/docs/guide-explained-entities.md#--memory-usage)                                                                                                                                                              |           ✅           |        ❌        |
+|                | [Remaining until blocking mode](https://github.com/bastgau/ha-pi-hole-v6/blob/develop/docs/guide-explained-entities.md#--remaining-until-blocking-mode)                                                                                                                            |        ✅ + 🕜         |        ❌        |
+|                | [Seen clients](https://github.com/bastgau/ha-pi-hole-v6/blob/develop/docs/guide-explained-entities.md#--seen-clients)                                                                                                                                                              |           ✅           |        ✅        |
+| Switch         | [Global](https://github.com/bastgau/ha-pi-hole-v6/blob/develop/docs/guide-explained-entities.md#--global-switch)                                                                                                                                                                   |           ✅           |        ✅        |
+|                | [Group](https://github.com/bastgau/ha-pi-hole-v6/blob/develop/docs/guide-explained-entities.md#--group-switch-one-switch-per-group) {group_name}                                                                                                                                   |      ✅ + ℹ️ + 🕜      |        ❌        |
+| Update         | [Core update](https://github.com/bastgau/ha-pi-hole-v6/blob/develop/docs/guide-explained-entities.md#--core-update)                                                                                                                                                                |           ✅           |        ✅        |
+|                | [Docker update](https://github.com/bastgau/ha-pi-hole-v6/blob/develop/docs/guide-explained-entities.md#--docker-update)                                                                                                                                                            |           ✅           |        ❌        |
+|                | [FTL update](https://github.com/bastgau/ha-pi-hole-v6/blob/develop/docs/guide-explained-entities.md#--ftl-update)                                                                                                                                                                  |           ✅           |        ✅        |
+|                | [Web interface update](https://github.com/bastgau/ha-pi-hole-v6/blob/develop/docs/guide-explained-entities.md#--web-interface-update)                                                                                                                                              |           ✅           |        ✅        |
+| Services       | [Disable](https://github.com/bastgau/ha-pi-hole-v6/blob/develop/docs/guide-explained-entities.md#--disable-blocking) / [Enable](https://github.com/bastgau/ha-pi-hole-v6/blob/develop/docs/guide-explained-entities.md#--enable-blocking) Global (with duration field)             |           ✅           |        ✅        |
+|                | [Disable](https://github.com/bastgau/ha-pi-hole-v6/blob/develop/docs/guide-explained-entities.md#--disable-blocking) / [Enable](https://github.com/bastgau/ha-pi-hole-v6/blob/develop/docs/guide-explained-entities.md#--enable-blocking) Group {group_name} (with duration field) |           ✅           |        ❌        |
 
 ✅ : Implemented  
 ❌ : Not Implemented  
 🕜 : Countdown  
-ℹ️ : Data in attributes  
+ℹ️ : Data in attributes
 
 > [!NOTE]
 > I hope you will continue to use or install the **Pi-hole V6 Integration**. 😃

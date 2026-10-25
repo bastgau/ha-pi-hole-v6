@@ -35,13 +35,11 @@ _LOGGER = logging.getLogger(__name__)
 
 @dataclass(frozen=True, kw_only=True)
 class PiHoleV6SensorEntityDescription(SensorEntityDescription):
-    """Describes a Pi-hole V6 sensor entity.
+    """Describe a Pi-hole V6 sensor entity.
 
     Attributes:
-        coordinator_key (str): The coordinator feeding this sensor, either COORDINATOR_LIVE for the data
-            that must feel responsive or COORDINATOR_STATS for the cumulative counters, paced slower.
-        follow_every_coordinator (bool): Whether the sensor also has to be written when a coordinator it is
-            not attached to completes a refresh, used by the sensors reporting on every coordinator.
+        coordinator_key (str): The coordinator feeding this sensor, either COORDINATOR_LIVE for the data that must feel responsive or COORDINATOR_STATS for the cumulative counters, paced slower.
+        follow_every_coordinator (bool): Whether the sensor also has to be written when a coordinator it is not attached to completes a refresh, used by the sensors reporting on every coordinator.
 
     """
 
@@ -188,9 +186,6 @@ async def async_setup_entry(
         entry (PiHoleV6ConfigEntry): The config entry providing runtime data.
         async_add_entities (AddConfigEntryEntitiesCallback): Callback to register new entities.
 
-    Returns:
-        None
-
     """
     name = entry.data[CONF_NAME]
     hole_data = entry.runtime_data
@@ -239,9 +234,6 @@ async def async_setup_entry(
         Args:
             _ (Any): The time event (unused).
 
-        Returns:
-            None
-
         """
         await sensor_update_timer(hass, name)
 
@@ -249,7 +241,16 @@ async def async_setup_entry(
 
 
 class PiHoleV6Sensor(PiHoleV6Entity, SensorEntity):  # pyright: ignore[reportIncompatibleVariableOverride]
-    """Representation of a Pi-hole V6 sensor."""
+    """Representation of a Pi-hole V6 sensor.
+
+    Attributes:
+        entity_description (EntityDescription): The description of the entity.
+        _unrecorded_attributes (frozenset[str]): The state attributes excluded from the recorder.
+        _extra_coordinators (Any): TODO
+        _attr_unique_id (str): The unique identifier of the entity.
+        entity_id (str): The entity id of the entity.
+
+    """
 
     entity_description: PiHoleV6SensorEntityDescription
 
@@ -278,8 +279,7 @@ class PiHoleV6Sensor(PiHoleV6Entity, SensorEntity):  # pyright: ignore[reportInc
             coordinator (DataUpdateCoordinator[Any]): The data update coordinator feeding this sensor.
             server_unique_id (str): A unique identifier for the server entry.
             description (PiHoleV6SensorEntityDescription): The entity description.
-            extra_coordinators (list[DataUpdateCoordinator[Any]] | None): Other coordinators whose refresh
-                must also trigger a state write, for the sensors reporting on every coordinator.
+            extra_coordinators (list[DataUpdateCoordinator[Any]] | None): Other coordinators whose refresh must also trigger a state write, for the sensors reporting on every coordinator.
 
         """
 
@@ -293,12 +293,7 @@ class PiHoleV6Sensor(PiHoleV6Entity, SensorEntity):  # pyright: ignore[reportInc
         self.entity_id = create_entity_id_name(raw_name)
 
     async def async_added_to_hass(self) -> None:
-        """Subscribe to the coordinators the sensor is not attached to.
-
-        Returns:
-            None
-
-        """
+        """Subscribe to the coordinators the sensor is not attached to."""
 
         await super().async_added_to_hass()
 
@@ -465,6 +460,11 @@ class PiHoleV6Sensor(PiHoleV6Entity, SensorEntity):  # pyright: ignore[reportInc
 
 
 class PiHoleV6UnrecordedSensor(PiHoleV6Sensor):
-    """Pi-hole V6 sensor whose attributes must never be written to the recorder."""
+    """Pi-hole V6 sensor whose attributes must never be written to the recorder.
+
+    Attributes:
+        _unrecorded_attributes (frozenset[str]): The state attributes excluded from the recorder.
+
+    """
 
     _unrecorded_attributes = frozenset({MATCH_ALL})

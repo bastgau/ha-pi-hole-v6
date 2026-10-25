@@ -1,5 +1,9 @@
 FROM mcr.microsoft.com/devcontainers/python:3.14
 
+# uv manages the project environment (see pyproject.toml). Copied from Astral's
+# official image rather than installed through a third-party devcontainer feature.
+COPY --from=ghcr.io/astral-sh/uv:0.11.25 /uv /uvx /usr/local/bin/
+
 # Install dependencies needed by Home Assistant or its dependencies
 RUN \
     apt-get update \

@@ -30,35 +30,35 @@ slower rhythm, which is exactly where the saving comes from. No data is lost.
 
 Pressing the `Refresh data` button refreshes both coordinators at once.
 
-| Entity | Coordinator |
-| --- | --- |
-| `sensor.<service_name>_ads_blocked_today` | `stats` |
-| `sensor.<service_name>_ads_percentage_blocked_today` | `stats` |
-| `sensor.<service_name>_dns_queries_cached` | `stats` |
-| `sensor.<service_name>_dns_queries_forwarded` | `stats` |
-| `sensor.<service_name>_dns_queries_today` | `stats` |
-| `sensor.<service_name>_dns_unique_domains` | `stats` |
-| `sensor.<service_name>_domains_blocked` | `stats` |
-| `sensor.<service_name>_ftl_info_message_count` | `stats` |
-| `update.<service_name>_core_update_available` | `stats` |
-| `update.<service_name>_docker_update_available` | `stats` |
-| `update.<service_name>_ftl_update_available` | `stats` |
-| `update.<service_name>_web_update_available` | `stats` |
-| `binary_sensor.<service_name>_status` | `live` |
-| `button.<service_name>_*` (all 6 actions) | `live` |
-| `device_tracker.*` (one per network device) | `live` |
-| `sensor.<service_name>_auth_sessions` | `live` |
-| `sensor.<service_name>_configured_clients` | `live` |
-| `sensor.<service_name>_cpu_use` | `live` |
-| `sensor.<service_name>_dhcp_leases` | `live` |
-| `sensor.<service_name>_dns_queries_frequency` | `live` |
-| `sensor.<service_name>_dns_unique_clients` | `live` |
-| `sensor.<service_name>_memory_use` | `live` |
-| `sensor.<service_name>_remaining_until_blocking_mode` | `live` |
-| `sensor.<service_name>_seen_clients` | `live` |
-| `switch.<service_name>` | `live` |
-| `switch.<service_name>_group_*` | `live` |
-| `sensor.<service_name>_latest_data_refresh` | `live` and `stats` |
+| Entity                                                | Coordinator        |
+| ----------------------------------------------------- | ------------------ |
+| `sensor.<service_name>_ads_blocked_today`             | `stats`            |
+| `sensor.<service_name>_ads_percentage_blocked_today`  | `stats`            |
+| `sensor.<service_name>_dns_queries_cached`            | `stats`            |
+| `sensor.<service_name>_dns_queries_forwarded`         | `stats`            |
+| `sensor.<service_name>_dns_queries_today`             | `stats`            |
+| `sensor.<service_name>_dns_unique_domains`            | `stats`            |
+| `sensor.<service_name>_domains_blocked`               | `stats`            |
+| `sensor.<service_name>_ftl_info_message_count`        | `stats`            |
+| `update.<service_name>_core_update_available`         | `stats`            |
+| `update.<service_name>_docker_update_available`       | `stats`            |
+| `update.<service_name>_ftl_update_available`          | `stats`            |
+| `update.<service_name>_web_update_available`          | `stats`            |
+| `binary_sensor.<service_name>_status`                 | `live`             |
+| `button.<service_name>_*` (all 6 actions)             | `live`             |
+| `device_tracker.*` (one per network device)           | `live`             |
+| `sensor.<service_name>_auth_sessions`                 | `live`             |
+| `sensor.<service_name>_configured_clients`            | `live`             |
+| `sensor.<service_name>_cpu_use`                       | `live`             |
+| `sensor.<service_name>_dhcp_leases`                   | `live`             |
+| `sensor.<service_name>_dns_queries_frequency`         | `live`             |
+| `sensor.<service_name>_dns_unique_clients`            | `live`             |
+| `sensor.<service_name>_memory_use`                    | `live`             |
+| `sensor.<service_name>_remaining_until_blocking_mode` | `live`             |
+| `sensor.<service_name>_seen_clients`                  | `live`             |
+| `switch.<service_name>`                               | `live`             |
+| `switch.<service_name>_group_*`                       | `live`             |
+| `sensor.<service_name>_latest_data_refresh`           | `live` and `stats` |
 
 `latest_data_refresh` is the only entity written by both: its state reports whichever coordinator
 refreshed last.
@@ -86,7 +86,7 @@ Uncheck the option `Enable polling for changes` to deactivate the automatic poll
 Open your Home Assistant interface. Click on the `Settings` icon.
 
 #### 2. Navigate to Automations & Scenes
-   
+
 In the settings menu, select `Automations & Scenes`.
 
 #### 3. Create a New Automation

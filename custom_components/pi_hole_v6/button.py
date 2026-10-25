@@ -70,9 +70,6 @@ async def async_setup_entry(
         entry (PiHoleV6ConfigEntry): The config entry providing runtime data.
         async_add_entities (AddConfigEntryEntitiesCallback): Callback to register new entities.
 
-    Returns:
-        None
-
     """
 
     hole_data = entry.runtime_data
@@ -94,7 +91,16 @@ async def async_setup_entry(
 
 
 class PiHoleV6Button(PiHoleV6Entity, ButtonEntity):  # pyright: ignore[reportIncompatibleVariableOverride]
-    """Representation of a Pi-hole V6 button."""
+    """Representation of a Pi-hole V6 button.
+
+    Attributes:
+        entity_description (EntityDescription): The description of the entity.
+        _coordinator_stats (Any): TODO
+        _attr_unique_id (str): The unique identifier of the entity.
+        _is_enabled (Any): TODO
+        entity_id (str): The entity id of the entity.
+
+    """
 
     entity_description: PiholeV6ButtonEntityDescription
 
@@ -111,8 +117,7 @@ class PiHoleV6Button(PiHoleV6Entity, ButtonEntity):  # pyright: ignore[reportInc
         Args:
             api (PiholeAPI): The Pi-hole API client instance.
             coordinator (DataUpdateCoordinator[None]): The "live" data update coordinator.
-            coordinator_stats (DataUpdateCoordinator[None]): The "stats" data update coordinator, kept so
-                an action can refresh and notify the slow moving entities as well.
+            coordinator_stats (DataUpdateCoordinator[None]): The "stats" data update coordinator, kept so an action can refresh and notify the slow moving entities as well.
             server_unique_id (str): A unique identifier for the server entry.
             description (PiholeV6ButtonEntityDescription): The entity description.
 
@@ -131,8 +136,8 @@ class PiHoleV6Button(PiHoleV6Entity, ButtonEntity):  # pyright: ignore[reportInc
     async def async_press(self) -> None:
         """Press the button.
 
-        Returns:
-            None
+        Raises:
+            ActionExecutionError: If the Pi-hole answers the action with an error code.
 
         """
 

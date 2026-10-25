@@ -1,206 +1,206 @@
 {
-    "config": {
-        "abort": {
-            "already_configured": "Service is al geconfigureerd.",
-            "reauth_successful": "Herauthenticatie is gelukt."
-        },
-        "error": {
-            "incorrect_data_expected": "Het is niet gelukt om de gegevens in de juiste structuur op te halen.",
-            "cannot_connect": "Kan geen verbinding maken met de server. Controleer of het serveradres en de poort correct zijn.",
-            "invalid_auth": "Ongeldig wachtwoord opgegeven. Zorg ervoor dat uw wachtwoord correct is.",
-            "invalid_path": "Ongeldig API-pad opgegeven. Controleer de eindpunt-URL."
-        },
-        "step": {
-            "user": {
-                "data": {
-                    "name": "Naam",
-                    "password": "Wachtwoord",
-                    "url": "Adres"
-                },
-                "data_description": {
-                    "password": "Wachtwoord dat gebruikt moet worden om in te loggen",
-                    "url": "URL of adres van uw Pi-hole (bv: {example_url})"
-                },
-                "description": "Met deze integratie kunt u statistieken ophalen en communiceren met een Pi-hole V6-systeem.",
-                "title": "Pi-hole V6"
-            },
-            "reauth_confirm": {
-                "data": {
-                    "password": "Wachtwoord"
-                },
-                "data_description": {
-                    "password": "Wachtwoord dat gebruikt moet worden om in te loggen"
-                },
-                "description": "Vanaf dit scherm kunt u het wachtwoord wijzigen om toegang te krijgen tot de Pi-hole-instantie.",
-                "title": "Pi-hole V6"
-            }
-        }
+  "config": {
+    "abort": {
+      "already_configured": "Service is al geconfigureerd.",
+      "reauth_successful": "Herauthenticatie is gelukt."
     },
-    "options": {
-        "step": {
-            "init": {
-                "data": {
-                    "update_interval_live": "Realtime verversingsfrequentie (seconden)",
-                    "update_interval_stats": "Verversingsfrequentie van statistieken (seconden)",
-                    "enable_device_tracker": "Netwerkapparaten volgen inschakelen",
-                    "device_tracker_whitelist": "Adreslijst als witte lijst gebruiken",
-                    "device_tracker_mac_list": "Gefilterde adressen"
-                },
-                "data_description": {
-                    "update_interval_live": "Hoe vaak de entiteiten worden ververst die de huidige status van uw Pi-hole weergeven: service- en blokkeerstatus, schakelaars en realtime-indicatoren. Een lagere waarde maakt het dashboard responsiever, ten koste van meer verzoeken aan uw Pi-hole. Standaard 120 seconden.",
-                    "update_interval_stats": "Hoe vaak de cumulatieve tellers en de periodieke controles worden ververst. Hun waarden veranderen voortdurend maar zijn alleen als trend zinvol, dus een langer interval vermindert het aantal rijen dat naar de recorder-database wordt geschreven zonder gegevens te verliezen. Moet groter dan of gelijk aan de realtime verversingsfrequentie zijn. Standaard 300 seconden.",
-                    "enable_device_tracker": "Standaard uitgeschakeld. Indien ingeschakeld wordt de lijst met netwerkapparaten van Pi-hole opgehaald om device_tracker-entiteiten aan te maken.",
-                    "device_tracker_whitelist": "Indien ingeschakeld worden alleen de vermelde adressen gevolgd. Indien uitgeschakeld worden de vermelde adressen uitgesloten en worden alle andere gevolgd.",
-                    "device_tracker_mac_list": "Eén MAC-adres (of Pi-hole pseudo-MAC, bijv. IP-192.168.1.10) of IP-adres per regel, of gescheiden door komma's. IP-adressen komen overeen met het huidige IP van een apparaat en kunnen niet meer overeenkomen als dit verandert. Laat leeg om filteren uit te schakelen."
-                },
-                "description": "Nadat u een van deze opties hebt gewijzigd, moet u de service opnieuw laden of Home Assistant opnieuw opstarten.",
-                "title": "Pi-hole V6"
-            }
-        },
-        "error": {
-            "invalid_update_interval_live": "Ongeldige realtime verversingsfrequentie. Deze moet hoger zijn dan 1 seconde en lager dan 3600 seconden.",
-            "invalid_update_interval_stats": "Ongeldige verversingsfrequentie van statistieken. Deze moet tussen 60 en 86400 seconden liggen en groter dan of gelijk aan de realtime verversingsfrequentie zijn."
-        }
+    "error": {
+      "incorrect_data_expected": "Het is niet gelukt om de gegevens in de juiste structuur op te halen.",
+      "cannot_connect": "Kan geen verbinding maken met de server. Controleer of het serveradres en de poort correct zijn.",
+      "invalid_auth": "Ongeldig wachtwoord opgegeven. Zorg ervoor dat uw wachtwoord correct is.",
+      "invalid_path": "Ongeldig API-pad opgegeven. Controleer de eindpunt-URL."
     },
-    "entity": {
-        "binary_sensor": {
-            "status": {
-                "name": "Status"
-            }
+    "step": {
+      "user": {
+        "data": {
+          "name": "Naam",
+          "password": "Wachtwoord",
+          "url": "Adres"
         },
-        "device_tracker": {
-            "network_device": {
-                "name": "Netwerkapparaat"
-            }
+        "data_description": {
+          "password": "Wachtwoord dat gebruikt moet worden om in te loggen",
+          "url": "URL of adres van uw Pi-hole (bv: {example_url})"
         },
-        "button": {
-            "action_flush_arp": {
-                "name": "Netwerktabel legen"
-            },
-            "action_flush_logs": {
-                "name": "DNS-logboeken legen"
-            },
-            "action_gravity": {
-                "name": "Gravity uitvoeren"
-            },
-            "action_restartdns": {
-                "name": "Pihole-FTL herstarten"
-            },
-            "action_refresh_data": {
-                "name": "Gegevens vernieuwen"
-            },
-            "action_ftl_purge_diagnosis_messages": {
-                "name": "Purge FTL diagnosis messages"
-            }
+        "description": "Met deze integratie kunt u statistieken ophalen en communiceren met een Pi-hole V6-systeem.",
+        "title": "Pi-hole V6"
+      },
+      "reauth_confirm": {
+        "data": {
+          "password": "Wachtwoord"
         },
-        "sensor": {
-            "ads_blocked_today": {
-                "name": "Ads vandaag geblokkeerd",
-                "unit_of_measurement": "ads"
-            },
-            "ads_percentage_blocked_today": {
-                "name": "Ads percentage vandaag geblokkeerd"
-            },
-            "seen_clients": {
-                "name": "Clients gezien",
-                "unit_of_measurement": "clients"
-            },
-            "dns_queries_today": {
-                "name": "DNS-query's vandaag",
-                "unit_of_measurement": "queries"
-            },
-            "domains_blocked": {
-                "name": "Domeinen geblokkeerd",
-                "unit_of_measurement": "domains"
-            },
-            "dns_queries_frequency": {
-                "name": "Average number of DNS queries",
-                "unit_of_measurement": "queries/min"
-            },
-            "dns_queries_cached": {
-                "name": "DNS-query's cached",
-                "unit_of_measurement": "queries"
-            },
-            "dns_queries_forwarded": {
-                "name": "DNS-query's doorgestuurd",
-                "unit_of_measurement": "queries"
-            },
-            "dns_unique_clients": {
-                "name": "Unieke DNS-clients",
-                "unit_of_measurement": "clients"
-            },
-            "dns_unique_domains": {
-                "name": "Unieke DNS-domeinen",
-                "unit_of_measurement": "domains"
-            },
-            "remaining_until_blocking_mode": {
-                "name": "Resterend tot blokkeringsmodus"
-            },
-            "latest_data_refresh": {
-                "name": "Meest recente gegevensvernieuwing"
-            },
-            "cpu_use": {
-                "name": "CPU usage"
-            },
-            "memory_use": {
-                "name": "Memory usage"
-            },
-            "ftl_info_message_count": {
-                "name": "FTL diagnosis messages count",
-                "unit_of_measurement": "messages"
-            },
-            "configured_clients": {
-                "name": "Clients configurés",
-                "unit_of_measurement": "clients"
-            },
-            "dhcp_leases": {
-                "name": "Actieve DHCP-leases",
-                "unit_of_measurement": "leases"
-            },
-            "auth_sessions": {
-                "name": "Actieve sessies",
-                "unit_of_measurement": "sessies"
-            }
+        "data_description": {
+          "password": "Wachtwoord dat gebruikt moet worden om in te loggen"
         },
-        "switch": {
-            "group": {
-                "name": "Groep {group_name}"
-            }
-        },
-        "update": {
-            "core_update_available": {
-                "name": "Core update"
-            },
-            "docker_update_available": {
-                "name": "Docker update"
-            },
-            "ftl_update_available": {
-                "name": "FTL update"
-            },
-            "web_update_available": {
-                "name": "Web interface update"
-            }
-        }
-    },
-    "services": {
-        "disable": {
-            "name": "Uitzetten",
-            "description": "Schakel geconfigureerde Pi-hole voor een bepaalde tijd uit.",
-            "fields": {
-                "duration": {
-                    "description": "Tijd dat de Pi-hole uitgeschakeld moet worden.",
-                    "name": "Duur"
-                }
-            }
-        },
-        "enable": {
-            "name": "Actief",
-            "description": "Schakelt geconfigureerde Pi-hole in."
-        }
-    },
-    "exceptions": {
-        "unable_to_launch_action": {
-            "message": "Não foi possível iniciar a ação *{action}*: {exception}."
-        }
+        "description": "Vanaf dit scherm kunt u het wachtwoord wijzigen om toegang te krijgen tot de Pi-hole-instantie.",
+        "title": "Pi-hole V6"
+      }
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "update_interval_live": "Realtime verversingsfrequentie (seconden)",
+          "update_interval_stats": "Verversingsfrequentie van statistieken (seconden)",
+          "enable_device_tracker": "Netwerkapparaten volgen inschakelen",
+          "device_tracker_whitelist": "Adreslijst als witte lijst gebruiken",
+          "device_tracker_mac_list": "Gefilterde adressen"
+        },
+        "data_description": {
+          "update_interval_live": "Hoe vaak de entiteiten worden ververst die de huidige status van uw Pi-hole weergeven: service- en blokkeerstatus, schakelaars en realtime-indicatoren. Een lagere waarde maakt het dashboard responsiever, ten koste van meer verzoeken aan uw Pi-hole. Standaard 120 seconden.",
+          "update_interval_stats": "Hoe vaak de cumulatieve tellers en de periodieke controles worden ververst. Hun waarden veranderen voortdurend maar zijn alleen als trend zinvol, dus een langer interval vermindert het aantal rijen dat naar de recorder-database wordt geschreven zonder gegevens te verliezen. Moet groter dan of gelijk aan de realtime verversingsfrequentie zijn. Standaard 300 seconden.",
+          "enable_device_tracker": "Standaard uitgeschakeld. Indien ingeschakeld wordt de lijst met netwerkapparaten van Pi-hole opgehaald om device_tracker-entiteiten aan te maken.",
+          "device_tracker_whitelist": "Indien ingeschakeld worden alleen de vermelde adressen gevolgd. Indien uitgeschakeld worden de vermelde adressen uitgesloten en worden alle andere gevolgd.",
+          "device_tracker_mac_list": "Eén MAC-adres (of Pi-hole pseudo-MAC, bijv. IP-192.168.1.10) of IP-adres per regel, of gescheiden door komma's. IP-adressen komen overeen met het huidige IP van een apparaat en kunnen niet meer overeenkomen als dit verandert. Laat leeg om filteren uit te schakelen."
+        },
+        "description": "Nadat u een van deze opties hebt gewijzigd, moet u de service opnieuw laden of Home Assistant opnieuw opstarten.",
+        "title": "Pi-hole V6"
+      }
+    },
+    "error": {
+      "invalid_update_interval_live": "Ongeldige realtime verversingsfrequentie. Deze moet hoger zijn dan 1 seconde en lager dan 3600 seconden.",
+      "invalid_update_interval_stats": "Ongeldige verversingsfrequentie van statistieken. Deze moet tussen 60 en 86400 seconden liggen en groter dan of gelijk aan de realtime verversingsfrequentie zijn."
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "status": {
+        "name": "Status"
+      }
+    },
+    "device_tracker": {
+      "network_device": {
+        "name": "Netwerkapparaat"
+      }
+    },
+    "button": {
+      "action_flush_arp": {
+        "name": "Netwerktabel legen"
+      },
+      "action_flush_logs": {
+        "name": "DNS-logboeken legen"
+      },
+      "action_gravity": {
+        "name": "Gravity uitvoeren"
+      },
+      "action_restartdns": {
+        "name": "Pihole-FTL herstarten"
+      },
+      "action_refresh_data": {
+        "name": "Gegevens vernieuwen"
+      },
+      "action_ftl_purge_diagnosis_messages": {
+        "name": "Purge FTL diagnosis messages"
+      }
+    },
+    "sensor": {
+      "ads_blocked_today": {
+        "name": "Ads vandaag geblokkeerd",
+        "unit_of_measurement": "ads"
+      },
+      "ads_percentage_blocked_today": {
+        "name": "Ads percentage vandaag geblokkeerd"
+      },
+      "seen_clients": {
+        "name": "Clients gezien",
+        "unit_of_measurement": "clients"
+      },
+      "dns_queries_today": {
+        "name": "DNS-query's vandaag",
+        "unit_of_measurement": "queries"
+      },
+      "domains_blocked": {
+        "name": "Domeinen geblokkeerd",
+        "unit_of_measurement": "domains"
+      },
+      "dns_queries_frequency": {
+        "name": "Average number of DNS queries",
+        "unit_of_measurement": "queries/min"
+      },
+      "dns_queries_cached": {
+        "name": "DNS-query's cached",
+        "unit_of_measurement": "queries"
+      },
+      "dns_queries_forwarded": {
+        "name": "DNS-query's doorgestuurd",
+        "unit_of_measurement": "queries"
+      },
+      "dns_unique_clients": {
+        "name": "Unieke DNS-clients",
+        "unit_of_measurement": "clients"
+      },
+      "dns_unique_domains": {
+        "name": "Unieke DNS-domeinen",
+        "unit_of_measurement": "domains"
+      },
+      "remaining_until_blocking_mode": {
+        "name": "Resterend tot blokkeringsmodus"
+      },
+      "latest_data_refresh": {
+        "name": "Meest recente gegevensvernieuwing"
+      },
+      "cpu_use": {
+        "name": "CPU usage"
+      },
+      "memory_use": {
+        "name": "Memory usage"
+      },
+      "ftl_info_message_count": {
+        "name": "FTL diagnosis messages count",
+        "unit_of_measurement": "messages"
+      },
+      "configured_clients": {
+        "name": "Clients configurés",
+        "unit_of_measurement": "clients"
+      },
+      "dhcp_leases": {
+        "name": "Actieve DHCP-leases",
+        "unit_of_measurement": "leases"
+      },
+      "auth_sessions": {
+        "name": "Actieve sessies",
+        "unit_of_measurement": "sessies"
+      }
+    },
+    "switch": {
+      "group": {
+        "name": "Groep {group_name}"
+      }
+    },
+    "update": {
+      "core_update_available": {
+        "name": "Core update"
+      },
+      "docker_update_available": {
+        "name": "Docker update"
+      },
+      "ftl_update_available": {
+        "name": "FTL update"
+      },
+      "web_update_available": {
+        "name": "Web interface update"
+      }
+    }
+  },
+  "services": {
+    "disable": {
+      "name": "Uitzetten",
+      "description": "Schakel geconfigureerde Pi-hole voor een bepaalde tijd uit.",
+      "fields": {
+        "duration": {
+          "description": "Tijd dat de Pi-hole uitgeschakeld moet worden.",
+          "name": "Duur"
+        }
+      }
+    },
+    "enable": {
+      "name": "Actief",
+      "description": "Schakelt geconfigureerde Pi-hole in."
+    }
+  },
+  "exceptions": {
+    "unable_to_launch_action": {
+      "message": "Não foi possível iniciar a ação *{action}*: {exception}."
+    }
+  }
 }

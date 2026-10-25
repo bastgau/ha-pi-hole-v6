@@ -1,81 +1,81 @@
 {
-    "entity": {
-        "binary_sensor": {
-            "status": {
-                "default": "mdi:pi-hole"
-            }
-        },
-        "device_tracker": {
-            "network_device": {
-                "default": "mdi:lan-disconnect",
-                "state": {
-                    "home": "mdi:lan-connect"
-                }
-            }
-        },
-        "sensor": {
-            "ads_blocked_today": {
-                "default": "mdi:close-octagon-outline"
-            },
-            "ads_percentage_blocked_today": {
-                "default": "mdi:close-octagon-outline"
-            },
-            "seen_clients": {
-                "default": "mdi:account-eye-outline"
-            },
-            "dns_queries_today": {
-                "default": "mdi:dns"
-            },
-            "domains_blocked": {
-                "default": "mdi:domain"
-            },
-            "dns_queries_frequency": {
-                "default": "mdi:dns-outline"
-            },
-            "dns_queries_cached": {
-                "default": "mdi:cached"
-            },
-            "dns_queries_forwarded": {
-                "default": "mdi:share-outline"
-            },
-            "dns_unique_clients": {
-                "default": "mdi:account-badge-outline"
-            },
-            "dns_unique_domains": {
-                "default": "mdi:domain"
-            },
-            "remaining_until_blocking_mode": {
-                "default": "mdi:timer-outline"
-            },
-            "cpu_use": {
-                "default": "mdi:cpu-64-bit"
-            },
-            "memory_use": {
-                "default": "mdi:memory"
-            },
-            "last_refresh_date": {
-                "default": "mdi:refresh"
-            },
-            "ftl_info_message_count": {
-                "default": "mdi:message-cog-outline"
-            },
-            "configured_clients": {
-                "default": "mdi:account-check-outline"
-            },
-            "dhcp_leases": {
-                "default": "mdi:lan"
-            },
-            "auth_sessions": {
-                "default": "mdi:robot-outline"
-            }
-        }
+  "entity": {
+    "binary_sensor": {
+      "status": {
+        "default": "mdi:pi-hole"
+      }
     },
-    "services": {
-        "disable": {
-            "service": "mdi:advertisements"
-        },
-        "enable": {
-            "service": "mdi:advertisements-off"
+    "device_tracker": {
+      "network_device": {
+        "default": "mdi:lan-disconnect",
+        "state": {
+          "home": "mdi:lan-connect"
         }
+      }
+    },
+    "sensor": {
+      "ads_blocked_today": {
+        "default": "mdi:close-octagon-outline"
+      },
+      "ads_percentage_blocked_today": {
+        "default": "mdi:close-octagon-outline"
+      },
+      "seen_clients": {
+        "default": "mdi:account-eye-outline"
+      },
+      "dns_queries_today": {
+        "default": "mdi:dns"
+      },
+      "domains_blocked": {
+        "default": "mdi:domain"
+      },
+      "dns_queries_frequency": {
+        "default": "mdi:dns-outline"
+      },
+      "dns_queries_cached": {
+        "default": "mdi:cached"
+      },
+      "dns_queries_forwarded": {
+        "default": "mdi:share-outline"
+      },
+      "dns_unique_clients": {
+        "default": "mdi:account-badge-outline"
+      },
+      "dns_unique_domains": {
+        "default": "mdi:domain"
+      },
+      "remaining_until_blocking_mode": {
+        "default": "mdi:timer-outline"
+      },
+      "cpu_use": {
+        "default": "mdi:cpu-64-bit"
+      },
+      "memory_use": {
+        "default": "mdi:memory"
+      },
+      "last_refresh_date": {
+        "default": "mdi:refresh"
+      },
+      "ftl_info_message_count": {
+        "default": "mdi:message-cog-outline"
+      },
+      "configured_clients": {
+        "default": "mdi:account-check-outline"
+      },
+      "dhcp_leases": {
+        "default": "mdi:lan"
+      },
+      "auth_sessions": {
+        "default": "mdi:robot-outline"
+      }
     }
+  },
+  "services": {
+    "disable": {
+      "service": "mdi:advertisements"
+    },
+    "enable": {
+      "service": "mdi:advertisements-off"
+    }
+  }
 }

@@ -14,4 +14,3 @@ enable:
     entity:
       integration: pi_hole_v6
       domain: switch
-

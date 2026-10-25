@@ -8,7 +8,7 @@ assignees: []
 ---
 
 <!--
-Note: The Pi-hole V6 integration is not compatible with versions of Home Assistant prior to 2025.03.
+Note: The Pi-hole V6 integration is not compatible with versions of Home Assistant prior to 2026.10.
 -->
 
 **Home Assistant version:**

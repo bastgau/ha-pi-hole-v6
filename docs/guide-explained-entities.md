@@ -1,8 +1,8 @@
 ## Entities & Services
 
-A few entities are disabled by default. You have to enable them to display / use them.  
+A few entities are disabled by default. You have to enable them to display / use them.
 
-The entities / services name is depending on the name of the service (_<service\_name>_).
+The entities / services name is depending on the name of the service (_<service_name>_).
 
 ### Sensors
 
@@ -13,151 +13,145 @@ The entities / services name is depending on the name of the service (_<service\
 
 #### - Ads blocked during the last 24 hours
 
-**Name:** sensor.<service\_name>_ads_blocked_today  
+**Name:** sensor.<service_name>\_ads_blocked_today  
 **Description:** Number of blocked queries during the last 24h.  
-**Unit**: ads  
+**Unit**: ads
 
 #### - Ads percentage blocked during the last 24 hours
 
-**Name:** sensor.<service\_name>_ads_percentage_blocked_today  
+**Name:** sensor.<service_name>\_ads_percentage_blocked_today  
 **Description:** Percent of blocked queries during the last 24h.  
-**Unit**: percentage  
+**Unit**: percentage
 
 #### - Average number of DNS queries
 
-**Name:** sensor.<service\_name>_dns_queries_frequency  
+**Name:** sensor.<service_name>\_dns_queries_frequency  
 **Description:** Average number of DNS queries per minute.  
-**Unit**: queries/minute  
+**Unit**: queries/minute
 
 #### - Configured clients
 
-**Name:** sensor.<service\_name>_configured_clients  
+**Name:** sensor.<service_name>\_configured_clients  
 **Description:** Total number of configured clients.  
 **Unit**: clients  
-**Attributes:**  Information about the configured clients.
+**Attributes:** Information about the configured clients.
 
 ```json
 {
-   "clients":[
-      {
-         "client":"192.168.31.172",
-         "name":"macbook-air-bastien-m3.local",
-         "comment":"Macbook Air Bastien 5Ghz",
-         "groups":[
-            8
-         ],
-         "id":7
-      },
-      {
-         "client":"192.168.31.196",
-         "name":"desktop-bastien.local",
-         "comment":"MSI Desktop Bastien",
-         "groups":[
-            18
-         ],
-         "id":62
-      },
-      {
-         "client":"192.168.31.171",
-         "name":"macbook-air-bastien-m3.local",
-         "comment":"Macbook Air Bastien 2.4Ghz",
-         "groups":[
-            8
-         ],
-         "id":109
-      }
-   ]
+  "clients": [
+    {
+      "client": "192.168.31.172",
+      "name": "macbook-air-bastien-m3.local",
+      "comment": "Macbook Air Bastien 5Ghz",
+      "groups": [8],
+      "id": 7
+    },
+    {
+      "client": "192.168.31.196",
+      "name": "desktop-bastien.local",
+      "comment": "MSI Desktop Bastien",
+      "groups": [18],
+      "id": 62
+    },
+    {
+      "client": "192.168.31.171",
+      "name": "macbook-air-bastien-m3.local",
+      "comment": "Macbook Air Bastien 2.4Ghz",
+      "groups": [8],
+      "id": 109
+    }
+  ]
 }
 ```
 
 #### - Active DHCP leases
 
-**Name:** sensor.<service\_name>_dhcp_leases  
+**Name:** sensor.<service_name>\_dhcp_leases  
 **Description:** Total number of active DHCP leases.  
 **Unit**: leases  
-**Attributes:**  Information about the active DHCP leases.
+**Attributes:** Information about the active DHCP leases.
 
 ```json
 {
-   "leases":[
-      {
-         "expires": 1675671991,
-         "name": "raspberrypi",
-         "hwaddr": "00:00:00:00:00:00",
-         "ip": "192.168.31.171",
-         "clientid": "00:00:00:00:00:00"
-      },
-      {
-         "expires": 1675671991,
-         "name": "laptop",
-         "hwaddr": "00:00:00:00:00:00",
-         "ip": "192.168.31.145",
-         "clientid": "00:00:00:00:00:00"
-      }
-   ]
+  "leases": [
+    {
+      "expires": 1675671991,
+      "name": "raspberrypi",
+      "hwaddr": "00:00:00:00:00:00",
+      "ip": "192.168.31.171",
+      "clientid": "00:00:00:00:00:00"
+    },
+    {
+      "expires": 1675671991,
+      "name": "laptop",
+      "hwaddr": "00:00:00:00:00:00",
+      "ip": "192.168.31.145",
+      "clientid": "00:00:00:00:00:00"
+    }
+  ]
 }
 ```
 
 #### - DNS queries cached
 
-**Name:** sensor.<service\_name>_dns_queries_cached  
+**Name:** sensor.<service_name>\_dns_queries_cached  
 **Description:** Number of queries replied to from cache or local configuration.  
-**Unit**: queries  
+**Unit**: queries
 
 #### - DNS queries during the last 24 hours
 
-**Name:** sensor.<service\_name>_dns_queries_today  
+**Name:** sensor.<service_name>\_dns_queries_today  
 **Description:** Total number of queries during the last 24h.  
-**Unit**: queries  
+**Unit**: queries
 
 #### - DNS queries forwarded
 
-**Name:** sensor.<service\_name>_dns_queries_forwarded  
+**Name:** sensor.<service_name>\_dns_queries_forwarded  
 **Description:** Number of queries that have been forwarded.  
-**Unit**: queries  
+**Unit**: queries
 
 #### - DNS unique clients
 
-**Name:** sensor.<service\_name>_dns_unique_clients  
+**Name:** sensor.<service_name>\_dns_unique_clients  
 **Description:** Number of active clients (seen in the last 24h).  
-**Unit**: clients  
+**Unit**: clients
 
 #### - DNS unique domains
 
-**Name:** sensor.<service\_name>_dns_unique_domains  
+**Name:** sensor.<service_name>\_dns_unique_domains  
 **Description:** Number of unique domains FTL knows.  
-**Unit**: domains  
+**Unit**: domains
 
 #### - Domains blocked
 
-**Name:** sensor.<service\_name>_domains_blocked  
+**Name:** sensor.<service_name>\_domains_blocked  
 **Description:** Number of domain on your Pi-hole's gravity.  
-**Unit**: domains  
+**Unit**: domains
 
 #### - FTL diagnosis messages count
 
-**Name:** sensor.<service\_name>_ftl_info_message_count  
+**Name:** sensor.<service_name>\_ftl_info_message_count  
 **Description:** Total number of Pi-hole diagnosis messages.  
 **Unit**: messages  
-**Attributes:**  Information about the FTL diagnosis messages.  
+**Attributes:** Information about the FTL diagnosis messages.
 
 ```json
 {
-   "messages":[
-      {
-         "id":4161,
-         "timestamp":1754172958,
-         "type":"LIST",
-         "plain":"List with ID 2 (https://mirror1.malwaredomains.com/files/justdomains) was inaccessible during last gravity run"
-      }
-   ],
-   "status":"OK: Messages fetched successfull",
+  "messages": [
+    {
+      "id": 4161,
+      "timestamp": 1754172958,
+      "type": "LIST",
+      "plain": "List with ID 2 (https://mirror1.malwaredomains.com/files/justdomains) was inaccessible during last gravity run"
+    }
+  ],
+  "status": "OK: Messages fetched successfull"
 }
 ```
 
 #### - Remaining until blocking mode
 
-**Name:** sensor.<service\_name>_remaining_until_blocking_mode  
+**Name:** sensor.<service_name>\_remaining_until_blocking_mode  
 **Description:** Remaining seconds until blocking mode is automatically changed.  
 **Unit**: seconds
 
@@ -165,15 +159,15 @@ _This entity generates frequent and unnecessary data. To improve performance and
 
 #### - Seen clients
 
-**Name:** sensor.<service\_name>_seen_clients  
+**Name:** sensor.<service_name>\_seen_clients  
 **Description:** Total number of clients seen by FTL.  
-**Unit**: clients  
+**Unit**: clients
 
 #### - Status
 
-**Name:** binary_sensor.<service\_name>_status  
+**Name:** binary_sensor.<service_name>\_status  
 **Description:** Blocking status  
-**Attributes:**  Information about the Pi-hole instance.
+**Attributes:** Information about the Pi-hole instance.
 
 ```json
 {
@@ -183,7 +177,7 @@ _This entity generates frequent and unnecessary data. To improve performance and
   "FTL version": "v6.2.3",
   "Web interface version": "v6.2.1"
 }
-```  
+```
 
 </details>
 
@@ -195,37 +189,38 @@ Please refer to the Pi-hole documentation to understand the meaning of each of t
 
 > [!NOTE]
 > The '**Permit destructive actions via API**' option must be enabled in the Pi-hole options to perform the following actions:
->  - `Flush the network table`
->  - `Flush the DNS logs`
->  - `Restart pihole-FTL` 
+>
+> - `Flush the network table`
+> - `Flush the DNS logs`
+> - `Restart pihole-FTL`
 
 <details>
-  <summary>Display the actions via buttons</summary>  
+  <summary>Display the actions via buttons</summary>
 
 #### - Flush the DNS logs
 
-**Name:** button.<service\_name>_action_flush_logs  
+**Name:** button.<service_name>\_action_flush_logs
 
 #### - Flush the network table
 
-**Name:** button.<service\_name>_action_flush_arp  
+**Name:** button.<service_name>\_action_flush_arp
 
 #### - Purge FTL diagnosis messages
 
-**Name:** button.<service\_name>_action_ftl_purge_diagnosis_messages  
+**Name:** button.<service_name>\_action_ftl_purge_diagnosis_messages
 
 #### - Refresh data
 
-**Name:** button.<service\_name>_action_refresh_data  
+**Name:** button.<service_name>\_action_refresh_data  
 **Description:** Action to force the refresh of Pi-hole information in Home Assistant.
 
 #### - Restart pihole-FTL
 
-**Name:** button.<service\_name>_action_restartdns  
+**Name:** button.<service_name>\_action_restartdns
 
 #### - Run gravity
 
-**Name:** button.<service\_name>_action_gravity  
+**Name:** button.<service_name>\_action_gravity
 
 </details>
 
@@ -238,15 +233,15 @@ Please refer to the Pi-hole documentation to understand the meaning of each of t
 
 #### - Global switch
 
-**Name:** switch.<service\_name>  
+**Name:** switch.<service_name>  
 **Description:** Switch to active or disable the ads blocking at Pi-hole instance level.
 
-The switch name is depending on the name of the service. 
+The switch name is depending on the name of the service.
 
 ```json
 {
-  "until_date":"2025-08-07T00:29:58.760494+02:00",
-  "remaining_seconds":26
+  "until_date": "2025-08-07T00:29:58.760494+02:00",
+  "remaining_seconds": 26
 }
 ```
 
@@ -255,9 +250,9 @@ The attributes `until_date` and `remaining_seconds` are existing only if the ads
 #### - Group switch (one switch per group)
 
 A new switch is created for each group in order to control it specifically.
-The switches name is depending on the name of the group.  
+The switches name is depending on the name of the group.
 
-**Name:** switch.<service\_name>\_group\_<group_name>  
+**Name:** switch.<service_name>\_group\_<group_name>  
 **Description:** Switch to active or disable the ads blocking at group level.  
 **Attributes:** Information about the group, as well as the list of clients associated with the group.
 
@@ -275,8 +270,8 @@ The switches name is depending on the name of the group.
       "name": "phone-bastien.local"
     }
   ],
-  "until_date":"2025-08-07T00:29:58.760494+02:00",
-  "remaining_seconds":26
+  "until_date": "2025-08-07T00:29:58.760494+02:00",
+  "remaining_seconds": 26
 }
 ```
 
@@ -293,19 +288,19 @@ The attributes `until_date` and `remaining_seconds` are existing only if the ads
 
 #### - Core update
 
-**Name:** update.<service\_name>_core_update_available 
+**Name:** update.<service_name>\_core_update_available
 
 #### - Docker update
 
-**Name:** update.<service\_name>_docker_update_available
+**Name:** update.<service_name>\_docker_update_available
 
 #### - FTL update
 
-**Name:** update.<service\_name>_ftl_update_available
+**Name:** update.<service_name>\_ftl_update_available
 
 #### - Web Interface update
 
-**Name:** update.<service\_name>_web_update_available
+**Name:** update.<service_name>\_web_update_available
 
 </details>
 
@@ -320,9 +315,9 @@ The attributes `until_date` and `remaining_seconds` are existing only if the ads
 
 #### - Network device
 
-**Name:** device_tracker.<service\_name>\_<mac_address\>  
+**Name:** device_tracker.<service_name>\_<mac_address\>  
 **Description:** Presence of a network device known to Pi-hole. Reports `home` if the device made a DNS query recently, `not_home` otherwise.  
-**Attributes:**  Information about the network device.
+**Attributes:** Information about the network device.
 
 ```json
 {
@@ -347,59 +342,51 @@ The attributes `until_date` and `remaining_seconds` are existing only if the ads
 
 #### - Active sessions
 
-**Name:** sensor.<service\_name>_auth_sessions  
+**Name:** sensor.<service_name>\_auth_sessions  
 **Description:** Total number of auth sessions.  
 **Unit**: sessions  
-**Attributes:** Information about the active sessions. 
+**Attributes:** Information about the active sessions.
 
 ```json
 {
-   "sessions":[
-      {
-         "id":0,
-         "current_session":true,
-         "valid":true,
-         "login_at":1754179116,
-         "last_active":1754179117,
-         "valid_until":1754180917,
-         "remote_addr":"172.19.0.1",
-         "user_agent":"HomeAssistant/2025.7.4 aiohttp/3.12.14 Python/3.13",
-         "app":false,
-         "cli":false
-      }
-   ]
+  "sessions": [
+    {
+      "id": 0,
+      "current_session": true,
+      "valid": true,
+      "login_at": 1754179116,
+      "last_active": 1754179117,
+      "valid_until": 1754180917,
+      "remote_addr": "172.19.0.1",
+      "user_agent": "HomeAssistant/2025.7.4 aiohttp/3.12.14 Python/3.13",
+      "app": false,
+      "cli": false
+    }
+  ]
 }
 ```
 
 #### - CPU usage
 
-**Name:** sensor.<service\_name>_cpu_use   
+**Name:** sensor.<service_name>\_cpu_use  
 **Description:** Amount of processing power utilized by the Pi-hole instance.  
 **Unit**: percentage  
-**Attributes:** Information about the CPU usage. 
+**Attributes:** Information about the CPU usage.
 
 ```json
 {
-   "nprocs":4,
-   "%cpu":39.6721305847168,
-   "load":{
-      "raw":[
-         1.29833984375,
-         0.95849609375,
-         0.767578125
-      ],
-      "percent":[
-         32.45849609375,
-         23.96240234375,
-         19.189453125
-      ]
-   }
+  "nprocs": 4,
+  "%cpu": 39.6721305847168,
+  "load": {
+    "raw": [1.29833984375, 0.95849609375, 0.767578125],
+    "percent": [32.45849609375, 23.96240234375, 19.189453125]
+  }
 }
 ```
 
 #### - Latest data refresh
 
-**Name:** sensor.<service\_name>_latest_data_refresh   
+**Name:** sensor.<service_name>\_latest_data_refresh  
 **Description:** Last data update from the Pi-hole API.  
 **Unit**: date
 
@@ -407,26 +394,26 @@ _This entity generates frequent and unnecessary data. To improve performance and
 
 #### - Memory usage
 
-**Name:** sensor.<service\_name>_memory_use   
+**Name:** sensor.<service_name>\_memory_use  
 **Description:** Amount of memory utilized by the Pi-hole instance.  
 **Unit**: percentage  
-**Attributes:** Information about the memory usage. 
+**Attributes:** Information about the memory usage.
 
 ```json
 {
-   "ram":{
-      "total":7962996,
-      "free":192828,
-      "used":4743964,
-      "available":2837180,
-      "%used":59.57511469301253
-   },
-   "swap":{
-      "total":999420,
-      "free":930556,
-      "used":68864,
-      "%used":6.89039642992936
-   }
+  "ram": {
+    "total": 7962996,
+    "free": 192828,
+    "used": 4743964,
+    "available": 2837180,
+    "%used": 59.57511469301253
+  },
+  "swap": {
+    "total": 999420,
+    "free": 930556,
+    "used": 68864,
+    "%used": 6.89039642992936
+  }
 }
 ```
 
@@ -443,7 +430,7 @@ _This entity generates frequent and unnecessary data. To improve performance and
 
 **Name:** pi_hole_v6.disable  
 **Description:** Disables configured Pi-hole for an amount of time.  
-**Action:**  
+**Action:**
 
 ```yaml
 action: pi_hole_v6.disable
@@ -461,7 +448,7 @@ target:
 
 **Name:** pi_hole_v6.enable  
 **Description:** Enables configured Pi-hole.  
-**Action:**  
+**Action:**
 
 ```yaml
 action: pi_hole_v6.enable

@@ -51,8 +51,7 @@ def _build_mac_filter(entry: PiHoleV6ConfigEntry) -> Callable[[str], bool]:
         entry (PiHoleV6ConfigEntry): The config entry providing the filter options.
 
     Returns:
-        Callable[[str], bool]: A predicate returning True if the given (lowercase)
-            MAC address should be tracked.
+        Callable[[str], bool]: A predicate returning True if the given (lowercase) MAC address should be tracked.
 
     """
     address_list = parse_mac_list(entry.data.get(CONF_DEVICE_TRACKER_MAC_LIST, DEFAULT_DEVICE_TRACKER_MAC_LIST))
@@ -79,8 +78,7 @@ def _build_device_filter(entry: PiHoleV6ConfigEntry) -> Callable[[dict[str, Any]
         entry (PiHoleV6ConfigEntry): The config entry providing the filter options.
 
     Returns:
-        Callable[[dict[str, Any]], bool]: A predicate returning True if the given
-            device should be tracked.
+        Callable[[dict[str, Any]], bool]: A predicate returning True if the given device should be tracked.
 
     """
     address_list = parse_mac_list(entry.data.get(CONF_DEVICE_TRACKER_MAC_LIST, DEFAULT_DEVICE_TRACKER_MAC_LIST))
@@ -112,12 +110,7 @@ def _purge_network_devices(
     Args:
         hass (HomeAssistant): The Home Assistant instance.
         entry (PiHoleV6ConfigEntry): The config entry owning the entities and devices.
-        is_mac_allowed (Callable[[str], bool]): Predicate deciding whether a MAC address
-            should still be tracked. Defaults to always False, removing every network
-            device (used when device tracking is fully disabled).
-
-    Returns:
-        None
+        is_mac_allowed (Callable[[str], bool]): Predicate deciding whether a MAC address should still be tracked. Defaults to always False, removing every network device (used when device tracking is fully disabled).
 
     """
     entity_registry = er.async_get(hass)
@@ -132,7 +125,7 @@ def _purge_network_devices(
     for device_entry in dr.async_entries_for_config_entry(device_registry, entry.entry_id):
         device_macs = {mac for conn_type, mac in device_entry.connections if conn_type == dr.CONNECTION_NETWORK_MAC}
         if device_macs and not any(is_mac_allowed(mac) for mac in device_macs):
-            device_registry.async_update_device(device_entry.id, remove_config_entry_id=entry.entry_id)
+            device_registry.async_remove_device(device_entry.id)
 
 
 def _device_display_name(device: dict[str, Any]) -> str:
@@ -173,9 +166,6 @@ async def async_setup_entry(
         entry (PiHoleV6ConfigEntry): The config entry providing runtime data.
         async_add_entities (AddConfigEntryEntitiesCallback): Callback to register new entities.
 
-    Returns:
-        None
-
     """
     if not entry.data.get(CONF_ENABLE_DEVICE_TRACKER, DEFAULT_ENABLE_DEVICE_TRACKER):
         _purge_network_devices(hass, entry)
@@ -200,9 +190,6 @@ async def async_setup_entry(
         blacklist filter (matched against MAC and current IP addresses) are actively
         removed.
 
-        Returns:
-            None
-
         """
         async with _add_lock:
             is_device_allowed = _build_device_filter(entry)
@@ -220,13 +207,23 @@ async def async_setup_entry(
                 if mac not in tracked_macs:
                     tracked_macs.add(mac)
 
+                    # via_device_id expects the registry id of the server device
+                    server_device = next(
+                        (
+                            device_entry
+                            for device_entry in dr.async_entries_for_config_entry(device_registry, entry.entry_id)
+                            if (DOMAIN, server_unique_id) in device_entry.identifiers
+                        ),
+                        None,
+                    )
+
                     device_registry.async_get_or_create(
                         config_entry_id=entry.entry_id,
                         connections={(dr.CONNECTION_NETWORK_MAC, mac)},
                         manufacturer=device.get("macVendor") or None,
                         model="Network device",
                         name=_device_display_name(device),
-                        via_device=(DOMAIN, server_unique_id),
+                        via_device_id=server_device.id if server_device else None,  # pyright: ignore[reportCallIssue]
                     )
 
                     entity = PiHoleV6DeviceTracker(
@@ -257,12 +254,7 @@ async def async_setup_entry(
 
     @callback
     def _schedule_add_remove_trackers() -> None:
-        """Schedule adding and removing trackers when coordinator updates.
-
-        Returns:
-            None
-
-        """
+        """Schedule adding and removing trackers when coordinator updates."""
         hass.async_create_task(_async_add_remove_trackers())
 
     entry.async_on_unload(hole_data.coordinator.async_add_listener(_schedule_add_remove_trackers))
@@ -278,9 +270,6 @@ async def async_setup_entry(
 
         Args:
             event (Event[EventDeviceRegistryUpdatedData]): The device registry update event.
-
-        Returns:
-            None
 
         """
         if event.data["action"] != "remove":
@@ -306,6 +295,15 @@ class PiHoleV6DeviceTracker(  # pyright: ignore[reportIncompatibleVariableOverri
 
     Attributes:
         api (PiholeAPI): The Pi-hole API client instance.
+        _attr_attribution (str): The attribution displayed with the entity state.
+        _attr_has_entity_name (bool): Whether the entity name is relative to its device.
+        _attr_translation_key (str): The translation key of the entity name.
+        _unrecorded_attributes (frozenset[str]): The state attributes excluded from the recorder.
+        _mac (str): The MAC address of the tracked device.
+        _hostname (str): The hostname of the tracked device.
+        _ip_address (str): The IP address of the tracked device.
+        _attr_unique_id (str): The unique identifier of the entity.
+        entity_id (str): The entity id of the entity.
 
     """
 
@@ -336,11 +334,7 @@ class PiHoleV6DeviceTracker(  # pyright: ignore[reportIncompatibleVariableOverri
             api (PiholeAPI): The Pi-hole API client instance.
             coordinator (DataUpdateCoordinator[None]): The data update coordinator.
             server_unique_id (str): A unique identifier for the server entry.
-            device (dict[str, Any]): The network device data dict containing hwaddr,
-                macVendor, ips, lastQuery, and other fields.
-
-        Returns:
-            None
+            device (dict[str, Any]): The network device data dict containing hwaddr, macVendor, ips, lastQuery, and other fields.
 
         """
         super().__init__(coordinator)
@@ -388,7 +382,7 @@ class PiHoleV6DeviceTracker(  # pyright: ignore[reportIncompatibleVariableOverri
         return None
 
     @property
-    def name(self) -> str | None:  # pyright: ignore[reportIncompatibleVariableOverride]
+    def name(self) -> str | None:  # pyright: ignore[reportIncompatibleVariableOverride]  # pylint: disable=redundant-returns-doc
         """Return the name of the entity within the device.
 
         Returns None so the entity uses the device name directly,
@@ -467,8 +461,7 @@ class PiHoleV6DeviceTracker(  # pyright: ignore[reportIncompatibleVariableOverri
         network device data. IP, MAC, and hostname are surfaced by ScannerEntity.
 
         Returns:
-            dict[str, Any] | None: A dictionary of extra attributes, or None if the
-                device is not found in the current network data.
+            dict[str, Any] | None: A dictionary of extra attributes, or None if the device is not found in the current network data.
 
         """
         device = self._find_device()

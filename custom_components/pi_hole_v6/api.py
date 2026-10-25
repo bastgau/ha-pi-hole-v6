@@ -41,6 +41,10 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
         cache_padd (dict[str, Any]): Cached Pi-hole dashboard data.
         cache_remaining_dates (dict[str, datetime]): Cached expiration dates for blocking timers.
         cache_summary (dict[str, Any]): Cached Pi-hole activity summary.
+        _call_lock (asyncio.Lock): The lock serializing the calls to the API.
+        _password (str): The password used to authenticate against the API.
+        _session (aiohttp.ClientSession): The HTTP session used to call the API.
+        _sid (str | None): The session identifier returned by the API after the authentication.
 
     """
 
@@ -253,9 +257,6 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
         Args:
             action (str): The name of the action being performed, used to determine authentication behavior.
 
-        Returns:
-            None
-
         """
         await self._check_authentification(action)
         await self._abort_logout(action)
@@ -269,9 +270,6 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
 
         Args:
             action (str): The name of the action being performed.
-
-        Returns:
-            None
 
         """
 
@@ -299,9 +297,6 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
         Args:
             action (str): The name of the action being performed, used to skip the check for auth-related actions.
 
-        Returns:
-            None
-
         """
 
         try:
@@ -327,9 +322,6 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
         Args:
             action (str): The name of the action being performed.
 
-        Returns:
-            None
-
         """
 
         if action != "login" and self._sid is None:
@@ -344,9 +336,6 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
         Args:
             action (str): The name of the action being performed.
 
-        Returns:
-            None
-
         Raises:
             AbortLogoutError: If a logout is attempted with no active session.
 
@@ -358,12 +347,10 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
     async def call_authentification_status(self) -> dict[str, Any]:
         """Retrieve the current authentication session status.
 
+        The errors of the underlying call propagate unchanged: APIError (if the API returns an error status code), ClientConnectorError (if the server is unreachable).
+
         Returns:
             dict[str, Any]: A dictionary with the keys "code", "reason", and "data".
-
-        Raises:
-            APIError: If the API returns an error status code.
-            ClientConnectorError: If the server is unreachable.
 
         """
 
@@ -384,12 +371,13 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
     async def call_login(self) -> dict[str, Any]:
         """Authenticate against the Pi-hole API using the configured password.
 
+        The errors of the underlying call propagate unchanged: APIError (if the API returns an error status code).
+
         Returns:
             dict[str, Any]: A dictionary with the keys "code", "reason", and "data".
 
         Raises:
             UnauthorizedError: If the password is incorrect or the session is invalid.
-            APIError: If the API returns an error status code.
 
         """
 
@@ -419,11 +407,10 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
     async def call_logout(self) -> dict[str, Any]:
         """Drop the current session.
 
+        The errors of the underlying call propagate unchanged: APIError (if the API returns an error status code during logout).
+
         Returns:
             dict[str, Any]: A dictionary with the keys "code", "reason", and "data".
-
-        Raises:
-            APIError: If the API returns an error status code during logout.
 
         """
 
@@ -453,12 +440,10 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
     async def call_summary(self) -> dict[str, Any]:
         """Retrieve an overview of Pi-hole activity.
 
+        The errors of the underlying call propagate unchanged: APIError (if the API returns an error status code), ClientConnectorError (if the server is unreachable).
+
         Returns:
             dict[str, Any]: A dictionary with the keys "code", "reason", and "data".
-
-        Raises:
-            APIError: If the API returns an error status code.
-            ClientConnectorError: If the server is unreachable.
 
         """
 
@@ -481,15 +466,13 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
     async def call_padd(self, full: bool = True) -> dict[str, Any]:
         """Retrieve the Pi-hole API Dashboard information.
 
+        The errors of the underlying call propagate unchanged: APIError (if the API returns an error status code), ClientConnectorError (if the server is unreachable).
+
         Args:
             full (bool): If True, retrieves the full dashboard data. Defaults to True.
 
         Returns:
             dict[str, Any]: A dictionary with the keys "code", "reason", and "data".
-
-        Raises:
-            APIError: If the API returns an error status code.
-            ClientConnectorError: If the server is unreachable.
 
         """
 
@@ -512,12 +495,10 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
     async def call_get_auth_sessions(self) -> dict[str, Any]:
         """Retrieve all active sessions.
 
+        The errors of the underlying call propagate unchanged: APIError (if the API returns an error status code), ClientConnectorError (if the server is unreachable).
+
         Returns:
             dict[str, Any]: A dictionary with the keys "code", "reason", and "data".
-
-        Raises:
-            APIError: If the API returns an error status code.
-            ClientConnectorError: If the server is unreachable.
 
         """
 
@@ -540,12 +521,10 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
     async def call_blocking_status(self) -> dict[str, Any]:
         """Retrieve current blocking status.
 
+        The errors of the underlying call propagate unchanged: APIError (if the API returns an error status code), ClientConnectorError (if the server is unreachable).
+
         Returns:
             dict[str, Any]: A dictionary with the keys "code", "reason", and "data".
-
-        Raises:
-            APIError: If the API returns an error status code.
-            ClientConnectorError: If the server is unreachable.
 
         """
 
@@ -568,12 +547,10 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
     async def call_blocking_enabled(self) -> dict[str, Any]:
         """Enable blocking for DNS requests.
 
+        The errors of the underlying call propagate unchanged: APIError (if the API returns an error status code), ClientConnectorError (if the server is unreachable).
+
         Returns:
             dict[str, Any]: A dictionary with the keys "code", "reason", and "data".
-
-        Raises:
-            APIError: If the API returns an error status code.
-            ClientConnectorError: If the server is unreachable.
 
         """
 
@@ -597,15 +574,13 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
     async def call_blocking_disabled(self, duration: int | None) -> dict[str, Any]:
         """Disable blocking for DNS requests.
 
+        The errors of the underlying call propagate unchanged: APIError (if the API returns an error status code), ClientConnectorError (if the server is unreachable).
+
         Args:
             duration (int | None): The time duration in seconds for which blocking will be disabled. Pass None to disable indefinitely.
 
         Returns:
             dict[str, Any]: A dictionary with the keys "code", "reason", and "data".
-
-        Raises:
-            APIError: If the API returns an error status code.
-            ClientConnectorError: If the server is unreachable.
 
         """
 
@@ -634,12 +609,10 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
     async def call_get_ftl_info_messages(self) -> dict[str, Any]:
         """Retrieve the list of FTL diagnosis messages.
 
+        The errors of the underlying call propagate unchanged: APIError (if the API returns an error status code), ClientConnectorError (if the server is unreachable).
+
         Returns:
             dict[str, Any]: A dictionary with the keys "code", "reason", and "data".
-
-        Raises:
-            APIError: If the API returns an error status code.
-            ClientConnectorError: If the server is unreachable.
 
         """
 
@@ -663,12 +636,10 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
     async def call_get_ftl_info_messages_count(self) -> dict[str, Any]:
         """Retrieve the count of FTL diagnosis messages.
 
+        The errors of the underlying call propagate unchanged: APIError (if the API returns an error status code), ClientConnectorError (if the server is unreachable).
+
         Returns:
             dict[str, Any]: A dictionary with the keys "code", "reason", and "data".
-
-        Raises:
-            APIError: If the API returns an error status code.
-            ClientConnectorError: If the server is unreachable.
 
         """
 
@@ -691,12 +662,10 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
     async def call_get_groups(self) -> dict[str, Any]:
         """Retrieve the list of Pi-hole groups.
 
+        The errors of the underlying call propagate unchanged: APIError (if the API returns an error status code), ClientConnectorError (if the server is unreachable).
+
         Returns:
             dict[str, Any]: A dictionary with the keys "code", "reason", and "data".
-
-        Raises:
-            APIError: If the API returns an error status code.
-            ClientConnectorError: If the server is unreachable.
 
         """
 
@@ -727,12 +696,10 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
     async def call_get_configured_clients(self) -> dict[str, Any]:
         """Retrieve the configured clients.
 
+        The errors of the underlying call propagate unchanged: APIError (if the API returns an error status code), ClientConnectorError (if the server is unreachable).
+
         Returns:
             dict[str, Any]: A dictionary with the keys "code", "reason", and "data".
-
-        Raises:
-            APIError: If the API returns an error status code.
-            ClientConnectorError: If the server is unreachable.
 
         """
 
@@ -755,12 +722,10 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
     async def call_get_dhcp_leases(self) -> dict[str, Any]:
         """Retrieve the active DHCP leases.
 
+        The errors of the underlying call propagate unchanged: APIError (if the API returns an error status code), ClientConnectorError (if the server is unreachable).
+
         Returns:
             dict[str, Any]: A dictionary with the keys "code", "reason", and "data".
-
-        Raises:
-            APIError: If the API returns an error status code.
-            ClientConnectorError: If the server is unreachable.
 
         """
 
@@ -783,15 +748,13 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
     async def call_get_network_devices(self, max_devices: int = MAX_NETWORK_DEVICES) -> dict[str, Any]:
         """Retrieve the list of known network devices.
 
+        The errors of the underlying call propagate unchanged: APIError (if the API returns an error status code), ClientConnectorError (if the server is unreachable).
+
         Args:
             max_devices (int): The maximum number of devices to retrieve. Defaults to MAX_NETWORK_DEVICES.
 
         Returns:
             dict[str, Any]: A dictionary with the keys "code", "reason", and "data".
-
-        Raises:
-            APIError: If the API returns an error status code.
-            ClientConnectorError: If the server is unreachable.
 
         """
 
@@ -814,15 +777,13 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
     async def call_group_disable(self, group: str) -> dict[str, Any]:
         """Disable a Pi-hole group.
 
+        The errors of the underlying call propagate unchanged: APIError (if the API returns an error status code), ClientConnectorError (if the server is unreachable).
+
         Args:
             group (str): The name of the group to disable.
 
         Returns:
             dict[str, Any]: A dictionary with the keys "code", "reason", and "data".
-
-        Raises:
-            APIError: If the API returns an error status code.
-            ClientConnectorError: If the server is unreachable.
 
         """
 
@@ -848,15 +809,13 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
     async def call_group_enable(self, group: str) -> dict[str, Any]:
         """Enable a Pi-hole group.
 
+        The errors of the underlying call propagate unchanged: APIError (if the API returns an error status code), ClientConnectorError (if the server is unreachable).
+
         Args:
             group (str): The name of the group to enable.
 
         Returns:
             dict[str, Any]: A dictionary with the keys "code", "reason", and "data".
-
-        Raises:
-            APIError: If the API returns an error status code.
-            ClientConnectorError: If the server is unreachable.
 
         """
 
@@ -884,12 +843,10 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
 
         This includes emptying the ARP table and removing both all known devices and their associated addresses.
 
+        The errors of the underlying call propagate unchanged: APIError (if the API returns an error status code), ClientConnectorError (if the server is unreachable).
+
         Returns:
             dict[str, Any]: A dictionary with the keys "code", "reason", and "data".
-
-        Raises:
-            APIError: If the API returns an error status code.
-            ClientConnectorError: If the server is unreachable.
 
         """
 
@@ -900,12 +857,10 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
 
         This includes emptying the DNS log file and purging the most recent 24 hours from both the database and FTL's internal memory.
 
+        The errors of the underlying call propagate unchanged: APIError (if the API returns an error status code), ClientConnectorError (if the server is unreachable).
+
         Returns:
             dict[str, Any]: A dictionary with the keys "code", "reason", and "data".
-
-        Raises:
-            APIError: If the API returns an error status code.
-            ClientConnectorError: If the server is unreachable.
 
         """
 
@@ -916,12 +871,10 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
 
         Update Pi-hole's adlists by running pihole -g.
 
+        The errors of the underlying call propagate unchanged: APIError (if the API returns an error status code), ClientConnectorError (if the server is unreachable).
+
         Returns:
             dict[str, Any]: A dictionary with the keys "code", "reason", and "data".
-
-        Raises:
-            APIError: If the API returns an error status code.
-            ClientConnectorError: If the server is unreachable.
 
         """
 
@@ -930,12 +883,10 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
     async def call_action_restartdns(self) -> dict[str, Any]:
         """Restart the pihole-FTL service.
 
+        The errors of the underlying call propagate unchanged: APIError (if the API returns an error status code), ClientConnectorError (if the server is unreachable).
+
         Returns:
             dict[str, Any]: A dictionary with the keys "code", "reason", and "data".
-
-        Raises:
-            APIError: If the API returns an error status code.
-            ClientConnectorError: If the server is unreachable.
 
         """
 
@@ -947,12 +898,10 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
         Iterates over cached messages and deletes each one via the API.
         Clears the local message cache after deletion.
 
+        The errors of the underlying call propagate unchanged: APIError (if the API returns an error status code), ClientConnectorError (if the server is unreachable).
+
         Returns:
             dict[str, Any]: A dictionary with the keys "code", "reason", and "data".
-
-        Raises:
-            APIError: If the API returns an error status code.
-            ClientConnectorError: If the server is unreachable.
 
         """
 
@@ -986,15 +935,13 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
     async def _call_action(self, action_name: str) -> dict[str, Any]:
         """Execute a Pi-hole action.
 
+        The errors of the underlying call propagate unchanged: APIError (if the API returns an error status code), ClientConnectorError (if the server is unreachable).
+
         Args:
             action_name (str): Represents the action to execute.
 
         Returns:
             dict[str, Any]: A dictionary with the keys "code", "reason", and "data".
-
-        Raises:
-            APIError: If the API returns an error status code.
-            ClientConnectorError: If the server is unreachable.
 
         """
 
@@ -1017,9 +964,6 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
 
         Args:
             data_name (str): The name of the cache to reset. Currently supports "ftl_info_messages".
-
-        Returns:
-            None
 
         """
 
