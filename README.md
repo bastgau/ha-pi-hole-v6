@@ -7,8 +7,8 @@
 [![HACS validation](https://github.com/bastgau/ha-pi-hole-v6/actions/workflows/validate-for-hacs.yml/badge.svg)](https://github.com/bastgau/ha-pi-hole-v6/actions/workflows/validate-for-hacs.yml)
 [![HASSFEST validation](https://github.com/bastgau/ha-pi-hole-v6/actions/workflows/validate-with-hassfest.yml/badge.svg)](https://github.com/bastgau/ha-pi-hole-v6/actions/workflows/validate-with-hassfest.yml)
 
-<p align="center" width="100%">
-    <img src="https://brands.home-assistant.io/_/pi_hole_v6/logo.png">
+<p align="center" width="192">
+    <img src="https://raw.githubusercontent.com/bastgau/ha-pi-hole-v6/refs/heads/main/custom_components/pi_hole_v6/brand/icon.png">
 </p>
 
 Original component : [Pi-hole](https://www.home-assistant.io/integrations/pi_hole/)
