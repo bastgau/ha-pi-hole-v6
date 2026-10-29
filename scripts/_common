@@ -1,3 +1,7 @@
+# shellcheck shell=bash disable=SC2034
+# (No shebang: it is sourced, not run. The colours look unused here because
+# the scripts that source this file are the ones using them.)
+
 # Sourced by the other scripts: colours, the repository root, and the project
 # variables from .devcontainer/.common-env (the same file the devcontainer
 # hands to Docker, and the workflows load into $GITHUB_ENV).

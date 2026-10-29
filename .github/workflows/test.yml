@@ -3,6 +3,8 @@ name: "Test"
 
 on:
   push:
+    branches:
+      - "**"
     tags-ignore:
       - "v*"
   pull_request:
@@ -48,7 +50,8 @@ jobs:
               - ".coveragerc*"
               - ".github/workflows/test.yml"
 
-  # Each scope covers 100% of what it owns, alone, with its own 95% floor.
+  # Each scope covers 100% of what it owns, alone, with its own floor:
+  # COVERAGE_FAIL_UNDER in .devcontainer/.common-env (95 by default).
   test:
     name: "${{ matrix.scope }}"
     needs: "changes"

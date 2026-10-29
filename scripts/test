@@ -10,9 +10,10 @@
 #
 #   scripts/test --list-scopes   the CI scopes, as a JSON array (for the workflow matrix)
 #
-# Each scope has its own 95% floor and covers what it owns *on its own*: if a
-# client branch is only ever reached by a Home Assistant test, that shows up as
-# a coverage drop instead of hiding in a combined run.
+# Each scope has its own floor, COVERAGE_FAIL_UNDER in .devcontainer/.common-env
+# (the coverage_fail_under answer, 95 % by default), and covers what it owns *on
+# its own*: if a client branch is only ever reached by a Home Assistant test,
+# that shows up as a coverage drop instead of hiding in a combined run.
 #
 # To iterate on one test, call pytest directly (no coverage gate):
 #   uv run --no-sync pytest tests/test_x.py -q
@@ -71,7 +72,7 @@ for scope in "${scopes[@]}"; do
       fi ;;
   esac
 
-  run pytest "${args[@]}" --cov-branch --cov-report=term-missing --cov-fail-under=95
+  run pytest "${args[@]}" --cov-branch --cov-report=term-missing --cov-fail-under="$COVERAGE_FAIL_UNDER"
   status=$?
 
   if [ $status -eq 0 ]; then

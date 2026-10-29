@@ -2,7 +2,7 @@ FROM mcr.microsoft.com/devcontainers/python:3.14
 
 # uv manages the project environment (see pyproject.toml). Copied from Astral's
 # official image rather than installed through a third-party devcontainer feature.
-COPY --from=ghcr.io/astral-sh/uv:0.11.25 /uv /uvx /usr/local/bin/
+COPY --from=ghcr.io/astral-sh/uv:0.13.6 /uv /uvx /usr/local/bin/
 
 # Install dependencies needed by Home Assistant or its dependencies
 RUN \
@@ -54,3 +54,11 @@ RUN echo 'eval "$(direnv hook bash)"' >> /etc/bash.bashrc \
 # Prefixes the prompt with the active venv's name, as `source activate` would.
 # Goes in ~/.bashrc because that is where the devcontainer theme sets PS1.
 RUN echo 'PS1='"'"'${VIRTUAL_ENV_PROMPT:+($VIRTUAL_ENV_PROMPT) }'"'"'"$PS1"' >> /home/vscode/.bashrc
+
+# Two named volumes are mounted under the home directory (see devcontainer.json):
+# `uv-cache` on ~/.cache/uv, shared by every integration, and `claude-config-<repo>`
+# on ~/.claude. A new volume copies its ownership from the image directory it covers,
+# so these must exist and belong to vscode; ~/.cache too, or the mount would create it
+# as root.
+RUN mkdir -p /home/vscode/.cache/uv /home/vscode/.claude \
+    && chown -R vscode:vscode /home/vscode/.cache /home/vscode/.claude

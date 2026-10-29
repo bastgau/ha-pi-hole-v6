@@ -2,6 +2,17 @@
 # Pre-commit configuration for a Home Assistant custom integration (HACS).
 # Scoped to `custom_components/` and `tests/`. hassfest and HACS validation run in
 # GitHub Actions (see .github/workflows/), not here.
+
+# `prek install` (scripts/setup) installs both hooks: the files at pre-commit,
+# the message against .commitlintrc.mjs at commit-msg.
+default_install_hook_types:
+  - pre-commit
+  - commit-msg
+# A hook that names no stage runs at pre-commit only, not a second time when
+# the message is checked.
+default_stages:
+  - pre-commit
+
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.17.0
@@ -27,6 +38,50 @@ repos:
         name: docstring-linter
         entry: uv run --no-sync docstring-linter
         language: system
+        files: ^(custom_components|tests)/.+\.(py|pyi)$
+      # pylint and pyright get the staged files only, with the configuration CI
+      # uses. Each spends 4 to 8 s loading Home Assistant whatever the number of
+      # files, so one process each (require_serial). A caller in an unstaged
+      # file that the change breaks is not seen here: CI checks every file.
+      - id: pylint
+        name: pylint
+        entry: uv run --no-sync pylint
+        language: system
+        files: ^(custom_components|tests)/.+\.py$
+        require_serial: true
+      # Not tests/: pyrightconfig.json ignores it.
+      - id: pyright
+        name: pyright
+        entry: uv run --no-sync pyright
+        language: system
+        files: ^custom_components/.+\.(py|pyi)$
+        require_serial: true
+      # CI installs with `uv sync --frozen`, which does not notice a uv.lock
+      # left behind by an edit to pyproject.toml: this does.
+      - id: uv-lock-check
+        name: uv-lock-check
+        entry: uv lock --check
+        language: system
+        files: ^(pyproject\.toml|uv\.lock)$
+        pass_filenames: false
+      # All of these are gitignored, but `git add --force` goes past that:
+      # environment files, the local Home Assistant config and its secrets, keys.
+      - id: forbid-files
+        name: forbid-files
+        entry: these files must not be committed
+        language: fail
+        files: (^|/)\.env$|^config/|(^|/)secrets\.yaml$|\.pem$|\.key$|(^|/)\.vscode/settings\.json$
+      # Gets the message file as its argument. config-conventional is the
+      # preset .commitlintrc.mjs extends; both pinned to the same release.
+      - id: commitlint
+        name: commitlint
+        entry: commitlint --edit
+        language: node
+        additional_dependencies:
+          - "@commitlint/cli@21.2.4"
+          - "@commitlint/config-conventional@21.2.4"
+        stages:
+          - commit-msg
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
@@ -34,14 +89,35 @@ repos:
       - id: check-json
         exclude: ^(\.vscode|\.devcontainer)/
       - id: check-yaml
+      - id: check-symlinks
       - id: check-executables-have-shebangs
         stages: [manual]
+      - id: check-toml
       - id: end-of-file-fixer
+      # LF, as .gitattributes stores them: left to itself, the hook would keep
+      # whichever ending a file has most of.
+      - id: mixed-line-ending
+        args:
+          - --fix=lf
+      # Keeps the two trailing spaces of a markdown line break, as the
+      # devcontainer's editor settings do.
       - id: trailing-whitespace
+        args:
+          - --markdown-linebreak-ext=md
       - id: no-commit-to-branch
         args:
           - --branch=main
           - --branch=master
+      # Conflict markers a `copier update` left behind. It is not a git merge,
+      # which is all the hook looks for without --assume-in-merge.
+      - id: check-merge-conflict
+        args:
+          - --assume-in-merge
+      # Over 500 kB: mostly screenshots added to img/.
+      - id: check-added-large-files
+      # Two names that differ only by case collide on a Windows or macOS host.
+      - id: check-case-conflict
+      - id: detect-private-key
 
   - repo: https://github.com/adrienverge/yamllint.git
     rev: v1.37.1

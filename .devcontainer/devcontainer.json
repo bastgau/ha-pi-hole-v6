@@ -12,10 +12,12 @@
     },
     "ghcr.io/devcontainers/features/rust:1": {}
   },
-  "postCreateCommand": "scripts/setup",
+  "postCreateCommand": "rm -rf .venv && scripts/setup",
+  "waitFor": "postCreateCommand",
   "mounts": [
     "type=bind,source=${localEnv:HOME}${localEnv:USERPROFILE}/.ssh,target=/home/vscode/.ssh,readonly",
-    "type=volume,source=claude-config-ha-pi-hole-v6,target=/home/vscode/.claude"
+    "type=volume,source=claude-config-ha-pi-hole-v6,target=/home/vscode/.claude",
+    "type=volume,source=uv-cache,target=/home/vscode/.cache/uv"
   ],
   "runArgs": [
     "--network=host",
@@ -51,10 +53,11 @@
       "settings": {
         "files.insertFinalNewline": true,
         "files.exclude": {
-          "**/.ruff_cache": true,
-          "**/__pycache__": true,
           "**/.mypy_cache": true,
-          "**/.pytest_cache": true
+          "**/.pytest_cache": true,
+          "**/.ruff_cache": true,
+          "**/.venv": false,
+          "**/__pycache__": true
         },
         "files.eol": "\n",
         "editor.tabSize": 4,
