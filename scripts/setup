@@ -24,6 +24,16 @@ fi
 
 echo -e "\n${BLUE}[uv]${NC} ${GREEN}✓ Done.${NC}"
 
+echo -e "\n${YELLOW}> Allow .envrc (direnv activates .venv in every shell):${NC}\n"
+
+if command -v direnv > /dev/null 2>&1; then
+    direnv allow .
+    echo -e "\n${BLUE}[direnv]${NC} ${GREEN}✓ Done.${NC}"
+else
+    echo -e "direnv not found. Skipping - rebuild the container to install it."
+    echo -e "\n${BLUE}[direnv]${NC} ${YELLOW}- Skipped.${NC}"
+fi
+
 echo -e "\n${YELLOW}> Install Prettier (scripts/lint repo):${NC}\n"
 
 # Version pinned to .pre-commit-config.yaml's, so the hook and scripts/lint
