@@ -32,6 +32,7 @@ file-read-backwards==2.0.0
 fnv-hash-fast==2.0.3
 gazetteer-matcher==1.1.0
 go2rtc-client==0.4.0
+gTTS==2.5.4
 ha-ffmpeg==3.2.2
 habluetooth==7.1.2
 hass-nabucasa==2.7.0
@@ -39,6 +40,7 @@ hassil==3.12.1
 home-assistant-frontend==20260930.3
 home-assistant-intents==2026.10.6
 ifaddr==0.2.0
+infrared-protocols==10.1.0
 matter-ble-proxy==0.7.1
 matter-python-client==1.4.0
 mutagen==1.48.1
@@ -46,10 +48,14 @@ numpy==2.3.2
 openai==3.10.0
 Pillow==12.3.0
 psutil-home-assistant==0.0.1
+pycountry==24.6.1
+PyMetno==0.13.0
 pymicro-vad==1.0.1
 PyNaCl==1.6.2
 pyspeex-noise==1.0.2
 PyTurboJPEG==1.8.3
+radios==1.0.0
+rf-protocols==4.3.0
 securetar==2026.4.1
 serialx==1.11.0
 SQLAlchemy==2.0.54

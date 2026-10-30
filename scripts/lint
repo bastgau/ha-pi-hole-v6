@@ -62,11 +62,16 @@ esac
 requested=("$@")
 [ ${#requested[@]} -eq 0 ] && requested=(all)
 
+# What `all` and `src` expand to, one scope per line. Read with mapfile rather
+# than $(...), which the shell would split and glob.
+mapfile -t all_scopes < <(ci_scopes)
+mapfile -t src_scopes < <(ci_scopes | grep -v '^tests$')
+
 scopes=()
 for arg in "${requested[@]}"; do
   case "$arg" in
-    all) scopes+=(repo $(ci_scopes)) ;;
-    src) scopes+=($(ci_scopes | grep -v '^tests$')) ;;
+    all) scopes+=(repo "${all_scopes[@]}") ;;
+    src) scopes+=("${src_scopes[@]}") ;;
     client | integration | tests)
       scope_paths "$arg" > /dev/null || { echo -e "${RED}Scope '$arg' does not exist in this repository.${NC}" >&2; exit 2; }
       scopes+=("$arg") ;;

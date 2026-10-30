@@ -1,10 +1,15 @@
 # Changes here will be overwritten by Copier; NEVER EDIT MANUALLY
-_commit: v0.10.0
+_commit: v0.22.0
 _src_path: gh:bastgau/ha-dev-environment
+author_email: contact@bastiengautier.com
+author_name: Bastien Gautier
 client_package: ''
+copyright_year: 2025
+coverage_fail_under: 0
 description: This custom integration restores compatibility between Home Assistant
     and Pi-hole, which is no longer supported by the native integration due to API
     changes.
+github_owner: bastgau
 integration_domain: pi_hole_v6
 integration_name: Pi-hole V6 Integration
 python_requires: '>=3.14.2,<3.15'

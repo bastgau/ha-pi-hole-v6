@@ -23,6 +23,7 @@ import sys
 from typing import Any
 
 import homeassistant
+from homeassistant.const import BASE_PLATFORMS
 
 Manifest = dict[str, Any]
 
@@ -36,7 +37,11 @@ REQUIREMENTS_FILE = REPO_ROOT / ".devcontainer" / "requirements-default-config.t
 # dependency. Their manifests aren't reachable by walking dependencies, so
 # they're listed here explicitly.
 EXTRA_COMPONENTS = {
-    "esphome",  # pulled in by bluetooth for ESPHome bluetooth proxies
+    "esphome",
+    "google_translate",
+    "met",
+    "radio_browser",
+    "shopping_list",
 }
 
 
@@ -76,6 +81,10 @@ def collect_components(components_dir: Path) -> set[str]:
         expand(dep)
     for component in EXTRA_COMPONENTS:
         expand(component)
+    # Home Assistant's bootstrap sets up every base platform (infrared,
+    # radio_frequency...) whether or not default_config asks for it.
+    for component in BASE_PLATFORMS:
+        expand(component)
 
     return seen
 
@@ -108,10 +117,10 @@ def rewrite_requirements_file(new_requirements: dict[str, str]) -> None:
         header_lines = []
         for line in lines:
             if line.startswith("#") or not line.strip():
-                header_lines.append(line)
+                header_lines.append(line)  # pyright: ignore[reportUnknownMemberType]
             else:
                 break
-        header = "\n".join(header_lines).rstrip("\n")
+        header = "\n".join(header_lines).rstrip("\n")  # pyright: ignore[reportUnknownArgumentType]
 
     block_lines = [MARKER] + [new_requirements[pkg] for pkg in sorted(new_requirements)]
     new_text = header + "\n" + "\n".join(block_lines) + "\n"

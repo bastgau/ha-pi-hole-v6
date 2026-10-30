@@ -12,17 +12,20 @@
     },
     "ghcr.io/devcontainers/features/rust:1": {}
   },
-  "postCreateCommand": "scripts/setup",
+  "postCreateCommand": "rm -rf .venv && scripts/setup",
+  "waitFor": "postCreateCommand",
   "mounts": [
     "type=bind,source=${localEnv:HOME}${localEnv:USERPROFILE}/.ssh,target=/home/vscode/.ssh,readonly",
-    "type=volume,source=claude-config-ha-pi-hole-v6,target=/home/vscode/.claude"
+    "type=volume,source=claude-config-ha-pi-hole-v6,target=/home/vscode/.claude",
+    "type=volume,source=uv-cache,target=/home/vscode/.cache/uv"
   ],
   "runArgs": [
     "--network=host",
     "--env-file=${localWorkspaceFolder}/.devcontainer/.common-env"
   ],
   "containerEnv": {
-    "UV_LINK_MODE": "copy"
+    "UV_LINK_MODE": "copy",
+    "DIRENV_LOG_FORMAT": ""
   },
   "remoteEnv": {
     "GITHUB_PERSONAL_ACCESS_TOKEN": "${localEnv:GITHUB_PERSONAL_ACCESS_TOKEN}"
@@ -50,14 +53,16 @@
       "settings": {
         "files.insertFinalNewline": true,
         "files.exclude": {
-          ".ruff_cache": true,
-          "**/__pycache__": true,
           "**/.mypy_cache": true,
-          "**/.pytest_cache": true
+          "**/.pytest_cache": true,
+          "**/.ruff_cache": true,
+          "**/.venv": false,
+          "**/__pycache__": true
         },
         "files.eol": "\n",
         "editor.tabSize": 4,
         "python.defaultInterpreterPath": "${workspaceFolder}/.venv/bin/python",
+        "python.terminal.activateEnvironment": false,
         "python.analysis.autoSearchPaths": false,
         "editor.formatOnPaste": false,
         "editor.formatOnSave": true,

@@ -1,11 +1,62 @@
 #!/bin/bash
 
-# Builds the development environment: the uv project environment, the
-# default_config requirements a local `hass` needs, Prettier and a ~/.vimrc.
-# Safe to re-run.
+# Builds the development environment: the Git identity, the uv project
+# environment, the default_config requirements a local `hass` needs, the
+# git hooks, Prettier and a ~/.vimrc. Safe to re-run.
 
 # shellcheck source=scripts/_common
 source "$(dirname "$0")/_common"
+
+echo -e "\n${YELLOW}> Configure the Git identity (author of the commits):${NC}\n"
+
+# Only what git does not already know is asked: VS Code copies the host's
+# ~/.gitconfig into the devcontainer, which usually holds both. The answers go
+# in the repository's .git/config rather than ~/.gitconfig: the workspace is
+# bind-mounted, so they survive a container rebuild.
+if ! git rev-parse --git-dir > /dev/null 2>&1; then
+    echo -e "Not a git repository. Skipping."
+    echo -e "\n${BLUE}[git]${NC} ${YELLOW}- Skipped.${NC}"
+else
+    missing=()
+    for key in user.name user.email; do
+        value="$(git config --get "$key")"
+        if [ -n "$value" ]; then
+            echo -e "${key} = ${value}"
+        else
+            missing+=("$key")
+        fi
+    done
+
+    if [ ${#missing[@]} -eq 0 ]; then
+        echo -e "\n${BLUE}[git]${NC} ${GREEN}✓ Done.${NC}"
+    elif [ ! -t 0 ]; then
+        echo -e "Not set: ${missing[*]}. No terminal to ask from - run scripts/setup in a terminal."
+        echo -e "\n${BLUE}[git]${NC} ${YELLOW}- Skipped.${NC}"
+    else
+        # The devcontainer runs postCreateCommand in a terminal that does not
+        # always pass keystrokes on: an unanswered question gives up after a
+        # minute instead of blocking the creation of the container.
+        status="${GREEN}✓ Done."
+        for key in "${missing[@]}"; do
+            value=""
+            # Empty answers are asked again, and so is an email without an @.
+            while [ -z "$value" ] || { [ "$key" = "user.email" ] && [[ "$value" != *@* ]]; }; do
+                # No answer in time, or end of input (Ctrl-D): skip the step, not the setup.
+                if ! read -r -t 60 -p "Git ${key#user.}: " value; then
+                    value=""
+                    break
+                fi
+            done
+            if [ -z "$value" ]; then
+                echo -e "\nNo answer. Skipping - run scripts/setup in a terminal to set ${key}."
+                status="${YELLOW}- Skipped."
+                break
+            fi
+            git config "$key" "$value"
+        done
+        echo -e "\n${BLUE}[git]${NC} ${status}${NC}"
+    fi
+fi
 
 echo -e "\n${YELLOW}> Install the project environment (uv sync):${NC}\n"
 
@@ -23,6 +74,33 @@ if ! uv pip install --requirement .devcontainer/requirements-default-config.txt;
 fi
 
 echo -e "\n${BLUE}[uv]${NC} ${GREEN}✓ Done.${NC}"
+
+echo -e "\n${YELLOW}> Allow .envrc (direnv activates .venv in every shell):${NC}\n"
+
+if command -v direnv > /dev/null 2>&1; then
+    direnv allow .
+    echo -e "\n${BLUE}[direnv]${NC} ${GREEN}✓ Done.${NC}"
+else
+    echo -e "direnv not found. Skipping - rebuild the container to install it."
+    echo -e "\n${BLUE}[direnv]${NC} ${YELLOW}- Skipped.${NC}"
+fi
+
+echo -e "\n${YELLOW}> Install the git hooks (prek):${NC}\n"
+
+# prek, from the lint group, runs .pre-commit-config.yaml, whose
+# default_install_hook_types makes it install two hooks: pre-commit (the
+# staged files) and commit-msg (the message, against .commitlintrc.mjs). They
+# call this .venv's prek, which `rm -rf .venv && scripts/setup` recreates at
+# the same path. The hook environments are built on the first commit.
+if ! git rev-parse --git-dir > /dev/null 2>&1; then
+    echo -e "Not a git repository. Skipping."
+    echo -e "\n${BLUE}[prek]${NC} ${YELLOW}- Skipped.${NC}"
+elif ! run prek install; then
+    echo -e "\n${BLUE}[prek]${NC} ${RED}✗ prek failed to install the git hooks.${NC}\n"
+    exit 1
+else
+    echo -e "\n${BLUE}[prek]${NC} ${GREEN}✓ Done.${NC}"
+fi
 
 echo -e "\n${YELLOW}> Install Prettier (scripts/lint repo):${NC}\n"
 
@@ -47,9 +125,7 @@ elif [ "$(prettier --version 2> /dev/null)" = "$PRETTIER_VERSION" ]; then
     echo -e "Prettier ${PRETTIER_VERSION} already installed. Skipping."
     echo -e "\n${BLUE}[prettier]${NC} ${GREEN}✓ Done.${NC}"
 else
-    npm install --global --no-fund --no-audit "prettier@${PRETTIER_VERSION}"
-
-    if [ $? -ne 0 ]; then
+    if ! npm install --global --no-fund --no-audit "prettier@${PRETTIER_VERSION}"; then
         echo -e "\n${BLUE}[prettier]${NC} ${RED}✗ npm failed to install Prettier.${NC}\n"
         exit 1
     fi
@@ -68,7 +144,7 @@ if [ -f "$VIMRC" ]; then
     echo -e "File .vimrc already exists. Skipping."
 else
     echo -e "Creating the file .vimrc"
-    cat > "$VIMRC" << 'EOF'
+    cat > "$VIMRC" << 'EOF' || { echo -e "\n${BLUE}[vimrc]${NC} ${RED}✗ Failed to create the file .vimrc.${NC}\n"; exit 1; }
 filetype on          " Enable file type detection
 syntax on            " Enable syntax highlighting
 set background=dark  " Adapt colors for dark background (ideal in PuTTY)
@@ -85,13 +161,7 @@ set softtabstop=4    " Tab = 4 spaces
 set mouse-=a
 set backspace=indent,eol,start
 EOF
-
-    if [ $? -eq 0 ]; then
-        echo -e "File .vimrc created successfully."
-    else
-        echo -e "\n${BLUE}[vimrc]${NC} ${RED}✗ Failed to create the file .vimrc.${NC}\n"
-        exit 1
-    fi
+    echo -e "File .vimrc created successfully."
 fi
 
 echo -e "\n${BLUE}[vimrc]${NC} ${GREEN}✓ Done.${NC}"
