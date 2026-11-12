@@ -35,4 +35,13 @@ DEFAULT_DEVICE_TRACKER_WHITELIST = True
 DEFAULT_DEVICE_TRACKER_MAC_LIST = ""
 MAX_NETWORK_DEVICES = 2048
 
+# Kinds of access the account used by the integration can have, deduced from GET /auth/sessions.
+ACCESS_MAIN_PASSWORD = "main_password"  # noqa: S105
+ACCESS_APP_SUDO = "app_sudo"
+ACCESS_APP_NO_SUDO = "app_no_sudo"
+ACCESS_RESTRICTED = "restricted"
+ACCESS_LEVELS: list[str] = [ACCESS_MAIN_PASSWORD, ACCESS_APP_SUDO, ACCESS_APP_NO_SUDO, ACCESS_RESTRICTED]
+# The accesses for which Pi-hole refuses to list the sessions.
+ACCESS_WITHOUT_SESSIONS: frozenset[str] = frozenset({ACCESS_APP_NO_SUDO, ACCESS_RESTRICTED})
+
 ATTRIBUTION = "Data provided by your Pi-hole instance API"

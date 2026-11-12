@@ -17,7 +17,7 @@ from homeassistant.const import CONF_NAME, MATCH_ALL, PERCENTAGE, EntityCategory
 from homeassistant.helpers.event import async_track_time_interval
 
 from .common import sensor_update_timer
-from .const import COORDINATOR_LIVE, COORDINATOR_STATS
+from .const import ACCESS_LEVELS, ACCESS_WITHOUT_SESSIONS, COORDINATOR_LIVE, COORDINATOR_STATS
 from .entity import PiHoleV6Entity
 from .helper import create_entity_id_name
 
@@ -165,6 +165,14 @@ SENSOR_TYPES: tuple[PiHoleV6SensorEntityDescription, ...] = (
         translation_key="auth_sessions",
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=0,
+        entity_registry_enabled_default=False,
+    ),
+    PiHoleV6SensorEntityDescription(
+        entity_category=EntityCategory.DIAGNOSTIC,
+        key="account_access",
+        translation_key="account_access",
+        device_class=SensorDeviceClass.ENUM,
+        options=ACCESS_LEVELS,
         entity_registry_enabled_default=False,
     ),
 )
@@ -345,7 +353,12 @@ class PiHoleV6Sensor(PiHoleV6Entity, SensorEntity):  # pyright: ignore[reportInc
             case "dhcp_leases":
                 return len(self.api.cache_dhcp_leases)
             case "auth_sessions":
+                if self.api.account_access in ACCESS_WITHOUT_SESSIONS:
+                    return None  # Unknown: Pi-hole refuses to list the sessions to this account.
+
                 return len(self.api.cache_auth_sessions)
+            case "account_access":
+                return self.api.account_access
             case _:
                 pass
 
@@ -429,6 +442,9 @@ class PiHoleV6Sensor(PiHoleV6Entity, SensorEntity):  # pyright: ignore[reportInc
             excluding: list[str] = ["tls", "x_forwarded_for"]
             sessions: list[Any] = [{k: v for k, v in session.items() if k not in excluding} for session in raw_sessions]
             return {"sessions": sessions, "note": "Total number of auth sessions."}
+
+        if self.entity_description.key == "account_access":
+            return {"note": "Kind of access of the account used by the integration, deduced from the auth sessions."}
 
         match self.entity_description.key:
             case "ads_blocked_today":
