@@ -8,7 +8,13 @@ from typing import TYPE_CHECKING, Any
 
 from aiohttp import ClientError, ClientResponse, ContentTypeError, client
 
-from .const import MAX_NETWORK_DEVICES
+from .const import (
+    ACCESS_APP_NO_SUDO,
+    ACCESS_APP_SUDO,
+    ACCESS_MAIN_PASSWORD,
+    ACCESS_RESTRICTED,
+    MAX_NETWORK_DEVICES,
+)
 from .exceptions import (
     AbortLogoutError,
     APIError,
@@ -32,7 +38,7 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
         url (str): The URL of the Pi-hole API endpoint.
         just_initialized (dict[str, bool]): Per coordinator flag indicating the client was just initialized, used to skip the first scheduled data fetch.
         last_refresh (dict[str, datetime]): Timestamp of the last data refresh of each coordinator, keyed by coordinator identifier.
-        is_privileged (bool | None): Whether the account used by the integration may call the privileged routes (main password, or application password with webserver.api.app_sudo enabled). None until the first probe.
+        account_access (str | None): The kind of access of the account used by the integration (ACCESS_* constants), deduced from GET /auth/sessions. None while unknown.
         cache_auth_sessions (list[dict[str, Any]]): Cached list of active authentication sessions.
         cache_blocking (dict[str, Any]): Cached blocking status data.
         cache_configured_clients (list[dict[str, Any]]): Cached list of configured clients.
@@ -69,7 +75,7 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
         self._session: client.ClientSession = session
         self._sid: str | None = None
         self.url: str = url
-        self.is_privileged: bool | None = None
+        self.account_access: str | None = None
 
         self.cache_auth_sessions: list[dict[str, Any]] = []
         self.cache_blocking: dict[str, Any] = {}
@@ -149,6 +155,8 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
             handle_status(request.status)
         except APIError as api_error:
             log_message: str = await self._create_log_message_on_api_exception(api_error, request, method, url)
+            api_error.body = await self._try_to_retrieve_json_result(request)
+
             if isinstance(api_error, expected_errors):
                 _LOGGER.debug(log_message)
             else:
@@ -501,9 +509,9 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
         }
 
     async def call_get_auth_sessions(self) -> dict[str, Any]:
-        """Retrieve all active sessions, and use the outcome to detect whether the account is privileged.
+        """Retrieve all active sessions, and use the outcome to detect the kind of access of the account.
 
-        The route is refused (403) to an account without privileged access. That refusal is not an error here: it is silenced, the sessions cache is emptied and `is_privileged` is set to False.
+        Pi-hole refuses the route (403) to an application session without `webserver.api.app_sudo`. That refusal is not an error here: it is logged at debug level, the sessions cache is emptied and `account_access` is deduced from it (see `_detect_access_from_refusal`). When the call succeeds, `account_access` is deduced from the `app` flag of the current session.
 
         The other errors of the underlying call propagate unchanged: APIError (if the API returns another error status code), ClientConnectorError (if the server is unreachable).
 
@@ -521,20 +529,57 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
                 method="GET",
                 expected_errors=(ForbiddenError,),
             )
-        except ForbiddenError:
-            self.is_privileged = False
+        except ForbiddenError as err:
+            self.account_access = self._detect_access_from_refusal(err)
             self.cache_auth_sessions = []
 
             return {"code": 403, "reason": "Forbidden", "data": {}}
 
-        self.is_privileged = True
         self.cache_auth_sessions = result["data"]["sessions"]
+        self.account_access = self._detect_access_from_sessions(self.cache_auth_sessions)
 
         return {
             "code": result["code"],
             "reason": result["reason"],
             "data": result["data"],
         }
+
+    @staticmethod
+    def _detect_access_from_refusal(error: ForbiddenError) -> str:
+        """Deduce the kind of access from a 403 returned by GET /auth/sessions.
+
+        The refusal text of Pi-hole names `webserver.api.app_sudo` when the cause is an application session without that setting. The text is only used to refine the analysis: without it, the refusal stays a generic restriction.
+
+        Args:
+            error (ForbiddenError): The refusal, carrying the body of the response when there was one.
+
+        Returns:
+            str: ACCESS_APP_NO_SUDO if the refusal mentions app_sudo, ACCESS_RESTRICTED otherwise.
+
+        """
+
+        if "app_sudo" in str(error.body):
+            return ACCESS_APP_NO_SUDO
+
+        return ACCESS_RESTRICTED
+
+    @staticmethod
+    def _detect_access_from_sessions(sessions: list[dict[str, Any]]) -> str | None:
+        """Deduce the kind of access from the current session in the list of sessions.
+
+        Args:
+            sessions (list[dict[str, Any]]): The sessions returned by GET /auth/sessions.
+
+        Returns:
+            str | None: ACCESS_APP_SUDO if the current session is an application one, ACCESS_MAIN_PASSWORD if not, None if the current session is not in the list.
+
+        """
+
+        for session in sessions:
+            if session.get("current_session") is True:
+                return ACCESS_APP_SUDO if session.get("app") is True else ACCESS_MAIN_PASSWORD
+
+        return None
 
     async def call_blocking_status(self) -> dict[str, Any]:
         """Retrieve current blocking status.

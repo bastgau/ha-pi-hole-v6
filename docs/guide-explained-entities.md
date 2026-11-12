@@ -366,6 +366,19 @@ The attributes `until_date` and `remaining_seconds` are existing only if the ads
 }
 ```
 
+#### - Account access
+
+**Name:** sensor.<service_name>\_account_access  
+**Description:** Kind of access of the account used by the integration, deduced from `GET /auth/sessions`.  
+**Values:**
+
+- `main_password`: the sessions can be listed and the current session is not an application one.
+- `app_sudo`: the sessions can be listed and the current session is an application one (`webserver.api.app_sudo` enabled).
+- `app_no_sudo`: Pi-hole refuses (403) to list the sessions and its message mentions `app_sudo`.
+- `restricted`: Pi-hole refuses (403) to list the sessions for another reason.
+
+The state is `unknown` until the first refresh, or if the current session is not found in the list. When the sessions cannot be listed, the "Active sessions" sensor is `unknown` too.
+
 #### - CPU usage
 
 **Name:** sensor.<service_name>\_cpu_use  

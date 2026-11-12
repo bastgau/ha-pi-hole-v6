@@ -67,6 +67,9 @@
       },
       "auth_sessions": {
         "default": "mdi:robot-outline"
+      },
+      "account_access": {
+        "default": "mdi:shield-account-outline"
       }
     }
   },

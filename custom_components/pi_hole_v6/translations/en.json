@@ -160,6 +160,15 @@
       "auth_sessions": {
         "name": "Active sessions",
         "unit_of_measurement": "sessions"
+      },
+      "account_access": {
+        "name": "Account access",
+        "state": {
+          "main_password": "Main password",
+          "app_sudo": "Application password (sudo)",
+          "app_no_sudo": "Application password (no sudo)",
+          "restricted": "Restricted"
+        }
       }
     },
     "switch": {
