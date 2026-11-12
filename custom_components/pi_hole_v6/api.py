@@ -13,6 +13,7 @@ from .exceptions import (
     AbortLogoutError,
     APIError,
     ClientConnectorError,
+    ForbiddenError,
     UnauthorizedError,
     handle_status,
 )
@@ -31,6 +32,7 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
         url (str): The URL of the Pi-hole API endpoint.
         just_initialized (dict[str, bool]): Per coordinator flag indicating the client was just initialized, used to skip the first scheduled data fetch.
         last_refresh (dict[str, datetime]): Timestamp of the last data refresh of each coordinator, keyed by coordinator identifier.
+        is_privileged (bool | None): Whether the account used by the integration may call the privileged routes (main password, or application password with webserver.api.app_sudo enabled). None until the first probe.
         cache_auth_sessions (list[dict[str, Any]]): Cached list of active authentication sessions.
         cache_blocking (dict[str, Any]): Cached blocking status data.
         cache_configured_clients (list[dict[str, Any]]): Cached list of configured clients.
@@ -67,6 +69,7 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
         self._session: client.ClientSession = session
         self._sid: str | None = None
         self.url: str = url
+        self.is_privileged: bool | None = None
 
         self.cache_auth_sessions: list[dict[str, Any]] = []
         self.cache_blocking: dict[str, Any] = {}
@@ -88,6 +91,7 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
         method: str,
         action: str = "",
         data: dict[str, Any] | None = None,
+        expected_errors: tuple[type[APIError], ...] = (),
     ) -> dict[str, Any]:
         """Send HTTP requests with specified method, route, and data.
 
@@ -96,6 +100,7 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
             method (str): Represents the HTTP method to be used. It can be one of the following: "post", "put", "delete", or "get".
             action (str): Represents the action name requested.
             data (dict[str, Any] | None): Used to pass a dictionary containing data to be sent in the request when making a POST request.
+            expected_errors (tuple[type[APIError], ...]): Errors the caller handles itself: they are still raised, but logged at debug level instead of error level.
 
         Returns:
             dict[str, Any]: A dictionary with keys "code", "reason", and "data".
@@ -144,7 +149,10 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
             handle_status(request.status)
         except APIError as api_error:
             log_message: str = await self._create_log_message_on_api_exception(api_error, request, method, url)
-            _LOGGER.error(log_message)  # noqa: TRY400
+            if isinstance(api_error, expected_errors):
+                _LOGGER.debug(log_message)
+            else:
+                _LOGGER.error(log_message)  # noqa: TRY400
             raise
 
         result_data: dict[str, Any] | None = None
@@ -493,9 +501,11 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
         }
 
     async def call_get_auth_sessions(self) -> dict[str, Any]:
-        """Retrieve all active sessions.
+        """Retrieve all active sessions, and use the outcome to detect whether the account is privileged.
 
-        The errors of the underlying call propagate unchanged: APIError (if the API returns an error status code), ClientConnectorError (if the server is unreachable).
+        The route is refused (403) to an account without privileged access. That refusal is not an error here: it is silenced, the sessions cache is emptied and `is_privileged` is set to False.
+
+        The other errors of the underlying call propagate unchanged: APIError (if the API returns another error status code), ClientConnectorError (if the server is unreachable).
 
         Returns:
             dict[str, Any]: A dictionary with the keys "code", "reason", and "data".
@@ -504,12 +514,20 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
 
         url: str = "/auth/sessions"
 
-        result: dict[str, Any] = await self._call(
-            url,
-            action="auth_sessions",
-            method="GET",
-        )
+        try:
+            result: dict[str, Any] = await self._call(
+                url,
+                action="auth_sessions",
+                method="GET",
+                expected_errors=(ForbiddenError,),
+            )
+        except ForbiddenError:
+            self.is_privileged = False
+            self.cache_auth_sessions = []
 
+            return {"code": 403, "reason": "Forbidden", "data": {}}
+
+        self.is_privileged = True
         self.cache_auth_sessions = result["data"]["sessions"]
 
         return {

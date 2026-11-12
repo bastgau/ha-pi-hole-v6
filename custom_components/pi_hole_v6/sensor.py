@@ -345,6 +345,9 @@ class PiHoleV6Sensor(PiHoleV6Entity, SensorEntity):  # pyright: ignore[reportInc
             case "dhcp_leases":
                 return len(self.api.cache_dhcp_leases)
             case "auth_sessions":
+                if self.api.is_privileged is not True:
+                    return None  # Unknown: the account may not read the sessions.
+
                 return len(self.api.cache_auth_sessions)
             case _:
                 pass
@@ -428,7 +431,11 @@ class PiHoleV6Sensor(PiHoleV6Entity, SensorEntity):  # pyright: ignore[reportInc
             raw_sessions: list[Any] = self.api.cache_auth_sessions
             excluding: list[str] = ["tls", "x_forwarded_for"]
             sessions: list[Any] = [{k: v for k, v in session.items() if k not in excluding} for session in raw_sessions]
-            return {"sessions": sessions, "note": "Total number of auth sessions."}
+            return {
+                "privileged": self.api.is_privileged,
+                "sessions": sessions,
+                "note": "Total number of auth sessions.",
+            }
 
         match self.entity_description.key:
             case "ads_blocked_today":
