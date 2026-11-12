@@ -154,13 +154,7 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
         try:
             handle_status(request.status)
         except APIError as api_error:
-            log_message: str = await self._create_log_message_on_api_exception(api_error, request, method, url)
-            api_error.body = await self._try_to_retrieve_json_result(request)
-
-            if isinstance(api_error, expected_errors):
-                _LOGGER.debug(log_message)
-            else:
-                _LOGGER.error(log_message)  # noqa: TRY400
+            await self._log_api_error(api_error, request, method, url, expected_errors)
             raise
 
         result_data: dict[str, Any] | None = None
@@ -179,6 +173,33 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
             "reason": request.reason,
             "data": result_data,
         }
+
+    async def _log_api_error(
+        self,
+        api_error: APIError,
+        request: ClientResponse,
+        method: str,
+        url: str,
+        expected_errors: tuple[type[APIError], ...],
+    ) -> None:
+        """Keep the body of an error response on the exception, and log the error.
+
+        Args:
+            api_error (APIError): The API exception that was raised.
+            request (ClientResponse): The HTTP response object associated with the error.
+            method (str): The HTTP method used for the request.
+            url (str): The URL of the request.
+            expected_errors (tuple[type[APIError], ...]): Errors the caller handles itself, logged at debug level instead of error level.
+
+        """
+
+        log_message: str = await self._create_log_message_on_api_exception(api_error, request, method, url)
+        api_error.body = await self._try_to_retrieve_json_result(request)
+
+        if isinstance(api_error, expected_errors):
+            _LOGGER.debug(log_message)
+        else:
+            _LOGGER.error(log_message)
 
     async def _try_to_retrieve_json_result(
         self,

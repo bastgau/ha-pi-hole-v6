@@ -2,8 +2,6 @@
 
 from unittest.mock import AsyncMock, MagicMock
 
-import pytest
-
 from custom_components.pi_hole_v6.api import Api
 from custom_components.pi_hole_v6.const import (
     ACCESS_APP_NO_SUDO,
@@ -12,6 +10,7 @@ from custom_components.pi_hole_v6.const import (
     ACCESS_RESTRICTED,
 )
 from custom_components.pi_hole_v6.exceptions import ForbiddenError
+import pytest
 
 REFUSAL_BODY = {
     "error": {
@@ -24,12 +23,13 @@ REFUSAL_BODY = {
 def make_api(*, sessions: list[dict] | None = None, refusal: ForbiddenError | None = None) -> Api:
     """Build an Api whose HTTP call is replaced by a canned answer."""
 
+    # pylint: disable=protected-access
     api = Api(session=MagicMock())
 
     if refusal is not None:
-        api._call = AsyncMock(side_effect=refusal)  # type: ignore[method-assign]  # noqa: SLF001
+        api._call = AsyncMock(side_effect=refusal)  # type: ignore[method-assign]
     else:
-        api._call = AsyncMock(  # type: ignore[method-assign]  # noqa: SLF001
+        api._call = AsyncMock(  # type: ignore[method-assign]
             return_value={"code": 200, "reason": "OK", "data": {"sessions": sessions}}
         )
 
