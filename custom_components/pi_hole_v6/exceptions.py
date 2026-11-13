@@ -28,7 +28,14 @@ class PiHoleV6Error(Exception):
 
 
 class APIError(PiHoleV6Error):
-    """The class `APIError` is a parent exception related to Pi-hole API."""
+    """The class `APIError` is a parent exception related to Pi-hole API.
+
+    Attributes:
+        body (Any): The JSON body of the error response when the API sent one, filled by the client. None otherwise.
+
+    """
+
+    body: Any = None
 
 
 class ActionExecutionError(PiHoleV6Error):
