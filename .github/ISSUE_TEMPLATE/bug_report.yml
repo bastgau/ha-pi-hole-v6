@@ -1,0 +1,39 @@
+name: 🐞 Bug report
+description: Report an issue
+labels: ["issue:bug", "issue:triage"]
+body:
+  - type: markdown
+    attributes:
+      value: "**Warning:** Pi-hole V6 Integration requires Home Assistant 2026.10.0 or later. Reports from older versions cannot be handled."
+  - type: input
+    attributes:
+      label: Home Assistant version
+      description: Please specify your Home Assistant version.
+    validations:
+      required: true
+  - type: input
+    attributes:
+      label: Pi-hole V6 Integration version
+      description: Please specify your integration version.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Describe the bug
+      description: A clear and concise description of what the bug is.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Expected behavior
+      description: A clear and concise description of what you expected to happen.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Screenshots
+      description: If applicable, add screenshots to help explain your problem.
+  - type: textarea
+    attributes:
+      label: Additional context
+      description: Add any other context about the problem here.
