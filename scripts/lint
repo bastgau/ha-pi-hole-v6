@@ -175,7 +175,7 @@ run_prettier() {
 
 for scope in "${scopes[@]}"; do
   if [ "$scope" = "repo" ]; then
-    echo -e "\n${YELLOW}==================== scope: repo ====================${NC}"
+    echo -e "\n${YELLOW}==================== scope: repo ====================${NC}\n"
     printf "%s\n" "json/yaml/markdown (excluding: card/, bruno/)"
     run_prettier "repo"
     continue
@@ -183,7 +183,7 @@ for scope in "${scopes[@]}"; do
 
   paths=$(scope_paths "$scope")
 
-  echo -e "\n${YELLOW}==================== scope: ${scope} ====================${NC}"
+  echo -e "\n${YELLOW}==================== scope: ${scope} ====================${NC}\n"
   # shellcheck disable=SC2086
   printf "%s\n" $paths
 

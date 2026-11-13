@@ -21,14 +21,12 @@
   ],
   "runArgs": [
     "--network=host",
-    "--env-file=${localWorkspaceFolder}/.devcontainer/.common-env"
+    "--env-file=${localWorkspaceFolder}/.devcontainer/.common-env",
+    "--env-file=${localWorkspaceFolder}/.devcontainer/.env"
   ],
   "containerEnv": {
     "UV_LINK_MODE": "copy",
     "DIRENV_LOG_FORMAT": ""
-  },
-  "remoteEnv": {
-    "GITHUB_PERSONAL_ACCESS_TOKEN": "${localEnv:GITHUB_PERSONAL_ACCESS_TOKEN}"
   },
   "forwardPorts": [8123],
   "portsAttributes": {
@@ -56,7 +54,7 @@
           "**/.mypy_cache": true,
           "**/.pytest_cache": true,
           "**/.ruff_cache": true,
-          "**/.venv": false,
+          "**/.venv": true,
           "**/__pycache__": true
         },
         "files.eol": "\n",
