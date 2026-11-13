@@ -32,7 +32,7 @@ jobs:
           status=0
           uvx --from copier copier check-update --quiet || status=$?
           if [ "$status" -eq 2 ]; then
-            echo "::error::ha-dev-environment has a newer version. Run 'copier update' and review the diff."
+            echo "::error::ha-dev-environment has a newer version. Run 'uvx --from copier copier update' and review the diff."
             exit 1
           fi
           exit "$status"

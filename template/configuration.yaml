@@ -1,4 +1,3 @@
-
 # Loads default set of integrations. Do not remove.
 default_config:
 
@@ -10,10 +9,11 @@ automation: !include automations.yaml
 script: !include scripts.yaml
 scene: !include scenes.yaml
 
-# Silences known, harmless devcontainer noise.
+# Silences known, harmless devcontainer noise, and logs the integration under development in debug.
 logger:
   default: warning
   logs:
+    custom_components.pi_hole_v6: debug
     aiohttp_fast_zlib: error
     asyncio: error
     habluetooth.manager: critical

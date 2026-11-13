@@ -1,0 +1,10 @@
+name: 🚀 New feature proposal
+description: Propose a new feature
+labels: ["issue:enhancement", "issue:triage"]
+body:
+  - type: textarea
+    attributes:
+      label: Describe the feature
+      description: A clear and concise description of the feature you would like.
+    validations:
+      required: true
