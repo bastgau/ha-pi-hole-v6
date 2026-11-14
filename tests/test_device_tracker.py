@@ -727,3 +727,42 @@ async def test_unregistered_mac_is_not_found(hass: HomeAssistant) -> None:
     _register(hass, entry, _mac("A"))
 
     assert _has_registered_entity(er.async_get(hass), entry.entry_id, _mac("B")) is False
+
+
+# --------------------------------------------------------------------------------------------------
+# Device info (required by Home Assistant 2026.11, default removed in 2027.11.0)
+# --------------------------------------------------------------------------------------------------
+
+
+def test_device_info_links_entity_to_its_mac_device() -> None:
+    """The entity declares the MAC connection of its network device, and nothing else."""
+    coordinator = MagicMock()
+    coordinator.name = "pihole"
+    device = {"hwaddr": "AA:BB:CC:DD:EE:FF", "ips": []}
+
+    entity = PiHoleV6DeviceTracker(MagicMock(), coordinator, "server_id", device)
+
+    assert entity.device_info is not None
+    assert entity.device_info["connections"] == {(dr.CONNECTION_NETWORK_MAC, "aa:bb:cc:dd:ee:ff")}
+
+
+async def test_entity_is_attached_to_the_device_created_at_setup(
+    harness: Harness, caplog: pytest.LogCaptureFixture
+) -> None:
+    """The entity joins the device made by `async_setup_entry`, and Home Assistant has nothing to report."""
+    harness.make_entry()
+    harness.devices = [_device("A", FRESH)]
+
+    await harness.setup()
+
+    entity_id = harness.entity_id("A")
+    assert entity_id is not None
+    entity_entry = er.async_get(harness.hass).async_get(entity_id)
+    assert harness.entry is not None
+    devices = dr.async_get(harness.hass).async_get_devices(
+        connections={(dr.CONNECTION_NETWORK_MAC, _mac("A"))}, config_entry_id=harness.entry.entry_id
+    )
+    assert entity_entry is not None
+    assert len(devices) == 1
+    assert entity_entry.device_id == devices[0].id
+    assert "does not provide device info" not in caplog.text
