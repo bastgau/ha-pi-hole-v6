@@ -4,7 +4,7 @@ labels: ["issue:bug", "issue:triage"]
 body:
   - type: markdown
     attributes:
-      value: "**Warning:** Pi-hole V6 Integration requires Home Assistant 2026.10.0 or later. Reports from older versions cannot be handled."
+      value: "**Warning:** Pi-hole V6 Integration requires Home Assistant 2026.11.0 or later. Reports from older versions cannot be handled."
   - type: input
     attributes:
       label: Home Assistant version

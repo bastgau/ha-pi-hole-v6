@@ -32,9 +32,9 @@ Changelog = "https://github.com/bastgau/ha-pi-hole-v6/releases"
 # scripts/update_requirements), which keeps them out of uv.lock and out of
 # Dependabot's pull requests.
 [dependency-groups]
-# Must match the homeassistant pin that pytest-homeassistant-custom-component
+# Must match the homeassistant pin that pytest-homeassistant
 # depends on, or `uv lock` fails to resolve.
-homeassistant = ["homeassistant==2026.10.1"]
+homeassistant = ["homeassistant==2026.11.2"]
 lint = [
   # Runs `copier update` against ha-dev-environment, the template this file comes from.
   "copier==9.19.1",
@@ -45,7 +45,8 @@ lint = [
   # Not on PyPI: installed straight from its GitHub release.
   "docstring-linter @ https://github.com/bastgau/docstring-linter/releases/download/v0.9.0/docstring_linter-0.9.0-py3-none-any.whl",
 ]
-test = ["pytest-homeassistant-custom-component==0.13.372"]
+# pytest-cov: the coverage gates of scripts/test; pytest-homeassistant does not bring it.
+test = ["pytest-cov==7.1.0", "pytest-homeassistant==2026.11.2"]
 
 [tool.uv]
 package = false
@@ -167,11 +168,14 @@ max-positional-arguments = 6
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-# pytest-homeassistant-custom-component's autouse fixture
-# `enable_event_loop_debug` is declared with @pytest.fixture despite being
-# async, which pytest-asyncio only tolerates in "auto" mode ("strict" raises
-# PytestRemovedIn9Warning: async fixture with no plugin/hook handling it).
 asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+# pytest-homeassistant (Home Assistant core's own testing package). Home Assistant
+# installs its httpx alias when it is imported, which must happen before respx is
+# imported: respx's own pytest plugin is therefore disabled (the package's HTTP mocks
+# still use respx directly). scripts/test passes the same option, since it replaces addopts.
+addopts = "-p no:respx"
+pythonpath = ["."]
 # Coverage is NOT in addopts: scripts/test (and CI) pass it per scope, so a bare
 # `pytest` from VSCode or while iterating on one test is never gated.
 

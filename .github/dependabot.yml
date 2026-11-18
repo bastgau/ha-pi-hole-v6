@@ -10,12 +10,12 @@ updates:
     commit-message:
       prefix: "chore"
     groups:
-      # pytest-homeassistant-custom-component pins homeassistant exactly, so the
+      # pytest-homeassistant pins homeassistant exactly, so the
       # two cannot move separately: one bumped alone makes `uv lock` fail.
       homeassistant:
         patterns:
           - "homeassistant"
-          - "pytest-homeassistant-custom-component"
+          - "pytest-homeassistant"
 
   - package-ecosystem: github-actions
     directory: "/"
