@@ -102,7 +102,7 @@
       "invalid_update_interval_live": "Invalid live refresh frequency. Must be higher than 1 second and lower than 3600 seconds.",
       "invalid_update_interval_stats": "Invalid statistics refresh frequency. Must be between 60 and 86400 seconds, and greater than or equal to the live refresh frequency.",
       "untrusted_certificate": "The certificate of the Pi-hole is not trusted. Confirm its fingerprint to enable verification.",
-      "certificate_changed": "The certificate of the Pi-hole does not match the one you confirmed earlier.",
+      "certificate_changed": "The certificate of the Pi-hole does not match the one you confirmed earlier. Reauthenticate the integration from its notification to confirm the new certificate.",
       "certificate_not_confirmed": "Confirm that the fingerprint matches to continue.",
       "cannot_connect": "Failed to connect to the server. Ensure that the server address and the port are correct.",
       "invalid_path": "Invalid API path specified. Please verify the endpoint URL.",

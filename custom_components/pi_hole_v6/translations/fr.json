@@ -88,7 +88,7 @@
       "invalid_update_interval_live": "Fréquence de rafraîchissement temps réel invalide. Doit être supérieure à 1 seconde et inférieure à 3600 secondes.",
       "invalid_update_interval_stats": "Fréquence de rafraîchissement des statistiques invalide. Doit être comprise entre 60 et 86400 secondes, et supérieure ou égale à la fréquence de rafraîchissement temps réel.",
       "untrusted_certificate": "Le certificat du Pi-hole n'est pas reconnu. Confirmez son empreinte pour activer la vérification.",
-      "certificate_changed": "Le certificat du Pi-hole ne correspond pas à celui que vous avez confirmé précédemment.",
+      "certificate_changed": "Le certificat du Pi-hole ne correspond pas à celui que vous avez confirmé précédemment. Réauthentifiez l'intégration depuis sa notification pour confirmer le nouveau certificat.",
       "certificate_not_confirmed": "Confirmez que l'empreinte correspond pour continuer.",
       "cannot_connect": "Échec de la connexion au serveur. Assurez-vous que l'adresse du serveur et le port sont corrects.",
       "invalid_path": "Chemin d'API invalide spécifié. Veuillez vérifier l'URL du point de terminaison.",
