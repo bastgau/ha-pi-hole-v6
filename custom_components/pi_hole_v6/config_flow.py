@@ -338,14 +338,21 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                     if self._reauth_pin:
                         return self.async_update_reload_and_abort(
                             self._get_reauth_entry(),
-                            data_updates={CONF_CERT_FINGERPRINT: self._certificate_fingerprint},
+                            data_updates={
+                                CONF_PASSWORD: self._config[CONF_PASSWORD],
+                                CONF_CERT_FINGERPRINT: self._certificate_fingerprint,
+                            },
                         )
                     return self.async_create_entry(title=self._config[CONF_NAME], data=self._config)
                 # The password or the URL is wrong: the pin step cannot fix it, so go back to the form that owns it.
                 self._config.pop(CONF_CERT_FINGERPRINT, None)
                 if self._reauth_pin:
                     return self._show_reauth_form({}, _map_errors(connection_errors, {CONF_PASSWORD}))
-                return self._show_user_form(self._config, _map_errors(connection_errors, {CONF_URL, CONF_PASSWORD}))
+                # The password is never sent back to the form in clear text.
+                return self._show_user_form(
+                    {**self._config, CONF_PASSWORD: ""},
+                    _map_errors(connection_errors, {CONF_URL, CONF_PASSWORD}),
+                )
 
         return self.async_show_form(
             step_id="pin_certificate",
