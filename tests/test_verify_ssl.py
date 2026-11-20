@@ -11,10 +11,11 @@ from custom_components.pi_hole_v6.const import (
 )
 
 
-class _FakeConfigEntries:
+class _FakeConfigEntries:  # pylint: disable=too-few-public-methods
     """Record the updates made to a config entry, as Home Assistant would store them."""
 
     def __init__(self) -> None:
+        """Start without recorded updates."""
         self.updates: list[dict[str, Any]] = []
 
     def async_update_entry(self, entry: Any, data: dict[str, Any]) -> None:
@@ -24,6 +25,7 @@ class _FakeConfigEntries:
 
 
 def _hass() -> SimpleNamespace:
+    """Return a minimal Home Assistant stand-in exposing the config entries updates."""
     return SimpleNamespace(config_entries=_FakeConfigEntries())
 
 
