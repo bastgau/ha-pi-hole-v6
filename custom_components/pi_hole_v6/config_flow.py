@@ -82,6 +82,40 @@ def _get_pin_certificate_schema() -> probatio.Schema:
     )
 
 
+def _map_errors(errors: dict[str, str], fields: set[str]) -> dict[str, str]:
+    """Attach each error to the form field it concerns, or to the whole form when that field is not on the form.
+
+    Args:
+        errors (dict[str, str]): The errors returned by the connection check, keyed by field.
+        fields (set[str]): The fields present on the form that displays the errors.
+
+    Returns:
+        dict[str, str]: The errors keyed by form field, or by "base" when the field is missing from the form.
+
+    """
+    return {(key if key in fields else "base"): value for key, value in errors.items()}
+
+
+def _candidate_config(entry_data: Mapping[str, Any], user_input: Mapping[str, Any]) -> dict[str, Any]:
+    """Build the configuration the options would save, dropping a certificate fingerprint that no longer applies.
+
+    The fingerprint belongs to one URL and only protects a verified connection: it is removed when verification
+    is disabled or when the URL changes.
+
+    Args:
+        entry_data (Mapping[str, Any]): The data currently stored in the config entry.
+        user_input (Mapping[str, Any]): The values submitted in the options form.
+
+    Returns:
+        dict[str, Any]: The configuration to test and to store.
+
+    """
+    config: dict[str, Any] = {**entry_data, **user_input}
+    if not config[CONF_VERIFY_SSL] or config[CONF_URL] != entry_data.get(CONF_URL):
+        config.pop(CONF_CERT_FINGERPRINT, None)
+    return config
+
+
 def _warn_insecure_settings(url: str, verify_ssl: bool) -> None:
     """Log a warning when the settings saved by the user expose the password on the network.
 
@@ -192,8 +226,19 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                 return await self.async_step_pin_certificate()
             user_input["password"] = ""
 
-        user_input = user_input or {}
+        return self._show_user_form(user_input or {}, errors)
 
+    def _show_user_form(self, user_input: dict[str, Any], errors: dict[str, str]) -> ConfigFlowResult:
+        """Show the main form, pre-filled with the given values, and display the errors on their fields.
+
+        Args:
+            user_input (dict[str, Any]): The values to pre-fill the form with.
+            errors (dict[str, str]): The errors to display, keyed by field.
+
+        Returns:
+            ConfigFlowResult: The form to show.
+
+        """
         return self.async_show_form(
             step_id="user",
             data_schema=_get_data_config_schema(user_input),
@@ -201,6 +246,30 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             description_placeholders={
                 "example_url": EXAMPLE_URL,
             },
+        )
+
+    def _show_reauth_form(self, user_input: dict[str, Any], errors: dict[str, str]) -> ConfigFlowResult:
+        """Show the reauthentication form, which only asks for the password.
+
+        Args:
+            user_input (dict[str, Any]): The values to pre-fill the form with.
+            errors (dict[str, str]): The errors to display, keyed by field or "base".
+
+        Returns:
+            ConfigFlowResult: The form to show.
+
+        """
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=probatio.Schema(
+                {
+                    probatio.Optional(
+                        CONF_PASSWORD,
+                        default=user_input.get(CONF_PASSWORD, DEFAULT_PASSWORD),
+                    ): str,
+                }
+            ),
+            errors=errors,
         )
 
     async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> ConfigFlowResult:
@@ -264,14 +333,19 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                 errors[CONF_CONFIRM_CERTIFICATE] = "certificate_not_confirmed"
             else:
                 self._config[CONF_CERT_FINGERPRINT] = self._certificate_fingerprint
-                if not (errors := await self._async_try_connect()):
+                connection_errors, _ = await _async_check_connection(self.hass, self._config)
+                if not connection_errors:
                     if self._reauth_pin:
                         return self.async_update_reload_and_abort(
                             self._get_reauth_entry(),
                             data_updates={CONF_CERT_FINGERPRINT: self._certificate_fingerprint},
                         )
                     return self.async_create_entry(title=self._config[CONF_NAME], data=self._config)
+                # The password or the URL is wrong: the pin step cannot fix it, so go back to the form that owns it.
                 self._config.pop(CONF_CERT_FINGERPRINT, None)
+                if self._reauth_pin:
+                    return self._show_reauth_form({}, _map_errors(connection_errors, {CONF_PASSWORD}))
+                return self._show_user_form(self._config, _map_errors(connection_errors, {CONF_URL, CONF_PASSWORD}))
 
         return self.async_show_form(
             step_id="pin_certificate",
@@ -293,30 +367,25 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             ConfigFlowResult: The result of the reauth confirmation step.
 
         """
-        errors: dict[str, str] | None = {}
-        if user_input:
-            self._config[CONF_PASSWORD] = user_input[CONF_PASSWORD]
+        if not user_input:
+            return self._show_reauth_form({}, {})
 
-            if not (errors := await self._async_try_connect()):
-                return self.async_update_reload_and_abort(
-                    self._get_reauth_entry(),
-                    data_updates=user_input,
-                )
-            del user_input[CONF_PASSWORD]
+        self._config[CONF_PASSWORD] = user_input[CONF_PASSWORD]
 
-        user_input = user_input or {}
-        return self.async_show_form(
-            step_id="reauth_confirm",
-            data_schema=probatio.Schema(
-                {
-                    probatio.Optional(
-                        CONF_PASSWORD,
-                        default=user_input.get(CONF_PASSWORD, DEFAULT_PASSWORD),
-                    ): str,
-                }
-            ),
-            errors=errors,
-        )
+        if not (errors := await self._async_try_connect()):
+            return self.async_update_reload_and_abort(
+                self._get_reauth_entry(),
+                data_updates=user_input,
+            )
+
+        if self._untrusted:
+            # No fingerprint stored yet, or the certificate is no longer trusted: ask the user to confirm it.
+            self._certificate_fingerprint = None
+            self._reauth_pin = True
+            return await self.async_step_pin_certificate()
+
+        del user_input[CONF_PASSWORD]
+        return self._show_reauth_form({}, _map_errors(errors, {CONF_PASSWORD}))
 
     @staticmethod
     @callback
@@ -513,17 +582,13 @@ class OptionsFlowHandler(OptionsFlow):
             if not user_input.get(CONF_CONFIRM_CERTIFICATE):
                 errors[CONF_CONFIRM_CERTIFICATE] = "certificate_not_confirmed"
             else:
-                self._pending[CONF_CERT_FINGERPRINT] = self._certificate_fingerprint
-                connection_errors, _ = await _async_check_connection(
-                    self.hass, {**self.config_entry.data, **self._pending}
-                )
+                config = {**self._pending, CONF_CERT_FINGERPRINT: self._certificate_fingerprint}
+                connection_errors, _ = await _async_check_connection(self.hass, config)
                 if not connection_errors:
-                    self.hass.config_entries.async_update_entry(
-                        self.config_entry, data={**self.config_entry.data, **self._pending}
-                    )
+                    self.hass.config_entries.async_update_entry(self.config_entry, data=config)
                     return self.async_create_entry(title="", data={})
-                errors = connection_errors
-                self._pending.pop(CONF_CERT_FINGERPRINT, None)
+                # The password or the URL is wrong: the pin step cannot fix it, so go back to the options form.
+                return self._show_options_form(self._pending, _map_errors(connection_errors, {CONF_URL}))
 
         return self.async_show_form(
             step_id="pin_certificate",
@@ -551,31 +616,22 @@ class OptionsFlowHandler(OptionsFlow):
         if user_input is not None:  # we asked to validate values entered by user
             errors = await _async_validate_input(user_input)
 
-            if not errors and user_input[CONF_VERIFY_SSL]:
-                # Enabling verification must not leave the integration broken: test the connection first.
-                connection_errors, untrusted = await _async_check_connection(
-                    self.hass, {**self.config_entry.data, **user_input}
-                )
-                if untrusted:
-                    self._pending = dict(user_input)
-                    self._certificate_fingerprint = None
-                    return await self.async_step_pin_certificate()
-                errors = connection_errors
-
             if not errors:
-                _warn_insecure_settings(user_input[CONF_URL], user_input[CONF_VERIFY_SSL])
-                self.hass.config_entries.async_update_entry(
-                    self.config_entry, data={**self.config_entry.data, **user_input}
-                )
-                return self.async_create_entry(title="", data={})
-            return self.async_show_form(
-                step_id="init",
-                data_schema=self.add_suggested_values_to_schema(
-                    _get_data_option_schema(),
-                    user_input,
-                ),
-                errors=dict(errors),
-            )
+                config = _candidate_config(self.config_entry.data, user_input)
+                if config[CONF_VERIFY_SSL]:
+                    # Enabling verification must not leave the integration broken: test the connection first.
+                    connection_errors, untrusted = await _async_check_connection(self.hass, config)
+                    if untrusted:
+                        self._pending = config
+                        self._certificate_fingerprint = None
+                        return await self.async_step_pin_certificate()
+                    errors = _map_errors(connection_errors, {CONF_URL})
+
+                if not errors:
+                    _warn_insecure_settings(config[CONF_URL], config[CONF_VERIFY_SSL])
+                    self.hass.config_entries.async_update_entry(self.config_entry, data=config)
+                    return self.async_create_entry(title="", data={})
+            return self._show_options_form(user_input, dict(errors))
 
         update_interval_live = self.config_entry.data.get(CONF_UPDATE_INTERVAL_LIVE, None)
         update_interval_stats = self.config_entry.data.get(CONF_UPDATE_INTERVAL_STATS, None)
@@ -611,10 +667,21 @@ class OptionsFlowHandler(OptionsFlow):
             )
 
         # we asked to provide default values for the form
+        return self._show_options_form(self.config_entry.data, {})
+
+    def _show_options_form(self, user_input: Mapping[str, Any], errors: dict[str, str]) -> ConfigFlowResult:
+        """Show the options form, pre-filled with the given values, and display the errors on their fields.
+
+        Args:
+            user_input (Mapping[str, Any]): The values to pre-fill the form with.
+            errors (dict[str, str]): The errors to display, keyed by field or "base".
+
+        Returns:
+            ConfigFlowResult: The form to show.
+
+        """
         return self.async_show_form(
             step_id="init",
-            data_schema=self.add_suggested_values_to_schema(
-                _get_data_option_schema(),
-                self.config_entry.data,
-            ),
+            data_schema=self.add_suggested_values_to_schema(_get_data_option_schema(), user_input),
+            errors=errors,
         )

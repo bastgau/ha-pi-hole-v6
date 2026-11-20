@@ -11,6 +11,8 @@ if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
 
 DEFAULT_HTTPS_PORT = 443
+# Without a timeout, an unresponsive host would block the executor and the flow indefinitely.
+CERTIFICATE_TIMEOUT_SECONDS = 10
 
 
 def _read_certificate_fingerprint(host: str, port: int) -> str:
@@ -26,7 +28,7 @@ def _read_certificate_fingerprint(host: str, port: int) -> str:
         str: The SHA-256 digest of the DER-encoded certificate, in lowercase hexadecimal.
 
     """
-    pem: str = ssl.get_server_certificate((host, port))
+    pem: str = ssl.get_server_certificate((host, port), timeout=CERTIFICATE_TIMEOUT_SECONDS)
     return hashlib.sha256(ssl.PEM_cert_to_DER_cert(pem)).hexdigest()
 
 

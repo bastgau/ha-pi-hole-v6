@@ -4,7 +4,10 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "untrusted_certificate": "The certificate of the Pi-hole is not trusted. Confirm its fingerprint to continue.",
       "certificate_changed": "The certificate of the Pi-hole does not match the one you confirmed earlier.",
-      "certificate_not_confirmed": "Confirm that the fingerprint matches to continue."
+      "certificate_not_confirmed": "Confirm that the fingerprint matches to continue.",
+      "cannot_connect": "Failed to connect to the server. Ensure that the server address and the port are correct.",
+      "invalid_path": "Invalid API path specified. Please verify the endpoint URL.",
+      "invalid_auth": "Invalid password provided. Ensure that your password is correct."
     },
     "abort": {
       "cannot_connect": "Failed to connect to the server. Ensure that the server address and the port are correct.",
