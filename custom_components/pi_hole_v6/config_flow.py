@@ -174,7 +174,7 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a Pi-hole V6 config flow.
 
     Attributes:
-        _config (Any): TODO
+        _config (dict[str, Any]): The configuration being entered: name, URL, password, certificate verification and, once confirmed, the pinned certificate fingerprint.
         _certificate_fingerprint (str | None): SHA-256 fingerprint of the certificate read from the Pi-hole, awaiting confirmation.
         _untrusted (bool): Whether the last connection attempt was refused because the certificate is not trusted.
         _reauth_pin (bool): Whether the certificate confirmation step runs for a reauthentication.
