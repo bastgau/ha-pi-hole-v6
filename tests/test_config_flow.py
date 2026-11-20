@@ -159,3 +159,38 @@ async def test_options_turning_verification_off_removes_the_pinned_certificate(
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert entry.data[CONF_VERIFY_SSL] is False
     assert CONF_CERT_FINGERPRINT not in entry.data
+
+
+async def test_wrong_password_then_url_change_reads_the_new_certificate(hass: HomeAssistant, no_setup: None) -> None:
+    """After a wrong password, a new URL gets its own certificate read, not the fingerprint of the first URL."""
+    fingerprint_a = "aa" * 32
+    fingerprint_b = "bb" * 32
+    other_url = "https://other.local:443/api"
+    checks = AsyncMock(
+        side_effect=[
+            UNTRUSTED,
+            ({CONF_PASSWORD: "invalid_auth"}, False),
+            UNTRUSTED,
+        ]
+    )
+    read = AsyncMock(side_effect=[fingerprint_a, fingerprint_b])
+    with (
+        patch(f"{CONFIG_FLOW}._async_check_connection", checks),
+        patch(f"{CONFIG_FLOW}.async_get_certificate_fingerprint", read),
+    ):
+        result = await hass.config_entries.flow.async_init(DOMAIN, context={"source": SOURCE_USER})
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_NAME: "Pi-hole", CONF_URL: URL, CONF_PASSWORD: "wrong", CONF_VERIFY_SSL: True},
+        )
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {CONF_CONFIRM_CERTIFICATE: True})
+        assert result["step_id"] == "user"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_NAME: "Pi-hole", CONF_URL: other_url, CONF_PASSWORD: "right", CONF_VERIFY_SSL: True},
+        )
+
+    assert result["step_id"] == "pin_certificate"
+    assert result["description_placeholders"]["fingerprint"] == fingerprint_b
+    assert read.await_count == 2

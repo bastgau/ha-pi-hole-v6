@@ -223,6 +223,8 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                 _warn_insecure_settings(self._config[CONF_URL], self._config[CONF_VERIFY_SSL])
                 return self.async_create_entry(title=user_input[CONF_NAME], data=self._config)
             if self._untrusted:
+                # Read the certificate of the URL just submitted, never a fingerprint left over from an earlier attempt.
+                self._certificate_fingerprint = None
                 return await self.async_step_pin_certificate()
             user_input["password"] = ""
 
