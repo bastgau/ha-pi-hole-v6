@@ -1,7 +1,10 @@
 {
   "config": {
     "error": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "untrusted_certificate": "The certificate of the Pi-hole is not trusted. Confirm its fingerprint to continue.",
+      "certificate_changed": "The certificate of the Pi-hole does not match the one you confirmed earlier.",
+      "certificate_not_confirmed": "Confirm that the fingerprint matches to continue."
     },
     "abort": {
       "cannot_connect": "Failed to connect to the server. Ensure that the server address and the port are correct.",
@@ -46,6 +49,16 @@
         },
         "description": "This integration allows you to retrieve statistics and interact with a Pi-hole V6 system.",
         "title": "Pi-hole V6"
+      },
+      "pin_certificate": {
+        "data": {
+          "confirm_certificate": "I have compared this fingerprint with the one shown by my Pi-hole"
+        },
+        "data_description": {
+          "confirm_certificate": "Only confirm if the fingerprint above is exactly the one displayed by your Pi-hole."
+        },
+        "description": "Your Pi-hole presents a certificate that is not signed by a trusted authority, such as its default self-signed certificate. Its SHA-256 fingerprint is:\n\n`{fingerprint}`\n\nCompare it with the fingerprint displayed by your Pi-hole (`{url}`) before confirming. Confirming trusts this certificate only: if it changes later, you will be asked to confirm the new one.",
+        "title": "Confirm the Pi-hole certificate"
       }
     }
   },

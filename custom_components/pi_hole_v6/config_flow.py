@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import ssl
 from typing import TYPE_CHECKING, Any
 
 import probatio
@@ -18,7 +19,9 @@ from homeassistant.helpers import selector
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .api import Api as ClientAPI
+from .certificate import async_get_certificate_fingerprint
 from .const import (
+    CONF_CERT_FINGERPRINT,
     CONF_DEVICE_TRACKER_MAC_LIST,
     CONF_DEVICE_TRACKER_WHITELIST,
     CONF_ENABLE_DEVICE_TRACKER,
@@ -40,6 +43,8 @@ from .const import (
     MIN_TIME_BETWEEN_UPDATES_STATS,
 )
 from .exceptions import (
+    CertificateChangedError,
+    CertificateError,
     ClientConnectorError,
     ContentTypeError,
     ForbiddenError,
@@ -54,6 +59,25 @@ if TYPE_CHECKING:
     from aiohttp import client
 
 _LOGGER = logging.getLogger(__name__)
+
+CONF_CONFIRM_CERTIFICATE = "confirm_certificate"
+
+
+def _get_pin_certificate_schema() -> probatio.Schema:
+    """Build and return the probatio schema for the certificate confirmation form.
+
+    Returns:
+        probatio.Schema: The schema asking the user to confirm the certificate fingerprint.
+
+    """
+    return probatio.Schema(
+        {
+            probatio.Required(
+                CONF_CONFIRM_CERTIFICATE,
+                default=False,
+            ): selector.BooleanSelector(),  # pyright: ignore[reportUnknownMemberType]
+        }
+    )
 
 
 def _warn_insecure_settings(url: str, verify_ssl: bool) -> None:
@@ -115,6 +139,9 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
 
     Attributes:
         _config (Any): TODO
+        _certificate_fingerprint (str | None): SHA-256 fingerprint of the certificate read from the Pi-hole, awaiting confirmation.
+        _untrusted (bool): Whether the last connection attempt was refused because the certificate is not trusted.
+        _reauth_pin (bool): Whether the certificate confirmation step runs for a reauthentication.
 
     """
 
@@ -123,6 +150,9 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize the config flow."""
         self._config: dict[str, Any] = {}
+        self._certificate_fingerprint: str | None = None
+        self._untrusted: bool = False
+        self._reauth_pin: bool = False
 
     async def async_step_user(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         """Handle a flow initiated by the user.
@@ -156,6 +186,8 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             if not (errors := await self._async_try_connect()):
                 _warn_insecure_settings(self._config[CONF_URL], self._config[CONF_VERIFY_SSL])
                 return self.async_create_entry(title=user_input[CONF_NAME], data=self._config)
+            if self._untrusted:
+                return await self.async_step_pin_certificate()
             user_input["password"] = ""
 
         user_input = user_input or {}
@@ -182,9 +214,72 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         self._config = {
             CONF_NAME: entry_data[CONF_NAME],
             CONF_URL: entry_data[CONF_URL],
+            CONF_PASSWORD: entry_data.get(CONF_PASSWORD, DEFAULT_PASSWORD),
             CONF_VERIFY_SSL: entry_data.get(CONF_VERIFY_SSL, LEGACY_VERIFY_SSL),
         }
+
+        stored_fingerprint: str | None = entry_data.get(CONF_CERT_FINGERPRINT)
+        if stored_fingerprint is not None:
+            self._config[CONF_CERT_FINGERPRINT] = stored_fingerprint
+            try:
+                current_fingerprint = await async_get_certificate_fingerprint(self.hass, self._config[CONF_URL])
+            except (OSError, ValueError, ssl.SSLError):
+                # Unreachable: the password step reports the connection problem.
+                current_fingerprint = None
+
+            if current_fingerprint is not None and current_fingerprint != stored_fingerprint:
+                self._certificate_fingerprint = current_fingerprint
+                self._reauth_pin = True
+                return await self.async_step_pin_certificate()
+
         return await self.async_step_reauth_confirm()
+
+    async def async_step_pin_certificate(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
+        """Ask the user to confirm the certificate of the Pi-hole, then pin its fingerprint.
+
+        The certificate is read without validating it, so the user must compare the fingerprint shown
+        here with the one displayed by the Pi-hole before confirming.
+
+        Args:
+            user_input (dict[str, Any] | None): The input submitted by the user, or None when displaying the form.
+
+        Returns:
+            ConfigFlowResult: The result of the confirmation step.
+
+        """
+        errors: dict[str, str] = {}
+
+        if self._certificate_fingerprint is None:
+            try:
+                self._certificate_fingerprint = await async_get_certificate_fingerprint(
+                    self.hass, self._config[CONF_URL]
+                )
+            except (OSError, ValueError, ssl.SSLError):
+                return self.async_abort(reason="cannot_connect")
+
+        if user_input is not None:
+            if not user_input.get(CONF_CONFIRM_CERTIFICATE):
+                errors[CONF_CONFIRM_CERTIFICATE] = "certificate_not_confirmed"
+            else:
+                self._config[CONF_CERT_FINGERPRINT] = self._certificate_fingerprint
+                if not (errors := await self._async_try_connect()):
+                    if self._reauth_pin:
+                        return self.async_update_reload_and_abort(
+                            self._get_reauth_entry(),
+                            data_updates={CONF_CERT_FINGERPRINT: self._certificate_fingerprint},
+                        )
+                    return self.async_create_entry(title=self._config[CONF_NAME], data=self._config)
+                self._config.pop(CONF_CERT_FINGERPRINT, None)
+
+        return self.async_show_form(
+            step_id="pin_certificate",
+            data_schema=_get_pin_certificate_schema(),
+            errors=errors,
+            description_placeholders={
+                "url": self._config[CONF_URL],
+                "fingerprint": self._certificate_fingerprint or "",
+            },
+        )
 
     async def async_step_reauth_confirm(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         """Handle user's reauth credentials.
@@ -243,16 +338,28 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             to an error string on failure.
 
         """
+        self._untrusted = False
+
         session: client.ClientSession = async_get_clientsession(self.hass, verify_ssl=self._config[CONF_VERIFY_SSL])
+
+        fingerprint: str | None = self._config.get(CONF_CERT_FINGERPRINT)
 
         api_client: ClientAPI = ClientAPI(
             session=session,
             url=self._config[CONF_URL],
             password=self._config[CONF_PASSWORD],
+            certificate_fingerprint=bytes.fromhex(fingerprint) if fingerprint else None,
         )
 
         try:
             await api_client.call_authentification_status()
+        except CertificateError:
+            _LOGGER.error("Certificate not trusted (%s)", api_client.url)  # noqa: TRY400
+            self._untrusted = True
+            return {CONF_URL: "untrusted_certificate"}
+        except CertificateChangedError:
+            _LOGGER.error("Certificate changed (%s)", api_client.url)  # noqa: TRY400
+            return {CONF_URL: "certificate_changed"}
         except ClientConnectorError:
             _LOGGER.error("Connection failed (%s)", api_client.url)  # noqa: TRY400
             return {CONF_URL: "cannot_connect"}
