@@ -6,7 +6,15 @@ import logging
 from socket import gaierror
 from typing import TYPE_CHECKING, Any
 
-from aiohttp import ClientError, ClientResponse, ContentTypeError, client
+from aiohttp import (
+    ClientConnectorCertificateError,
+    ClientError,
+    ClientResponse,
+    ContentTypeError,
+    Fingerprint,
+    ServerFingerprintMismatch,
+    client,
+)
 
 from .const import (
     ACCESS_APP_NO_SUDO,
@@ -18,6 +26,8 @@ from .const import (
 from .exceptions import (
     AbortLogoutError,
     APIError,
+    CertificateChangedError,
+    CertificateError,
     ClientConnectorError,
     ForbiddenError,
     UnauthorizedError,
@@ -36,6 +46,7 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
 
     Attributes:
         url (str): The URL of the Pi-hole API endpoint.
+        _ssl_kwargs (dict[str, Any]): Extra keyword arguments for every request, carrying the pinned certificate fingerprint when there is one.
         just_initialized (dict[str, bool]): Per coordinator flag indicating the client was just initialized, used to skip the first scheduled data fetch.
         last_refresh (dict[str, datetime]): Timestamp of the last data refresh of each coordinator, keyed by coordinator identifier.
         account_access (str | None): The kind of access of the account used by the integration (ACCESS_* constants), deduced from GET /auth/sessions. None while unknown.
@@ -61,6 +72,7 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
         session: client.ClientSession,
         url: str = "http://pi.hole",
         password: str = "",
+        certificate_fingerprint: bytes | None = None,
     ) -> None:
         """Initialize Pi-hole API Client object with an API URL.
 
@@ -68,11 +80,16 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
             session (client.ClientSession): The aiohttp client session used to perform HTTP requests.
             url (str): Represents the URL of API endpoint. Defaults to "http://pi.hole".
             password (str): The password used to authenticate against the Pi-hole API. Defaults to "".
+            certificate_fingerprint (bytes | None): The confirmed SHA-256 digest of the Pi-hole certificate. When set, the connection is accepted only if the server presents this certificate, instead of relying on the CA store. Defaults to None.
 
         """
         self._call_lock = asyncio.Lock()
         self._password: str = password
         self._session: client.ClientSession = session
+        # Passed to every request: an empty mapping keeps the session's own verification.
+        self._ssl_kwargs: dict[str, Any] = (
+            {"ssl": Fingerprint(certificate_fingerprint)} if certificate_fingerprint is not None else {}
+        )
         self._sid: str | None = None
         self.url: str = url
         self.account_access: str | None = None
@@ -91,7 +108,7 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
         self.just_initialized: dict[str, bool] = {}
         self.last_refresh: dict[str, datetime] = {}
 
-    async def _call(
+    async def _call(  # pylint: disable=too-many-branches
         self,
         route: str,
         method: str,
@@ -113,6 +130,8 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
 
         Raises:
             ClientConnectorError: If a network-level error occurs (timeout, connection refused, DNS failure).
+            CertificateError: If the certificate is not trusted by the CA store and no fingerprint is pinned.
+            CertificateChangedError: If the certificate does not match the pinned fingerprint.
             RuntimeError: If the HTTP method is not supported.
 
         """
@@ -136,18 +155,22 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
 
             async with asyncio.timeout(60):
                 if method == "post":
-                    request = await self._session.post(url, json=data, headers=headers)
+                    request = await self._session.post(url, json=data, headers=headers, **self._ssl_kwargs)
                 elif method == "put":
-                    request = await self._session.put(url, json=data, headers=headers)
+                    request = await self._session.put(url, json=data, headers=headers, **self._ssl_kwargs)
                 elif method == "delete":
-                    request = await self._session.delete(url, headers=headers)
+                    request = await self._session.delete(url, headers=headers, **self._ssl_kwargs)
                 elif method == "get":
-                    request = await self._session.get(url, headers=headers)
+                    request = await self._session.get(url, headers=headers, **self._ssl_kwargs)
                 else:
                     msg: str = f"Method ({method}) is not supported/implemented."
                     _LOGGER.critical(msg)
                     raise RuntimeError(msg)
 
+        except ServerFingerprintMismatch as err:
+            raise CertificateChangedError from err
+        except ClientConnectorCertificateError as err:
+            raise CertificateError from err
         except (TimeoutError, ClientError, gaierror) as err:
             raise ClientConnectorError(str(err)) from err
 

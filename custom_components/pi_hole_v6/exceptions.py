@@ -49,6 +49,28 @@ class ActionExecutionError(PiHoleV6Error):
     message: str = "The action requested has failed. Please check HA logs or Pi-hole logs."
 
 
+class CertificateError(PiHoleV6Error):
+    """The class `CertificateError` is raised when the certificate of the Pi-hole cannot be validated by the CA store.
+
+    Attributes:
+        message (str): The message carried by the exception.
+
+    """
+
+    message: str = "The certificate of the Pi-hole is not trusted."
+
+
+class CertificateChangedError(PiHoleV6Error):
+    """The class `CertificateChangedError` is raised when the certificate pinned for the Pi-hole has changed.
+
+    Attributes:
+        message (str): The message carried by the exception.
+
+    """
+
+    message: str = "The certificate of the Pi-hole has changed since it was confirmed."
+
+
 class AbortLogoutError(PiHoleV6Error):
     """The class `AbortLogoutError` represents an exception when a logout is not relevant and can be avoided.
 

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import ssl
 from typing import TYPE_CHECKING, Any
 
 import probatio
@@ -18,7 +19,9 @@ from homeassistant.helpers import selector
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .api import Api as ClientAPI
+from .certificate import async_get_certificate_fingerprint
 from .const import (
+    CONF_CERT_FINGERPRINT,
     CONF_DEVICE_TRACKER_MAC_LIST,
     CONF_DEVICE_TRACKER_WHITELIST,
     CONF_ENABLE_DEVICE_TRACKER,
@@ -40,6 +43,8 @@ from .const import (
     MIN_TIME_BETWEEN_UPDATES_STATS,
 )
 from .exceptions import (
+    CertificateChangedError,
+    CertificateError,
     ClientConnectorError,
     ContentTypeError,
     ForbiddenError,
@@ -53,7 +58,62 @@ if TYPE_CHECKING:
 
     from aiohttp import client
 
+    from homeassistant.core import HomeAssistant
+
 _LOGGER = logging.getLogger(__name__)
+
+CONF_CONFIRM_CERTIFICATE = "confirm_certificate"
+
+
+def _get_pin_certificate_schema() -> probatio.Schema:
+    """Build and return the probatio schema for the certificate confirmation form.
+
+    Returns:
+        probatio.Schema: The schema asking the user to confirm the certificate fingerprint.
+
+    """
+    return probatio.Schema(
+        {
+            probatio.Required(
+                CONF_CONFIRM_CERTIFICATE,
+                default=False,
+            ): selector.BooleanSelector(),  # pyright: ignore[reportUnknownMemberType]
+        }
+    )
+
+
+def _map_errors(errors: dict[str, str], fields: set[str]) -> dict[str, str]:
+    """Attach each error to the form field it concerns, or to the whole form when that field is not on the form.
+
+    Args:
+        errors (dict[str, str]): The errors returned by the connection check, keyed by field.
+        fields (set[str]): The fields present on the form that displays the errors.
+
+    Returns:
+        dict[str, str]: The errors keyed by form field, or by "base" when the field is missing from the form.
+
+    """
+    return {(key if key in fields else "base"): value for key, value in errors.items()}
+
+
+def _candidate_config(entry_data: Mapping[str, Any], user_input: Mapping[str, Any]) -> dict[str, Any]:
+    """Build the configuration the options would save, dropping a certificate fingerprint that no longer applies.
+
+    The fingerprint belongs to one URL and only protects a verified connection: it is removed when verification
+    is disabled or when the URL changes.
+
+    Args:
+        entry_data (Mapping[str, Any]): The data currently stored in the config entry.
+        user_input (Mapping[str, Any]): The values submitted in the options form.
+
+    Returns:
+        dict[str, Any]: The configuration to test and to store.
+
+    """
+    config: dict[str, Any] = {**entry_data, **user_input}
+    if not config[CONF_VERIFY_SSL] or config[CONF_URL] != entry_data.get(CONF_URL):
+        config.pop(CONF_CERT_FINGERPRINT, None)
+    return config
 
 
 def _warn_insecure_settings(url: str, verify_ssl: bool) -> None:
@@ -114,7 +174,10 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a Pi-hole V6 config flow.
 
     Attributes:
-        _config (Any): TODO
+        _config (dict[str, Any]): The configuration being entered: name, URL, password, certificate verification and, once confirmed, the pinned certificate fingerprint.
+        _certificate_fingerprint (str | None): SHA-256 fingerprint of the certificate read from the Pi-hole, awaiting confirmation.
+        _untrusted (bool): Whether the last connection attempt was refused because the certificate is not trusted.
+        _reauth_pin (bool): Whether the certificate confirmation step runs for a reauthentication.
 
     """
 
@@ -123,6 +186,9 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize the config flow."""
         self._config: dict[str, Any] = {}
+        self._certificate_fingerprint: str | None = None
+        self._untrusted: bool = False
+        self._reauth_pin: bool = False
 
     async def async_step_user(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         """Handle a flow initiated by the user.
@@ -156,10 +222,25 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             if not (errors := await self._async_try_connect()):
                 _warn_insecure_settings(self._config[CONF_URL], self._config[CONF_VERIFY_SSL])
                 return self.async_create_entry(title=user_input[CONF_NAME], data=self._config)
+            if self._untrusted:
+                # Read the certificate of the URL just submitted, never a fingerprint left over from an earlier attempt.
+                self._certificate_fingerprint = None
+                return await self.async_step_pin_certificate()
             user_input["password"] = ""
 
-        user_input = user_input or {}
+        return self._show_user_form(user_input or {}, errors)
 
+    def _show_user_form(self, user_input: dict[str, Any], errors: dict[str, str]) -> ConfigFlowResult:
+        """Show the main form, pre-filled with the given values, and display the errors on their fields.
+
+        Args:
+            user_input (dict[str, Any]): The values to pre-fill the form with.
+            errors (dict[str, str]): The errors to display, keyed by field.
+
+        Returns:
+            ConfigFlowResult: The form to show.
+
+        """
         return self.async_show_form(
             step_id="user",
             data_schema=_get_data_config_schema(user_input),
@@ -167,6 +248,30 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             description_placeholders={
                 "example_url": EXAMPLE_URL,
             },
+        )
+
+    def _show_reauth_form(self, user_input: dict[str, Any], errors: dict[str, str]) -> ConfigFlowResult:
+        """Show the reauthentication form, which only asks for the password.
+
+        Args:
+            user_input (dict[str, Any]): The values to pre-fill the form with.
+            errors (dict[str, str]): The errors to display, keyed by field or "base".
+
+        Returns:
+            ConfigFlowResult: The form to show.
+
+        """
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=probatio.Schema(
+                {
+                    probatio.Optional(
+                        CONF_PASSWORD,
+                        default=user_input.get(CONF_PASSWORD, DEFAULT_PASSWORD),
+                    ): str,
+                }
+            ),
+            errors=errors,
         )
 
     async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> ConfigFlowResult:
@@ -182,9 +287,84 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         self._config = {
             CONF_NAME: entry_data[CONF_NAME],
             CONF_URL: entry_data[CONF_URL],
+            CONF_PASSWORD: entry_data.get(CONF_PASSWORD, DEFAULT_PASSWORD),
             CONF_VERIFY_SSL: entry_data.get(CONF_VERIFY_SSL, LEGACY_VERIFY_SSL),
         }
+
+        stored_fingerprint: str | None = entry_data.get(CONF_CERT_FINGERPRINT)
+        if stored_fingerprint is not None:
+            self._config[CONF_CERT_FINGERPRINT] = stored_fingerprint
+            try:
+                current_fingerprint = await async_get_certificate_fingerprint(self.hass, self._config[CONF_URL])
+            except (OSError, ValueError, ssl.SSLError):
+                # Unreachable: the password step reports the connection problem.
+                current_fingerprint = None
+
+            if current_fingerprint is not None and current_fingerprint != stored_fingerprint:
+                self._certificate_fingerprint = current_fingerprint
+                self._reauth_pin = True
+                return await self.async_step_pin_certificate()
+
         return await self.async_step_reauth_confirm()
+
+    async def async_step_pin_certificate(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
+        """Ask the user to confirm the certificate of the Pi-hole, then pin its fingerprint.
+
+        The certificate is read without validating it, so the user must compare the fingerprint shown
+        here with the one displayed by the Pi-hole before confirming.
+
+        Args:
+            user_input (dict[str, Any] | None): The input submitted by the user, or None when displaying the form.
+
+        Returns:
+            ConfigFlowResult: The result of the confirmation step.
+
+        """
+        errors: dict[str, str] = {}
+
+        if self._certificate_fingerprint is None:
+            try:
+                self._certificate_fingerprint = await async_get_certificate_fingerprint(
+                    self.hass, self._config[CONF_URL]
+                )
+            except (OSError, ValueError, ssl.SSLError):
+                return self.async_abort(reason="cannot_connect")
+
+        if user_input is not None:
+            if not user_input.get(CONF_CONFIRM_CERTIFICATE):
+                errors[CONF_CONFIRM_CERTIFICATE] = "certificate_not_confirmed"
+            else:
+                self._config[CONF_CERT_FINGERPRINT] = self._certificate_fingerprint
+                connection_errors, _ = await _async_check_connection(self.hass, self._config)
+                if not connection_errors:
+                    if self._reauth_pin:
+                        return self.async_update_reload_and_abort(
+                            self._get_reauth_entry(),
+                            data_updates={
+                                CONF_PASSWORD: self._config[CONF_PASSWORD],
+                                CONF_CERT_FINGERPRINT: self._certificate_fingerprint,
+                            },
+                        )
+                    return self.async_create_entry(title=self._config[CONF_NAME], data=self._config)
+                # The password or the URL is wrong: the pin step cannot fix it, so go back to the form that owns it.
+                self._config.pop(CONF_CERT_FINGERPRINT, None)
+                if self._reauth_pin:
+                    return self._show_reauth_form({}, _map_errors(connection_errors, {CONF_PASSWORD}))
+                # The password is never sent back to the form in clear text.
+                return self._show_user_form(
+                    {**self._config, CONF_PASSWORD: ""},
+                    _map_errors(connection_errors, {CONF_URL, CONF_PASSWORD}),
+                )
+
+        return self.async_show_form(
+            step_id="pin_certificate",
+            data_schema=_get_pin_certificate_schema(),
+            errors=errors,
+            description_placeholders={
+                "url": self._config[CONF_URL],
+                "fingerprint": self._certificate_fingerprint or "",
+            },
+        )
 
     async def async_step_reauth_confirm(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         """Handle user's reauth credentials.
@@ -196,30 +376,25 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             ConfigFlowResult: The result of the reauth confirmation step.
 
         """
-        errors: dict[str, str] | None = {}
-        if user_input:
-            self._config[CONF_PASSWORD] = user_input[CONF_PASSWORD]
+        if not user_input:
+            return self._show_reauth_form({}, {})
 
-            if not (errors := await self._async_try_connect()):
-                return self.async_update_reload_and_abort(
-                    self._get_reauth_entry(),
-                    data_updates=user_input,
-                )
-            del user_input[CONF_PASSWORD]
+        self._config[CONF_PASSWORD] = user_input[CONF_PASSWORD]
 
-        user_input = user_input or {}
-        return self.async_show_form(
-            step_id="reauth_confirm",
-            data_schema=probatio.Schema(
-                {
-                    probatio.Optional(
-                        CONF_PASSWORD,
-                        default=user_input.get(CONF_PASSWORD, DEFAULT_PASSWORD),
-                    ): str,
-                }
-            ),
-            errors=errors,
-        )
+        if not (errors := await self._async_try_connect()):
+            return self.async_update_reload_and_abort(
+                self._get_reauth_entry(),
+                data_updates=user_input,
+            )
+
+        if self._untrusted:
+            # No fingerprint stored yet, or the certificate is no longer trusted: ask the user to confirm it.
+            self._certificate_fingerprint = None
+            self._reauth_pin = True
+            return await self.async_step_pin_certificate()
+
+        del user_input[CONF_PASSWORD]
+        return self._show_reauth_form({}, _map_errors(errors, {CONF_PASSWORD}))
 
     @staticmethod
     @callback
@@ -243,31 +418,56 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             to an error string on failure.
 
         """
-        session: client.ClientSession = async_get_clientsession(self.hass, verify_ssl=self._config[CONF_VERIFY_SSL])
+        errors, self._untrusted = await _async_check_connection(self.hass, self._config)
+        return errors
 
-        api_client: ClientAPI = ClientAPI(
-            session=session,
-            url=self._config[CONF_URL],
-            password=self._config[CONF_PASSWORD],
-        )
 
-        try:
-            await api_client.call_authentification_status()
-        except ClientConnectorError:
-            _LOGGER.error("Connection failed (%s)", api_client.url)  # noqa: TRY400
-            return {CONF_URL: "cannot_connect"}
-        except (
-            NotFoundError,
-            ContentTypeError,
-            MethodNotAllowedError,
-        ):
-            _LOGGER.error("Connection failed (%s)", api_client.url)  # noqa: TRY400
-            return {CONF_URL: "invalid_path"}
-        except (UnauthorizedError, ForbiddenError):
-            _LOGGER.error("Connection failed (%s)", api_client.url)  # noqa: TRY400
-            return {CONF_PASSWORD: "invalid_auth"}
+async def _async_check_connection(hass: HomeAssistant, config: dict[str, Any]) -> tuple[dict[str, str], bool]:
+    """Attempt to connect to the Pi-hole API with the given configuration.
 
-        return {}
+    Args:
+        hass (HomeAssistant): The Home Assistant instance.
+        config (dict[str, Any]): The URL, password, certificate verification and pinned fingerprint to test.
+
+    Returns:
+        tuple[dict[str, str], bool]: An empty dict on success, or a dict mapping a field key to an error string,
+        and whether the failure is an untrusted certificate that the user can confirm.
+
+    """
+    session: client.ClientSession = async_get_clientsession(hass, verify_ssl=config[CONF_VERIFY_SSL])
+
+    fingerprint: str | None = config.get(CONF_CERT_FINGERPRINT)
+
+    api_client: ClientAPI = ClientAPI(
+        session=session,
+        url=config[CONF_URL],
+        password=config[CONF_PASSWORD],
+        certificate_fingerprint=bytes.fromhex(fingerprint) if fingerprint else None,
+    )
+
+    try:
+        await api_client.call_authentification_status()
+    except CertificateError:
+        _LOGGER.error("Certificate not trusted (%s)", api_client.url)  # noqa: TRY400
+        return {CONF_URL: "untrusted_certificate"}, True
+    except CertificateChangedError:
+        _LOGGER.error("Certificate changed (%s)", api_client.url)  # noqa: TRY400
+        return {CONF_URL: "certificate_changed"}, False
+    except ClientConnectorError:
+        _LOGGER.error("Connection failed (%s)", api_client.url)  # noqa: TRY400
+        return {CONF_URL: "cannot_connect"}, False
+    except (
+        NotFoundError,
+        ContentTypeError,
+        MethodNotAllowedError,
+    ):
+        _LOGGER.error("Connection failed (%s)", api_client.url)  # noqa: TRY400
+        return {CONF_URL: "invalid_path"}, False
+    except (UnauthorizedError, ForbiddenError):
+        _LOGGER.error("Connection failed (%s)", api_client.url)  # noqa: TRY400
+        return {CONF_PASSWORD: "invalid_auth"}, False
+
+    return {}, False
 
 
 def _get_data_option_schema() -> probatio.Schema:
@@ -354,7 +554,60 @@ async def _async_validate_input(
 
 
 class OptionsFlowHandler(OptionsFlow):
-    """Change the configuration (options) of an existing instance of the integration."""
+    """Change the configuration (options) of an existing instance of the integration.
+
+    Attributes:
+        _pending (dict[str, Any]): The submitted options waiting for the confirmation of an untrusted certificate.
+        _certificate_fingerprint (str | None): SHA-256 fingerprint of the certificate read from the Pi-hole, awaiting confirmation.
+
+    """
+
+    def __init__(self) -> None:
+        """Initialize the options flow."""
+        self._pending: dict[str, Any] = {}
+        self._certificate_fingerprint: str | None = None
+
+    async def async_step_pin_certificate(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
+        """Ask the user to confirm the certificate before enabling its verification in the options.
+
+        Args:
+            user_input (dict[str, Any] | None): The input submitted by the user, or None when displaying the form.
+
+        Returns:
+            ConfigFlowResult: The result of the confirmation step.
+
+        """
+        errors: dict[str, str] = {}
+
+        if self._certificate_fingerprint is None:
+            try:
+                self._certificate_fingerprint = await async_get_certificate_fingerprint(
+                    self.hass, self._pending[CONF_URL]
+                )
+            except (OSError, ValueError, ssl.SSLError):
+                return self.async_abort(reason="cannot_connect")
+
+        if user_input is not None:
+            if not user_input.get(CONF_CONFIRM_CERTIFICATE):
+                errors[CONF_CONFIRM_CERTIFICATE] = "certificate_not_confirmed"
+            else:
+                config = {**self._pending, CONF_CERT_FINGERPRINT: self._certificate_fingerprint}
+                connection_errors, _ = await _async_check_connection(self.hass, config)
+                if not connection_errors:
+                    self.hass.config_entries.async_update_entry(self.config_entry, data=config)
+                    return self.async_create_entry(title="", data={})
+                # The password or the URL is wrong: the pin step cannot fix it, so go back to the options form.
+                return self._show_options_form(self._pending, _map_errors(connection_errors, {CONF_URL}))
+
+        return self.async_show_form(
+            step_id="pin_certificate",
+            data_schema=_get_pin_certificate_schema(),
+            errors=errors,
+            description_placeholders={
+                "url": self._pending[CONF_URL],
+                "fingerprint": self._certificate_fingerprint or "",
+            },
+        )
 
     async def async_step_init(self, user_input: Any) -> ConfigFlowResult:
         """Handle the initial step of the options flow.
@@ -373,19 +626,21 @@ class OptionsFlowHandler(OptionsFlow):
             errors = await _async_validate_input(user_input)
 
             if not errors:
-                _warn_insecure_settings(user_input[CONF_URL], user_input[CONF_VERIFY_SSL])
-                self.hass.config_entries.async_update_entry(
-                    self.config_entry, data={**self.config_entry.data, **user_input}
-                )
-                return self.async_create_entry(title="", data={})
-            return self.async_show_form(
-                step_id="init",
-                data_schema=self.add_suggested_values_to_schema(
-                    _get_data_option_schema(),
-                    user_input,
-                ),
-                errors=dict(errors),
-            )
+                config = _candidate_config(self.config_entry.data, user_input)
+                if config[CONF_VERIFY_SSL]:
+                    # Enabling verification must not leave the integration broken: test the connection first.
+                    connection_errors, untrusted = await _async_check_connection(self.hass, config)
+                    if untrusted:
+                        self._pending = config
+                        self._certificate_fingerprint = None
+                        return await self.async_step_pin_certificate()
+                    errors = _map_errors(connection_errors, {CONF_URL})
+
+                if not errors:
+                    _warn_insecure_settings(config[CONF_URL], config[CONF_VERIFY_SSL])
+                    self.hass.config_entries.async_update_entry(self.config_entry, data=config)
+                    return self.async_create_entry(title="", data={})
+            return self._show_options_form(user_input, dict(errors))
 
         update_interval_live = self.config_entry.data.get(CONF_UPDATE_INTERVAL_LIVE, None)
         update_interval_stats = self.config_entry.data.get(CONF_UPDATE_INTERVAL_STATS, None)
@@ -421,10 +676,21 @@ class OptionsFlowHandler(OptionsFlow):
             )
 
         # we asked to provide default values for the form
+        return self._show_options_form(self.config_entry.data, {})
+
+    def _show_options_form(self, user_input: Mapping[str, Any], errors: dict[str, str]) -> ConfigFlowResult:
+        """Show the options form, pre-filled with the given values, and display the errors on their fields.
+
+        Args:
+            user_input (Mapping[str, Any]): The values to pre-fill the form with.
+            errors (dict[str, str]): The errors to display, keyed by field or "base".
+
+        Returns:
+            ConfigFlowResult: The form to show.
+
+        """
         return self.async_show_form(
             step_id="init",
-            data_schema=self.add_suggested_values_to_schema(
-                _get_data_option_schema(),
-                self.config_entry.data,
-            ),
+            data_schema=self.add_suggested_values_to_schema(_get_data_option_schema(), user_input),
+            errors=errors,
         )

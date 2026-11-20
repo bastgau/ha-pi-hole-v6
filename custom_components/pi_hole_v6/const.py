@@ -13,6 +13,8 @@ CONF_DEVICE_TRACKER_WHITELIST = "device_tracker_whitelist"
 CONF_DEVICE_TRACKER_MAC_LIST = "device_tracker_mac_list"
 # Whether the TLS certificate presented by the Pi-hole must be validated.
 CONF_VERIFY_SSL = "verify_ssl"
+# SHA-256 digest (hexadecimal) of the Pi-hole certificate, confirmed by the user.
+CONF_CERT_FINGERPRINT = "cert_fingerprint"
 
 DOMAIN = "pi_hole_v6"
 DEFAULT_NAME = "Pi-hole"

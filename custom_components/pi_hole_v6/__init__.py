@@ -24,6 +24,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .api import Api as PiholeAPI
 from .const import (
+    CONF_CERT_FINGERPRINT,
     CONF_ENABLE_DEVICE_TRACKER,
     CONF_UPDATE_INTERVAL_LIVE,
     CONF_UPDATE_INTERVAL_STATS,
@@ -37,16 +38,29 @@ from .const import (
     MIN_TIME_BETWEEN_UPDATES_LIVE,
     MIN_TIME_BETWEEN_UPDATES_STATS,
 )
-from .exceptions import APIError, DataStructureError, PiHoleV6Error, UnauthorizedError
+from .exceptions import (
+    APIError,
+    CertificateChangedError,
+    CertificateError,
+    DataStructureError,
+    PiHoleV6Error,
+    UnauthorizedError,
+)
 
 if TYPE_CHECKING:
-    from aiohttp import client
-
     from homeassistant.core import Event, HomeAssistant
 
 
 _LOGGER = logging.getLogger(__name__)
 
+
+# Why the integration asks the user to reauthenticate, per error raised while it runs.
+_AUTH_FAILURE_MESSAGES: dict[type[PiHoleV6Error], str] = {
+    UnauthorizedError: "Credentials must be updated.",
+    # Without a pinned fingerprint, a certificate that is no longer trusted (renewed by another CA, self-signed again...).
+    CertificateError: "The certificate of the Pi-hole is not trusted: confirm it to continue.",
+    CertificateChangedError: "The certificate of the Pi-hole has changed: confirm the new one.",
+}
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
@@ -206,6 +220,29 @@ def migrate_legacy_verify_ssl(hass: HomeAssistant, entry: PiHoleV6ConfigEntry) -
     return LEGACY_VERIFY_SSL
 
 
+def _create_api_client(hass: HomeAssistant, entry: PiHoleV6ConfigEntry, verify_ssl: bool) -> PiholeAPI:
+    """Create the Pi-hole API client of a config entry, pinned to its confirmed certificate when there is one.
+
+    Args:
+        hass (HomeAssistant): The Home Assistant instance.
+        entry (PiHoleV6ConfigEntry): The config entry the client belongs to.
+        verify_ssl (bool): Whether the TLS certificate is verified against the CA store.
+
+    Returns:
+        PiholeAPI: The API client.
+
+    """
+    url: str = entry.data[CONF_URL]
+    certificate_fingerprint: str | None = entry.data.get(CONF_CERT_FINGERPRINT)
+
+    return PiholeAPI(
+        session=async_get_clientsession(hass, verify_ssl=verify_ssl),
+        url=url,
+        password=entry.data.get(CONF_PASSWORD, ""),
+        certificate_fingerprint=bytes.fromhex(certificate_fingerprint) if certificate_fingerprint else None,
+    )
+
+
 def get_update_interval(entry: PiHoleV6ConfigEntry, conf_key: str, default: timedelta) -> timedelta:
     """Read a coordinator update interval from the config entry.
 
@@ -241,21 +278,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: PiHoleV6ConfigEntry) -> 
 
     """
 
-    password = entry.data.get(CONF_PASSWORD, "")
     name = entry.data[CONF_NAME]
     url = entry.data[CONF_URL]
 
     _LOGGER.debug("Setting up %s integration with host %s", DOMAIN, url)
 
     migrate_legacy_update_interval(hass, entry)
-    verify_ssl = migrate_legacy_verify_ssl(hass, entry)
-    session: client.ClientSession = async_get_clientsession(hass, verify_ssl=verify_ssl)
-
-    api_client: PiholeAPI = PiholeAPI(
-        session=session,
-        url=url,
-        password=password,
-    )
+    api_client: PiholeAPI = _create_api_client(hass, entry, migrate_legacy_verify_ssl(hass, entry))
 
     async def async_logout(_: Event) -> None:
         """Log out from the Pi-hole API when Home Assistant stops.
@@ -307,9 +336,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: PiHoleV6ConfigEntry) -> 
                 else:
                     await async_get_stats_data(api_client=api_client)
 
-            except UnauthorizedError as err:
-                msg: str = "Credentials must be updated."
-                raise ConfigEntryAuthFailed(msg) from err
+            except (UnauthorizedError, CertificateError, CertificateChangedError) as err:
+                message: str = _AUTH_FAILURE_MESSAGES.get(type(err), _AUTH_FAILURE_MESSAGES[UnauthorizedError])
+                raise ConfigEntryAuthFailed(message) from err
 
             except PiHoleV6Error as err:
                 raise UpdateFailed(str(err)) from err

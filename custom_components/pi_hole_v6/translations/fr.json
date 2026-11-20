@@ -8,18 +8,23 @@
       "incorrect_data_expected": "Échec de la récupération des données dans la structure attendue.",
       "cannot_connect": "Échec de la connexion au serveur. Assurez-vous que l'adresse du serveur et le port sont corrects.",
       "invalid_auth": "Mot de passe invalide fourni. Assurez-vous que votre mot de passe est correct.",
-      "invalid_path": "Chemin d'API invalide spécifié. Veuillez vérifier l'URL du point de terminaison."
+      "invalid_path": "Chemin d'API invalide spécifié. Veuillez vérifier l'URL du point de terminaison.",
+      "untrusted_certificate": "Le certificat du Pi-hole n'est pas reconnu. Confirmez son empreinte pour continuer.",
+      "certificate_changed": "Le certificat du Pi-hole ne correspond pas à celui que vous avez confirmé précédemment.",
+      "certificate_not_confirmed": "Confirmez que l'empreinte correspond pour continuer."
     },
     "step": {
       "user": {
         "data": {
           "name": "Nom",
           "password": "Mot de passe",
-          "url": "Adresse"
+          "url": "Adresse",
+          "verify_ssl": "Vérifier le certificat du Pi-hole"
         },
         "data_description": {
           "password": "Mot de passe à utiliser pour la connexion",
-          "url": "URL ou adresse de votre Pi-hole (ex: {example_url})"
+          "url": "URL ou adresse de votre Pi-hole (ex : {example_url}). Utilisez https:// dès que possible : avec http://, le mot de passe et la session circulent en clair sur votre réseau.",
+          "verify_ssl": "À laisser activé. Il vérifie que le serveur est bien votre Pi-hole. Le désactiver permet à quiconque sur votre réseau d'intercepter le mot de passe. Le certificat auto-signé de Pi-hole échouera à cette vérification, sauf si vous la désactivez."
         },
         "description": "Cette intégration permet de récupérer des statistiques et d'interagir avec un système Pi-hole V6.",
         "title": "Pi-hole V6"
@@ -33,6 +38,16 @@
         },
         "description": "A partir de cet écran, vous pouvez modifier le mot de passe pour accéder à l'instance  Pi-hole.",
         "title": "Pi-hole V6"
+      },
+      "pin_certificate": {
+        "data": {
+          "confirm_certificate": "J'ai comparé cette empreinte avec celle affichée par mon Pi-hole"
+        },
+        "data_description": {
+          "confirm_certificate": "Ne confirmez que si l'empreinte ci-dessus est exactement celle affichée par votre Pi-hole."
+        },
+        "description": "Votre Pi-hole présente un certificat qui n'est pas signé par une autorité de confiance, comme son certificat auto-signé par défaut. Son empreinte SHA-256 est :\n\n`{fingerprint}`\n\nComparez-la avec l'empreinte affichée par votre Pi-hole (`{url}`) avant de confirmer. La confirmation ne fait confiance qu'à ce certificat : s'il change plus tard, il vous sera demandé de confirmer le nouveau.",
+        "title": "Confirmer le certificat du Pi-hole"
       }
     }
   },
@@ -44,22 +59,43 @@
           "update_interval_stats": "Fréquence de rafraîchissement des statistiques (secondes)",
           "enable_device_tracker": "Activer le suivi des appareils réseau",
           "device_tracker_whitelist": "Utiliser la liste d'adresses comme liste blanche",
-          "device_tracker_mac_list": "Adresses filtrées"
+          "device_tracker_mac_list": "Adresses filtrées",
+          "verify_ssl": "Vérifier le certificat du Pi-hole"
         },
         "data_description": {
           "update_interval_live": "Fréquence de rafraîchissement des entités qui reflètent l'état courant de votre Pi-hole : statut du service et du blocage, interrupteurs et indicateurs temps réel. Diminuer cette valeur rend le tableau de bord plus réactif, au prix de davantage de requêtes vers votre Pi-hole. 120 secondes par défaut.",
           "update_interval_stats": "Fréquence de rafraîchissement des compteurs cumulatifs et des vérifications périodiques. Leurs valeurs évoluent en permanence mais n'ont d'intérêt qu'en tendance : allonger cet intervalle réduit le nombre de lignes écrites dans la base du recorder, sans perdre aucune donnée. Doit être supérieure ou égale à la fréquence de rafraîchissement temps réel. 300 secondes par défaut.",
           "enable_device_tracker": "Désactivé par défaut. Si activé, récupère la liste des appareils réseau depuis Pi-hole pour créer les entités device_tracker.",
           "device_tracker_whitelist": "Si activé, seules les adresses listées sont suivies. Si désactivé, les adresses listées sont exclues et toutes les autres sont suivies.",
-          "device_tracker_mac_list": "Une adresse MAC (ou pseudo-MAC Pi-hole, ex: IP-192.168.1.10) ou IP par ligne, ou séparées par des virgules. Les adresses IP correspondent à l'IP actuelle d'un appareil et peuvent ne plus correspondre si elle change. Laisser vide pour désactiver le filtrage."
+          "device_tracker_mac_list": "Une adresse MAC (ou pseudo-MAC Pi-hole, ex: IP-192.168.1.10) ou IP par ligne, ou séparées par des virgules. Les adresses IP correspondent à l'IP actuelle d'un appareil et peuvent ne plus correspondre si elle change. Laisser vide pour désactiver le filtrage.",
+          "verify_ssl": "À laisser activé. Il vérifie que le serveur est bien votre Pi-hole. Le désactiver permet à quiconque sur votre réseau d'intercepter le mot de passe. Le certificat auto-signé de Pi-hole échouera à cette vérification, sauf si vous la désactivez."
         },
         "description": "Après avoir modifié une de ces options, il est nécessaire de recharger le service ou de redémarrer Home Assistant.",
         "title": "Pi-hole V6"
+      },
+      "pin_certificate": {
+        "data": {
+          "confirm_certificate": "J'ai comparé cette empreinte avec celle affichée par mon Pi-hole"
+        },
+        "data_description": {
+          "confirm_certificate": "Ne confirmez que si l'empreinte ci-dessus est exactement celle affichée par votre Pi-hole."
+        },
+        "description": "Votre Pi-hole présente un certificat qui n'est pas signé par une autorité de confiance. Son empreinte SHA-256 est :\n\n`{fingerprint}`\n\nComparez-la avec l'empreinte affichée par votre Pi-hole (`{url}`) avant de confirmer.",
+        "title": "Confirmer le certificat du Pi-hole"
       }
     },
     "error": {
       "invalid_update_interval_live": "Fréquence de rafraîchissement temps réel invalide. Doit être supérieure à 1 seconde et inférieure à 3600 secondes.",
-      "invalid_update_interval_stats": "Fréquence de rafraîchissement des statistiques invalide. Doit être comprise entre 60 et 86400 secondes, et supérieure ou égale à la fréquence de rafraîchissement temps réel."
+      "invalid_update_interval_stats": "Fréquence de rafraîchissement des statistiques invalide. Doit être comprise entre 60 et 86400 secondes, et supérieure ou égale à la fréquence de rafraîchissement temps réel.",
+      "untrusted_certificate": "Le certificat du Pi-hole n'est pas reconnu. Confirmez son empreinte pour activer la vérification.",
+      "certificate_changed": "Le certificat du Pi-hole ne correspond pas à celui que vous avez confirmé précédemment. Réauthentifiez l'intégration depuis sa notification pour confirmer le nouveau certificat.",
+      "certificate_not_confirmed": "Confirmez que l'empreinte correspond pour continuer.",
+      "cannot_connect": "Échec de la connexion au serveur. Assurez-vous que l'adresse du serveur et le port sont corrects.",
+      "invalid_path": "Chemin d'API invalide spécifié. Veuillez vérifier l'URL du point de terminaison.",
+      "invalid_auth": "Mot de passe invalide fourni. Assurez-vous que votre mot de passe est correct."
+    },
+    "abort": {
+      "cannot_connect": "Échec de la connexion au serveur pour lire son certificat. Assurez-vous que l'adresse du serveur est correcte."
     }
   },
   "entity": {

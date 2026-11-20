@@ -8,7 +8,10 @@
       "incorrect_data_expected": "Failed to retrieve the data in the correct structure.",
       "cannot_connect": "Failed to connect to the server. Ensure that the server address and the port are correct.",
       "invalid_auth": "Invalid password provided. Ensure that your password is correct.",
-      "invalid_path": "Invalid API path specified. Please verify the endpoint URL."
+      "invalid_path": "Invalid API path specified. Please verify the endpoint URL.",
+      "untrusted_certificate": "The certificate of the Pi-hole is not trusted. Confirm its fingerprint to continue.",
+      "certificate_changed": "The certificate of the Pi-hole does not match the one you confirmed earlier.",
+      "certificate_not_confirmed": "Confirm that the fingerprint matches to continue."
     },
     "step": {
       "user": {
@@ -35,6 +38,16 @@
         },
         "description": "From this screen, you can change the password to access the Pi-hole instance.",
         "title": "Pi-hole V6"
+      },
+      "pin_certificate": {
+        "data": {
+          "confirm_certificate": "I have compared this fingerprint with the one shown by my Pi-hole"
+        },
+        "data_description": {
+          "confirm_certificate": "Only confirm if the fingerprint above is exactly the one displayed by your Pi-hole."
+        },
+        "description": "Your Pi-hole presents a certificate that is not signed by a trusted authority, such as its default self-signed certificate. Its SHA-256 fingerprint is:\n\n`{fingerprint}`\n\nCompare it with the fingerprint displayed by your Pi-hole (`{url}`) before confirming. Confirming trusts this certificate only: if it changes later, you will be asked to confirm the new one.",
+        "title": "Confirm the Pi-hole certificate"
       }
     }
   },
@@ -59,11 +72,30 @@
         },
         "description": "After modifying one of these options, it is necessary to reload the service or restart Home Assistant.",
         "title": "Pi-hole V6"
+      },
+      "pin_certificate": {
+        "data": {
+          "confirm_certificate": "I have compared this fingerprint with the one shown by my Pi-hole"
+        },
+        "data_description": {
+          "confirm_certificate": "Only confirm if the fingerprint above is exactly the one displayed by your Pi-hole."
+        },
+        "description": "Your Pi-hole presents a certificate that is not signed by a trusted authority, such as its default self-signed certificate. Its SHA-256 fingerprint is:\n\n`{fingerprint}`\n\nCompare it with the fingerprint displayed by your Pi-hole (`{url}`) before confirming. Confirming trusts this certificate only: if it changes later, you will be asked to confirm the new one.",
+        "title": "Confirm the Pi-hole certificate"
       }
     },
     "error": {
       "invalid_update_interval_live": "Invalid live refresh frequency. Must be higher than 1 second and lower than 3600 seconds.",
-      "invalid_update_interval_stats": "Invalid statistics refresh frequency. Must be between 60 and 86400 seconds, and greater than or equal to the live refresh frequency."
+      "invalid_update_interval_stats": "Invalid statistics refresh frequency. Must be between 60 and 86400 seconds, and greater than or equal to the live refresh frequency.",
+      "untrusted_certificate": "The certificate of the Pi-hole is not trusted. Confirm its fingerprint to enable verification.",
+      "certificate_changed": "The certificate of the Pi-hole does not match the one you confirmed earlier. Reauthenticate the integration from its notification to confirm the new certificate.",
+      "certificate_not_confirmed": "Confirm that the fingerprint matches to continue.",
+      "cannot_connect": "Failed to connect to the server. Ensure that the server address and the port are correct.",
+      "invalid_path": "Invalid API path specified. Please verify the endpoint URL.",
+      "invalid_auth": "Invalid password provided. Ensure that your password is correct."
+    },
+    "abort": {
+      "cannot_connect": "Failed to connect to the server to read its certificate. Ensure that the server address is correct."
     }
   },
   "entity": {
