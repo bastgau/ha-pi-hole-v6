@@ -26,11 +26,13 @@
         "data": {
           "name": "Name",
           "password": "Password",
-          "url": "Address"
+          "url": "Address",
+          "verify_ssl": "Verify the Pi-hole certificate"
         },
         "data_description": {
           "password": "Password to be used for login",
-          "url": "URL or address of your Pi-hole (ie: {example_url})"
+          "url": "URL or address of your Pi-hole (ie: {example_url}). Use https:// whenever possible: with http://, the password and the session are sent in clear text on your network.",
+          "verify_ssl": "Keep enabled. It checks that the server is really your Pi-hole. Disabling it lets anyone on your network intercept the password. Pi-hole's self-signed certificate will fail this check unless you disable it."
         },
         "description": "This integration allows you to retrieve statistics and interact with a Pi-hole V6 system.",
         "title": "Pi-hole V6"
@@ -55,13 +57,15 @@
           "update_interval_stats": "Statistics refresh frequency (seconds)",
           "enable_device_tracker": "Enable network device tracking",
           "device_tracker_whitelist": "Use address list as a whitelist",
-          "device_tracker_mac_list": "Filtered addresses"
+          "device_tracker_mac_list": "Filtered addresses",
+          "verify_ssl": "Verify the Pi-hole certificate"
         },
         "data_description": {
           "update_interval_live": "How often the entities that reflect the current state of your Pi-hole are refreshed: service and blocking status, switches, and the live indicators. Lowering it makes the dashboard more reactive, at the cost of more requests to your Pi-hole. Defaults to 120 seconds.",
           "update_interval_stats": "How often the cumulative counters and the periodic checks are refreshed. Their values keep moving but are only meaningful as a trend, so a longer interval reduces the number of rows written to the recorder database without losing any data. Must be greater than or equal to the live refresh frequency. Defaults to 300 seconds.",
           "enable_device_tracker": "Disabled by default. When enabled, retrieves the list of network devices from Pi-hole to create device_tracker entities.",
           "device_tracker_whitelist": "When enabled, only the listed addresses are tracked. When disabled, the listed addresses are excluded and all others are tracked.",
+          "verify_ssl": "Keep enabled. It checks that the server is really your Pi-hole. Disabling it lets anyone on your network intercept the password. Pi-hole's self-signed certificate will fail this check unless you disable it.",
           "device_tracker_mac_list": "One MAC address (or Pi-hole pseudo-MAC, e.g. IP-192.168.1.10) or IP address per line, or separated by commas. IP addresses match a device's current IP and may stop matching if it changes. Leave empty to disable filtering."
         },
         "description": "After modifying one of these options, it is necessary to reload the service or restart Home Assistant.",

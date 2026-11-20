@@ -27,11 +27,13 @@ from .const import (
     CONF_ENABLE_DEVICE_TRACKER,
     CONF_UPDATE_INTERVAL_LIVE,
     CONF_UPDATE_INTERVAL_STATS,
+    CONF_VERIFY_SSL,
     COORDINATOR_LIVE,
     COORDINATOR_STATS,
     DEFAULT_ENABLE_DEVICE_TRACKER,
     DOMAIN,
     LEGACY_CONF_UPDATE_INTERVAL,
+    LEGACY_VERIFY_SSL,
     MIN_TIME_BETWEEN_UPDATES_LIVE,
     MIN_TIME_BETWEEN_UPDATES_STATS,
 )
@@ -179,6 +181,31 @@ def migrate_legacy_update_interval(hass: HomeAssistant, entry: PiHoleV6ConfigEnt
     hass.config_entries.async_update_entry(entry, data=data)
 
 
+def migrate_legacy_verify_ssl(hass: HomeAssistant, entry: PiHoleV6ConfigEntry) -> bool:
+    """Store the certificate verification option, keeping the legacy behaviour for entries that predate it.
+
+    Entries created before the option existed were always connected without verifying the certificate.
+    They are kept that way on purpose: enabling verification would break a self-signed certificate
+    without the user knowing why. The value is stored once, so the options form shows it.
+
+    Args:
+        hass (HomeAssistant): The Home Assistant instance.
+        entry (PiHoleV6ConfigEntry): The config entry to migrate.
+
+    Returns:
+        bool: Whether the TLS certificate must be verified.
+
+    """
+
+    if CONF_VERIFY_SSL in entry.data:
+        return bool(entry.data[CONF_VERIFY_SSL])
+
+    data: dict[str, Any] = {**entry.data, CONF_VERIFY_SSL: LEGACY_VERIFY_SSL}
+    _LOGGER.debug("Storing %s option for an entry created before it existed", CONF_VERIFY_SSL)
+    hass.config_entries.async_update_entry(entry, data=data)
+    return LEGACY_VERIFY_SSL
+
+
 def get_update_interval(entry: PiHoleV6ConfigEntry, conf_key: str, default: timedelta) -> timedelta:
     """Read a coordinator update interval from the config entry.
 
@@ -221,8 +248,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: PiHoleV6ConfigEntry) -> 
     _LOGGER.debug("Setting up %s integration with host %s", DOMAIN, url)
 
     migrate_legacy_update_interval(hass, entry)
-
-    session: client.ClientSession = async_get_clientsession(hass, verify_ssl=False)
+    verify_ssl = migrate_legacy_verify_ssl(hass, entry)
+    session: client.ClientSession = async_get_clientsession(hass, verify_ssl=verify_ssl)
 
     api_client: PiholeAPI = PiholeAPI(
         session=session,

@@ -24,6 +24,7 @@ from .const import (
     CONF_ENABLE_DEVICE_TRACKER,
     CONF_UPDATE_INTERVAL_LIVE,
     CONF_UPDATE_INTERVAL_STATS,
+    CONF_VERIFY_SSL,
     CONFIG_ENTRY_VERSION,
     DEFAULT_DEVICE_TRACKER_MAC_LIST,
     DEFAULT_DEVICE_TRACKER_WHITELIST,
@@ -31,8 +32,10 @@ from .const import (
     DEFAULT_NAME,
     DEFAULT_PASSWORD,
     DEFAULT_URL,
+    DEFAULT_VERIFY_SSL,
     DOMAIN,
     EXAMPLE_URL,
+    LEGACY_VERIFY_SSL,
     MIN_TIME_BETWEEN_UPDATES_LIVE,
     MIN_TIME_BETWEEN_UPDATES_STATS,
 )
@@ -51,6 +54,28 @@ if TYPE_CHECKING:
     from aiohttp import client
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def _warn_insecure_settings(url: str, verify_ssl: bool) -> None:
+    """Log a warning when the settings saved by the user expose the password on the network.
+
+    Called only when the configuration is saved, so the warning is not repeated at every start.
+
+    Args:
+        url (str): The Pi-hole API URL.
+        verify_ssl (bool): Whether the TLS certificate is verified.
+
+    """
+    if not verify_ssl:
+        _LOGGER.warning(
+            "TLS certificate verification is disabled for %s: the password could be intercepted on your network",
+            url,
+        )
+    if url.lower().startswith("http://"):
+        _LOGGER.warning(
+            "%s uses an unencrypted connection: the password and session are sent in clear text",
+            url,
+        )
 
 
 def _get_data_config_schema(user_input: Any) -> probatio.Schema:
@@ -77,6 +102,10 @@ def _get_data_config_schema(user_input: Any) -> probatio.Schema:
                 CONF_PASSWORD,
                 default=user_input.get(CONF_PASSWORD, DEFAULT_PASSWORD),
             ): str,
+            probatio.Optional(
+                CONF_VERIFY_SSL,
+                default=user_input.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL),
+            ): selector.BooleanSelector(),  # pyright: ignore[reportUnknownMemberType]
         }
     )
 
@@ -118,12 +147,14 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                 CONF_NAME: user_input[CONF_NAME],
                 CONF_URL: user_input[CONF_URL],
                 CONF_PASSWORD: user_input[CONF_PASSWORD],
+                CONF_VERIFY_SSL: user_input.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL),
             }
 
             await self.async_set_unique_id(user_input[CONF_URL].lower())
             self._abort_if_unique_id_configured()
 
             if not (errors := await self._async_try_connect()):
+                _warn_insecure_settings(self._config[CONF_URL], self._config[CONF_VERIFY_SSL])
                 return self.async_create_entry(title=user_input[CONF_NAME], data=self._config)
             user_input["password"] = ""
 
@@ -151,6 +182,7 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         self._config = {
             CONF_NAME: entry_data[CONF_NAME],
             CONF_URL: entry_data[CONF_URL],
+            CONF_VERIFY_SSL: entry_data.get(CONF_VERIFY_SSL, LEGACY_VERIFY_SSL),
         }
         return await self.async_step_reauth_confirm()
 
@@ -211,7 +243,7 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             to an error string on failure.
 
         """
-        session: client.ClientSession = async_get_clientsession(self.hass, verify_ssl=False)
+        session: client.ClientSession = async_get_clientsession(self.hass, verify_ssl=self._config[CONF_VERIFY_SSL])
 
         api_client: ClientAPI = ClientAPI(
             session=session,
@@ -293,6 +325,9 @@ def _get_data_option_schema() -> probatio.Schema:
                 ),
                 probatio.Coerce(str),
             ),
+            probatio.Required(
+                CONF_VERIFY_SSL,
+            ): selector.BooleanSelector(),  # pyright: ignore[reportUnknownMemberType]
         }
     )
 
@@ -338,6 +373,7 @@ class OptionsFlowHandler(OptionsFlow):
             errors = await _async_validate_input(user_input)
 
             if not errors:
+                _warn_insecure_settings(user_input[CONF_URL], user_input[CONF_VERIFY_SSL])
                 self.hass.config_entries.async_update_entry(
                     self.config_entry, data={**self.config_entry.data, **user_input}
                 )
