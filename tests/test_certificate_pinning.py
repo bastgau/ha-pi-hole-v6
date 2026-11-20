@@ -7,15 +7,19 @@ import hashlib
 import socket
 import ssl
 import subprocess
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 from unittest.mock import AsyncMock, patch
 
 from aiohttp import ClientConnectorCertificateError, ClientSession, web
 from aiohttp.client_reqrep import ConnectionKey
 from custom_components.pi_hole_v6.api import Api
 from custom_components.pi_hole_v6.certificate import _read_certificate_fingerprint
+from custom_components.pi_hole_v6.config_flow import _async_check_connection
+from custom_components.pi_hole_v6.const import CONF_CERT_FINGERPRINT, CONF_VERIFY_SSL
 from custom_components.pi_hole_v6.exceptions import CertificateChangedError, CertificateError
 import pytest
+
+from homeassistant.const import CONF_PASSWORD, CONF_URL
 
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator
@@ -157,3 +161,20 @@ async def test_changed_certificate_is_refused(tls_server: tuple[str, str]) -> No
         api = Api(session=session, url=url, certificate_fingerprint=other)
         with pytest.raises(CertificateChangedError):
             await api.call_authentification_status()
+
+
+async def test_connection_check_accepts_confirmed_certificate(hass: Any, tls_server: tuple[str, str]) -> None:
+    """The check used by the config and options flows accepts the certificate the user confirmed."""
+    url, fingerprint = tls_server
+    errors, untrusted = await _async_check_connection(
+        hass,
+        {
+            CONF_URL: url,
+            CONF_PASSWORD: "",
+            CONF_VERIFY_SSL: True,
+            CONF_CERT_FINGERPRINT: fingerprint,
+        },
+    )
+
+    assert errors == {}
+    assert untrusted is False

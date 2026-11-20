@@ -58,6 +58,8 @@ if TYPE_CHECKING:
 
     from aiohttp import client
 
+    from homeassistant.core import HomeAssistant
+
 _LOGGER = logging.getLogger(__name__)
 
 CONF_CONFIRM_CERTIFICATE = "confirm_certificate"
@@ -338,43 +340,56 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             to an error string on failure.
 
         """
-        self._untrusted = False
+        errors, self._untrusted = await _async_check_connection(self.hass, self._config)
+        return errors
 
-        session: client.ClientSession = async_get_clientsession(self.hass, verify_ssl=self._config[CONF_VERIFY_SSL])
 
-        fingerprint: str | None = self._config.get(CONF_CERT_FINGERPRINT)
+async def _async_check_connection(hass: HomeAssistant, config: dict[str, Any]) -> tuple[dict[str, str], bool]:
+    """Attempt to connect to the Pi-hole API with the given configuration.
 
-        api_client: ClientAPI = ClientAPI(
-            session=session,
-            url=self._config[CONF_URL],
-            password=self._config[CONF_PASSWORD],
-            certificate_fingerprint=bytes.fromhex(fingerprint) if fingerprint else None,
-        )
+    Args:
+        hass (HomeAssistant): The Home Assistant instance.
+        config (dict[str, Any]): The URL, password, certificate verification and pinned fingerprint to test.
 
-        try:
-            await api_client.call_authentification_status()
-        except CertificateError:
-            _LOGGER.error("Certificate not trusted (%s)", api_client.url)  # noqa: TRY400
-            self._untrusted = True
-            return {CONF_URL: "untrusted_certificate"}
-        except CertificateChangedError:
-            _LOGGER.error("Certificate changed (%s)", api_client.url)  # noqa: TRY400
-            return {CONF_URL: "certificate_changed"}
-        except ClientConnectorError:
-            _LOGGER.error("Connection failed (%s)", api_client.url)  # noqa: TRY400
-            return {CONF_URL: "cannot_connect"}
-        except (
-            NotFoundError,
-            ContentTypeError,
-            MethodNotAllowedError,
-        ):
-            _LOGGER.error("Connection failed (%s)", api_client.url)  # noqa: TRY400
-            return {CONF_URL: "invalid_path"}
-        except (UnauthorizedError, ForbiddenError):
-            _LOGGER.error("Connection failed (%s)", api_client.url)  # noqa: TRY400
-            return {CONF_PASSWORD: "invalid_auth"}
+    Returns:
+        tuple[dict[str, str], bool]: An empty dict on success, or a dict mapping a field key to an error string,
+        and whether the failure is an untrusted certificate that the user can confirm.
 
-        return {}
+    """
+    session: client.ClientSession = async_get_clientsession(hass, verify_ssl=config[CONF_VERIFY_SSL])
+
+    fingerprint: str | None = config.get(CONF_CERT_FINGERPRINT)
+
+    api_client: ClientAPI = ClientAPI(
+        session=session,
+        url=config[CONF_URL],
+        password=config[CONF_PASSWORD],
+        certificate_fingerprint=bytes.fromhex(fingerprint) if fingerprint else None,
+    )
+
+    try:
+        await api_client.call_authentification_status()
+    except CertificateError:
+        _LOGGER.error("Certificate not trusted (%s)", api_client.url)  # noqa: TRY400
+        return {CONF_URL: "untrusted_certificate"}, True
+    except CertificateChangedError:
+        _LOGGER.error("Certificate changed (%s)", api_client.url)  # noqa: TRY400
+        return {CONF_URL: "certificate_changed"}, False
+    except ClientConnectorError:
+        _LOGGER.error("Connection failed (%s)", api_client.url)  # noqa: TRY400
+        return {CONF_URL: "cannot_connect"}, False
+    except (
+        NotFoundError,
+        ContentTypeError,
+        MethodNotAllowedError,
+    ):
+        _LOGGER.error("Connection failed (%s)", api_client.url)  # noqa: TRY400
+        return {CONF_URL: "invalid_path"}, False
+    except (UnauthorizedError, ForbiddenError):
+        _LOGGER.error("Connection failed (%s)", api_client.url)  # noqa: TRY400
+        return {CONF_PASSWORD: "invalid_auth"}, False
+
+    return {}, False
 
 
 def _get_data_option_schema() -> probatio.Schema:
@@ -461,7 +476,64 @@ async def _async_validate_input(
 
 
 class OptionsFlowHandler(OptionsFlow):
-    """Change the configuration (options) of an existing instance of the integration."""
+    """Change the configuration (options) of an existing instance of the integration.
+
+    Attributes:
+        _pending (dict[str, Any]): The submitted options waiting for the confirmation of an untrusted certificate.
+        _certificate_fingerprint (str | None): SHA-256 fingerprint of the certificate read from the Pi-hole, awaiting confirmation.
+
+    """
+
+    def __init__(self) -> None:
+        """Initialize the options flow."""
+        self._pending: dict[str, Any] = {}
+        self._certificate_fingerprint: str | None = None
+
+    async def async_step_pin_certificate(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
+        """Ask the user to confirm the certificate before enabling its verification in the options.
+
+        Args:
+            user_input (dict[str, Any] | None): The input submitted by the user, or None when displaying the form.
+
+        Returns:
+            ConfigFlowResult: The result of the confirmation step.
+
+        """
+        errors: dict[str, str] = {}
+
+        if self._certificate_fingerprint is None:
+            try:
+                self._certificate_fingerprint = await async_get_certificate_fingerprint(
+                    self.hass, self._pending[CONF_URL]
+                )
+            except (OSError, ValueError, ssl.SSLError):
+                return self.async_abort(reason="cannot_connect")
+
+        if user_input is not None:
+            if not user_input.get(CONF_CONFIRM_CERTIFICATE):
+                errors[CONF_CONFIRM_CERTIFICATE] = "certificate_not_confirmed"
+            else:
+                self._pending[CONF_CERT_FINGERPRINT] = self._certificate_fingerprint
+                connection_errors, _ = await _async_check_connection(
+                    self.hass, {**self.config_entry.data, **self._pending}
+                )
+                if not connection_errors:
+                    self.hass.config_entries.async_update_entry(
+                        self.config_entry, data={**self.config_entry.data, **self._pending}
+                    )
+                    return self.async_create_entry(title="", data={})
+                errors = connection_errors
+                self._pending.pop(CONF_CERT_FINGERPRINT, None)
+
+        return self.async_show_form(
+            step_id="pin_certificate",
+            data_schema=_get_pin_certificate_schema(),
+            errors=errors,
+            description_placeholders={
+                "url": self._pending[CONF_URL],
+                "fingerprint": self._certificate_fingerprint or "",
+            },
+        )
 
     async def async_step_init(self, user_input: Any) -> ConfigFlowResult:
         """Handle the initial step of the options flow.
@@ -478,6 +550,17 @@ class OptionsFlowHandler(OptionsFlow):
         """
         if user_input is not None:  # we asked to validate values entered by user
             errors = await _async_validate_input(user_input)
+
+            if not errors and user_input[CONF_VERIFY_SSL]:
+                # Enabling verification must not leave the integration broken: test the connection first.
+                connection_errors, untrusted = await _async_check_connection(
+                    self.hass, {**self.config_entry.data, **user_input}
+                )
+                if untrusted:
+                    self._pending = dict(user_input)
+                    self._certificate_fingerprint = None
+                    return await self.async_step_pin_certificate()
+                errors = connection_errors
 
             if not errors:
                 _warn_insecure_settings(user_input[CONF_URL], user_input[CONF_VERIFY_SSL])
