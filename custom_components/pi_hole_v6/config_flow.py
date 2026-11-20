@@ -56,6 +56,28 @@ if TYPE_CHECKING:
 _LOGGER = logging.getLogger(__name__)
 
 
+def _warn_insecure_settings(url: str, verify_ssl: bool) -> None:
+    """Log a warning when the settings saved by the user expose the password on the network.
+
+    Called only when the configuration is saved, so the warning is not repeated at every start.
+
+    Args:
+        url (str): The Pi-hole API URL.
+        verify_ssl (bool): Whether the TLS certificate is verified.
+
+    """
+    if not verify_ssl:
+        _LOGGER.warning(
+            "TLS certificate verification is disabled for %s: the password could be intercepted on your network",
+            url,
+        )
+    if url.lower().startswith("http://"):
+        _LOGGER.warning(
+            "%s uses an unencrypted connection: the password and session are sent in clear text",
+            url,
+        )
+
+
 def _get_data_config_schema(user_input: Any) -> probatio.Schema:
     """Build and return the probatio schema for the main config flow form.
 
@@ -132,6 +154,7 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             self._abort_if_unique_id_configured()
 
             if not (errors := await self._async_try_connect()):
+                _warn_insecure_settings(self._config[CONF_URL], self._config[CONF_VERIFY_SSL])
                 return self.async_create_entry(title=user_input[CONF_NAME], data=self._config)
             user_input["password"] = ""
 
@@ -350,6 +373,7 @@ class OptionsFlowHandler(OptionsFlow):
             errors = await _async_validate_input(user_input)
 
             if not errors:
+                _warn_insecure_settings(user_input[CONF_URL], user_input[CONF_VERIFY_SSL])
                 self.hass.config_entries.async_update_entry(
                     self.config_entry, data={**self.config_entry.data, **user_input}
                 )

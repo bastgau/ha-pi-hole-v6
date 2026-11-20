@@ -206,26 +206,6 @@ def migrate_legacy_verify_ssl(hass: HomeAssistant, entry: PiHoleV6ConfigEntry) -
     return LEGACY_VERIFY_SSL
 
 
-def warn_insecure_connection(url: str, verify_ssl: bool) -> None:
-    """Log a warning when the connection to the Pi-hole exposes the password.
-
-    Args:
-        url (str): The Pi-hole API URL.
-        verify_ssl (bool): Whether the TLS certificate is verified.
-
-    """
-    if not verify_ssl:
-        _LOGGER.warning(
-            "TLS certificate verification is disabled for %s: the password could be intercepted on your network",
-            url,
-        )
-    if url.lower().startswith("http://"):
-        _LOGGER.warning(
-            "%s uses an unencrypted connection: the password and session are sent in clear text",
-            url,
-        )
-
-
 def get_update_interval(entry: PiHoleV6ConfigEntry, conf_key: str, default: timedelta) -> timedelta:
     """Read a coordinator update interval from the config entry.
 
@@ -269,8 +249,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: PiHoleV6ConfigEntry) -> 
 
     migrate_legacy_update_interval(hass, entry)
     verify_ssl = migrate_legacy_verify_ssl(hass, entry)
-    warn_insecure_connection(url, verify_ssl)
-
     session: client.ClientSession = async_get_clientsession(hass, verify_ssl=verify_ssl)
 
     api_client: PiholeAPI = PiholeAPI(
