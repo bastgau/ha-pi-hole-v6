@@ -41,6 +41,7 @@ from .const import (
 from .exceptions import (
     APIError,
     CertificateChangedError,
+    CertificateError,
     DataStructureError,
     PiHoleV6Error,
     UnauthorizedError,
@@ -52,6 +53,14 @@ if TYPE_CHECKING:
 
 _LOGGER = logging.getLogger(__name__)
 
+
+# Why the integration asks the user to reauthenticate, per error raised while it runs.
+_AUTH_FAILURE_MESSAGES: dict[type[PiHoleV6Error], str] = {
+    UnauthorizedError: "Credentials must be updated.",
+    # Without a pinned fingerprint, a certificate that is no longer trusted (renewed by another CA, self-signed again...).
+    CertificateError: "The certificate of the Pi-hole is not trusted: confirm it to continue.",
+    CertificateChangedError: "The certificate of the Pi-hole has changed: confirm the new one.",
+}
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
@@ -327,13 +336,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: PiHoleV6ConfigEntry) -> 
                 else:
                     await async_get_stats_data(api_client=api_client)
 
-            except UnauthorizedError as err:
-                msg: str = "Credentials must be updated."
-                raise ConfigEntryAuthFailed(msg) from err
-
-            except CertificateChangedError as err:
-                msg = "The certificate of the Pi-hole has changed: confirm the new one."
-                raise ConfigEntryAuthFailed(msg) from err
+            except (UnauthorizedError, CertificateError, CertificateChangedError) as err:
+                message: str = _AUTH_FAILURE_MESSAGES.get(type(err), _AUTH_FAILURE_MESSAGES[UnauthorizedError])
+                raise ConfigEntryAuthFailed(message) from err
 
             except PiHoleV6Error as err:
                 raise UpdateFailed(str(err)) from err
