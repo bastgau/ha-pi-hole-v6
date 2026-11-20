@@ -24,6 +24,7 @@ from .const import (
     CONF_ENABLE_DEVICE_TRACKER,
     CONF_UPDATE_INTERVAL_LIVE,
     CONF_UPDATE_INTERVAL_STATS,
+    CONF_VERIFY_SSL,
     CONFIG_ENTRY_VERSION,
     DEFAULT_DEVICE_TRACKER_MAC_LIST,
     DEFAULT_DEVICE_TRACKER_WHITELIST,
@@ -31,8 +32,10 @@ from .const import (
     DEFAULT_NAME,
     DEFAULT_PASSWORD,
     DEFAULT_URL,
+    DEFAULT_VERIFY_SSL,
     DOMAIN,
     EXAMPLE_URL,
+    LEGACY_VERIFY_SSL,
     MIN_TIME_BETWEEN_UPDATES_LIVE,
     MIN_TIME_BETWEEN_UPDATES_STATS,
 )
@@ -77,6 +80,10 @@ def _get_data_config_schema(user_input: Any) -> probatio.Schema:
                 CONF_PASSWORD,
                 default=user_input.get(CONF_PASSWORD, DEFAULT_PASSWORD),
             ): str,
+            probatio.Optional(
+                CONF_VERIFY_SSL,
+                default=user_input.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL),
+            ): selector.BooleanSelector(),  # pyright: ignore[reportUnknownMemberType]
         }
     )
 
@@ -118,6 +125,7 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                 CONF_NAME: user_input[CONF_NAME],
                 CONF_URL: user_input[CONF_URL],
                 CONF_PASSWORD: user_input[CONF_PASSWORD],
+                CONF_VERIFY_SSL: user_input.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL),
             }
 
             await self.async_set_unique_id(user_input[CONF_URL].lower())
@@ -151,6 +159,7 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         self._config = {
             CONF_NAME: entry_data[CONF_NAME],
             CONF_URL: entry_data[CONF_URL],
+            CONF_VERIFY_SSL: entry_data.get(CONF_VERIFY_SSL, LEGACY_VERIFY_SSL),
         }
         return await self.async_step_reauth_confirm()
 
@@ -211,7 +220,7 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             to an error string on failure.
 
         """
-        session: client.ClientSession = async_get_clientsession(self.hass, verify_ssl=False)
+        session: client.ClientSession = async_get_clientsession(self.hass, verify_ssl=self._config[CONF_VERIFY_SSL])
 
         api_client: ClientAPI = ClientAPI(
             session=session,
@@ -293,6 +302,9 @@ def _get_data_option_schema() -> probatio.Schema:
                 ),
                 probatio.Coerce(str),
             ),
+            probatio.Required(
+                CONF_VERIFY_SSL,
+            ): selector.BooleanSelector(),  # pyright: ignore[reportUnknownMemberType]
         }
     )
 

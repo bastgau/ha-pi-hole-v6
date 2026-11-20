@@ -11,11 +11,16 @@ CONF_UPDATE_INTERVAL_STATS = "update_interval_stats"
 CONF_ENABLE_DEVICE_TRACKER = "enable_device_tracker"
 CONF_DEVICE_TRACKER_WHITELIST = "device_tracker_whitelist"
 CONF_DEVICE_TRACKER_MAC_LIST = "device_tracker_mac_list"
+# Whether the TLS certificate presented by the Pi-hole must be validated.
+CONF_VERIFY_SSL = "verify_ssl"
 
 DOMAIN = "pi_hole_v6"
 DEFAULT_NAME = "Pi-hole"
 DEFAULT_URL = "https://pihole.local:443/api"
 DEFAULT_PASSWORD = ""
+# Value for new config entries. Entries created before this option existed are migrated to False.
+DEFAULT_VERIFY_SSL = True
+LEGACY_VERIFY_SSL = False
 EXAMPLE_URL = "https://pihole.local:443/api"
 
 SERVICE_DISABLE = "disable"
