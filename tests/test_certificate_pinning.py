@@ -1,3 +1,4 @@
+# pylint: disable=redefined-outer-name  # pytest fixtures are requested by name
 """Check the certificate pinning against a real local TLS server presenting a self-signed certificate."""
 
 from __future__ import annotations
@@ -7,6 +8,7 @@ import hashlib
 import socket
 import ssl
 import subprocess
+import threading
 from typing import TYPE_CHECKING, Any
 from unittest.mock import AsyncMock, patch
 
@@ -109,8 +111,6 @@ def test_fingerprint_is_sha256_of_the_der_certificate(tmp_path: Path) -> None:
     port = _free_port()
     listener = socket.create_server(("127.0.0.1", port))
     listener.settimeout(5)
-
-    import threading  # noqa: PLC0415
 
     def serve() -> None:
         conn, _ = listener.accept()
