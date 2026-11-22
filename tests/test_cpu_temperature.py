@@ -290,6 +290,7 @@ async def test_sensor_state_and_attributes(hass: HomeAssistant) -> None:
     assert state.attributes["hot_limit"] == 60.0
     assert state.attributes["unit"] == "C"
     assert "list" not in state.attributes
+    assert state.attributes["note"] == "CPU temperature of the machine hosting Pi-hole, in °C."
 
     registry_entry = er.async_get(hass).async_get(ENTITY_ID)
     assert registry_entry is not None

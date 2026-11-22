@@ -447,17 +447,23 @@ class PiHoleV6Sensor(PiHoleV6Entity, SensorEntity):  # pyright: ignore[reportInc
                 "live_data_refresh": self.api.last_refresh.get(COORDINATOR_LIVE),
                 "stats_data_refresh": self.api.last_refresh.get(COORDINATOR_STATS),
                 "presence_data_refresh": self.api.last_refresh.get(COORDINATOR_PRESENCE),
-                "note": "Most recent refresh of the two coordinators.",
+                "note": "Most recent refresh of the live, stats and presence coordinators.",
             }
 
         if self.entity_description.key == "memory_use":
-            return self.api.cache_padd["system"]["memory"]
+            return {**self.api.cache_padd["system"]["memory"], "note": "Memory usage of the machine hosting Pi-hole."}
 
         if self.entity_description.key == "cpu_use":
-            return self.api.cache_padd["system"]["cpu"]
+            return {**self.api.cache_padd["system"]["cpu"], "note": "CPU usage of the machine hosting Pi-hole."}
 
         if self.entity_description.key == "cpu_temperature":
-            return self.api.cpu_temperature_report()
+            return {
+                **(self.api.cpu_temperature_report() or {}),
+                "note": "CPU temperature of the machine hosting Pi-hole, in °C.",
+            }
+
+        if self.entity_description.key == "privacy_level":
+            return {"note": "Privacy level set in Pi-hole."}
 
         if self.entity_description.key == "ftl_info_message_count":
             raw_messages: list[Any] = self.api.cache_ftl_info["message_list"]

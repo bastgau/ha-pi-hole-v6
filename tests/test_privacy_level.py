@@ -254,6 +254,7 @@ async def test_sensor_state_follows_the_level(hass: HomeAssistant, level: int | 
     assert state.state == expected
     assert state.attributes["device_class"] == SensorDeviceClass.ENUM
     assert state.attributes["options"] == PRIVACY_LEVELS
+    assert state.attributes["note"] == "Privacy level set in Pi-hole."
 
     await _unload(hass, entry)
 
