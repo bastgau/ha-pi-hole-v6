@@ -417,7 +417,8 @@ The state is always in °C: if Pi-hole is configured to report °F or K, the val
 
 **Name:** sensor.<service_name>\_latest_data_refresh  
 **Description:** Last data update from the Pi-hole API.  
-**Unit**: date
+**Unit**: date  
+**Attributes**: `live_data_refresh`, `stats_data_refresh` and `presence_data_refresh` (last refresh of each coordinator; the presence one stays empty while that coordinator has not read the query log). The state is the most recent of the three, and the sensor is written on each refresh of any of them.
 
 _This entity generates frequent and unnecessary data. To improve performance and reduce database size, exclude it from the recorder by adding it to the recorder.exclude list in your configuration.yaml._
 

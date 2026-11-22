@@ -21,6 +21,7 @@ from .const import (
     ACCESS_LEVELS,
     ACCESS_WITHOUT_SESSIONS,
     COORDINATOR_LIVE,
+    COORDINATOR_PRESENCE,
     COORDINATOR_STATS,
     PRIVACY_LEVELS,
 )
@@ -229,6 +230,10 @@ async def async_setup_entry(
         COORDINATOR_STATS: hole_data.coordinator_stats,
     }
 
+    # The presence coordinator only exists when the network devices are tracked and a frequency is set.
+    if hole_data.coordinator_presence is not None:
+        coordinators[COORDINATOR_PRESENCE] = hole_data.coordinator_presence
+
     def get_extra_coordinators(
         description: PiHoleV6SensorEntityDescription,
     ) -> list[DataUpdateCoordinator[Any]]:
@@ -295,6 +300,7 @@ class PiHoleV6Sensor(PiHoleV6Entity, SensorEntity):  # pyright: ignore[reportInc
             "note",
             "live_data_refresh",
             "stats_data_refresh",
+            "presence_data_refresh",
         }
     )
 
@@ -440,6 +446,7 @@ class PiHoleV6Sensor(PiHoleV6Entity, SensorEntity):  # pyright: ignore[reportInc
             return {
                 "live_data_refresh": self.api.last_refresh.get(COORDINATOR_LIVE),
                 "stats_data_refresh": self.api.last_refresh.get(COORDINATOR_STATS),
+                "presence_data_refresh": self.api.last_refresh.get(COORDINATOR_PRESENCE),
                 "note": "Most recent refresh of the two coordinators.",
             }
 
