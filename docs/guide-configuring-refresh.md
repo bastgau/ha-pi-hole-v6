@@ -49,6 +49,7 @@ Pressing the `Refresh data` button refreshes both coordinators at once.
 | `device_tracker.*` (one per network device)           | `live`             |
 | `sensor.<service_name>_auth_sessions`                 | `live`             |
 | `sensor.<service_name>_configured_clients`            | `live`             |
+| `sensor.<service_name>_cpu_temperature`               | `stats`            |
 | `sensor.<service_name>_cpu_use`                       | `live`             |
 | `sensor.<service_name>_dhcp_leases`                   | `live`             |
 | `sensor.<service_name>_dns_queries_frequency`         | `live`             |

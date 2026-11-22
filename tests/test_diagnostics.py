@@ -129,6 +129,7 @@ def _fill_caches(api: Api) -> None:
         "node_name": NODE_NAME,
         "iface": {"v4": {"name": IFACE, "addr": IP}},
         "pid": PID,
+        "sensors": {"cpu_temp": 48.3, "unit": "C", "hot_limit": 60.0, "list": [{"name": EXTRA}]},
         "version": {
             "core": {"local": {"version": "v6.0", "hash": HASH}, "remote": {"version": "v6.1", "hash": HASH}},
             "web": {"local": {"version": "v6.0"}, "remote": {"version": "v6.0"}},
@@ -597,3 +598,56 @@ async def test_last_refresh_and_interval(hass: HomeAssistant, loaded: PiHoleV6Co
     assert coordinators["stats"]["update_interval"] is None
     assert coordinators["stats"]["last_refresh"] is None
     assert coordinators["live"]["update_interval"] == 90.0
+
+
+@pytest.mark.parametrize(
+    ("sensors", "available", "unit"),
+    [
+        ({"cpu_temp": 48.3, "unit": "C"}, True, "C"),
+        ({"cpu_temp": 118.94, "unit": "F"}, True, "F"),
+        ({"cpu_temp": None, "unit": "C"}, False, "C"),
+        ({"unit": "K"}, False, "K"),
+        ({"cpu_temp": 48.3, "unit": "X"}, False, "X"),
+        ({"cpu_temp": 48.3}, True, None),
+        ({"cpu_temp": 48.3, "unit": "u" * 8}, False, "u" * 8),
+        ({"cpu_temp": 48.3, "unit": "u" * 100}, False, "u" * 8),
+        ({"cpu_temp": 48.3, "unit": 5}, False, None),
+        (None, False, None),
+        ([], False, None),
+    ],
+)
+async def test_cpu_temperature_fields(
+    hass: HomeAssistant, loaded: PiHoleV6ConfigEntry, sensors: Any, available: bool, unit: str | None
+) -> None:
+    """The report tells whether a temperature is read and in which unit, never the value itself."""
+    loaded.runtime_data.api.cache_padd = {"sensors": sensors}
+
+    result = await async_get_config_entry_diagnostics(hass, loaded)
+
+    assert result["pihole"]["cpu_temperature_available"] is available
+    assert result["pihole"]["temperature_unit"] == unit
+
+
+async def test_cpu_temperature_fields_without_sensors(hass: HomeAssistant, loaded: PiHoleV6ConfigEntry) -> None:
+    """A padd response without sensors gives an unavailable probe and no unit."""
+    loaded.runtime_data.api.cache_padd = {"host_model": "Raspberry Pi 4"}
+
+    result = await async_get_config_entry_diagnostics(hass, loaded)
+
+    assert result["pihole"]["cpu_temperature_available"] is False
+    assert result["pihole"]["temperature_unit"] is None
+
+
+async def test_cpu_temperature_value_and_probes_are_not_reported(
+    hass: HomeAssistant, loaded: PiHoleV6ConfigEntry
+) -> None:
+    """The reading, the hot limit and the probe list stay out of the report."""
+    loaded.runtime_data.api.cache_padd = {
+        "sensors": {"cpu_temp": 48.31337, "unit": "C", "hot_limit": 61.7, "list": [{"name": EXTRA}]},
+    }
+
+    dumped = json.dumps(await async_get_config_entry_diagnostics(hass, loaded))
+
+    assert "48.31337" not in dumped
+    assert "61.7" not in dumped
+    assert EXTRA not in dumped

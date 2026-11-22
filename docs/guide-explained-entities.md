@@ -379,6 +379,22 @@ The attributes `until_date` and `remaining_seconds` are existing only if the ads
 
 The state is `unknown` until the first refresh, or if the current session is not found in the list. When the sessions cannot be listed, the "Active sessions" sensor is `unknown` too.
 
+#### - CPU temperature
+
+**Name:** sensor.<service_name>\_cpu_temperature  
+**Description:** Temperature of the CPU of the machine hosting Pi-hole, as reported by Pi-hole (no additional request).  
+**Unit**: °C  
+**Attributes:** The hot limit reported by Pi-hole, and the unit it uses.
+
+```json
+{
+  "hot_limit": 60.0,
+  "unit": "C"
+}
+```
+
+The state is always in °C: if Pi-hole is configured to report °F or K, the value is converted. It is `unknown` when Pi-hole finds no CPU probe (Docker without access to `/sys`, virtual machine, unsupported hardware).
+
 #### - CPU usage
 
 **Name:** sensor.<service_name>\_cpu_use  

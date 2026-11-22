@@ -1,0 +1,10 @@
+{
+  "%cpu": 3.2,
+  "%mem": 41.5,
+  "host_model": "Raspberry Pi 4 Model B",
+  "sensors": {
+    "cpu_temp": 48.3,
+    "hot_limit": 60.0,
+    "unit": "C"
+  }
+}

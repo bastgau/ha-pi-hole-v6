@@ -48,6 +48,9 @@ TO_REDACT: set[str] = {CONF_URL, CONF_PASSWORD, CONF_CERT_FINGERPRINT, CONF_NAME
 # The longest free text taken from the Pi-hole that a report keeps.
 _MAX_TEXT_LENGTH = 64
 
+# The longest temperature unit kept ("C", "F" or "K" are expected).
+_MAX_UNIT_LENGTH = 8
+
 # The components of the Pi-hole whose versions are reported, as named in the padd response.
 _VERSION_COMPONENTS: tuple[str, ...] = ("core", "web", "ftl", "docker")
 
@@ -280,6 +283,8 @@ def _pihole(api: Api) -> dict[str, Any]:
         "updates_available": updates,
         "blocking": _text(_dict(api.cache_blocking).get("blocking")),
         "host_model": _truncate(_text(padd.get("host_model"))),
+        "cpu_temperature_available": api.cpu_temperature_celsius() is not None,
+        "temperature_unit": _truncate(_text(_dict(padd.get("sensors")).get("unit")), _MAX_UNIT_LENGTH),
         "counters": {name: _number(_dict(summary.get(section)).get(key)) for name, section, key in _SUMMARY_COUNTERS},
         "sizes": {
             "groups": _length(api.cache_groups),
