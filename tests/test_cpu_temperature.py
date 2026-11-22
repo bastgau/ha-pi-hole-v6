@@ -152,14 +152,11 @@ def test_cache_is_not_modified(unit: str) -> None:
 @pytest.mark.parametrize(
     ("padd", "expected"),
     [
-        (
-            {"sensors": {"cpu_temp": 48.3, "hot_limit": 60.0, "unit": "C"}},
-            {"cpu_temp": 48.3, "hot_limit": 60.0, "unit": "C"},
-        ),
-        ({"sensors": {"cpu_temp": 118.94, "unit": "F"}}, {"cpu_temp": 118.94, "unit": "F"}),
-        ({"sensors": {"cpu_temp": None, "unit": "C"}}, {"cpu_temp": None, "unit": "C"}),
-        ({"sensors": {"cpu_temp": 48.3, "list": [{"name": "probe"}], "other": 1}}, {"cpu_temp": 48.3}),
-        ({"sensors": {"list": []}}, None),
+        ({"sensors": {"cpu_temp": 48.3, "hot_limit": 60.0, "unit": "C"}}, {"hot_limit": 60.0, "unit": "C"}),
+        ({"sensors": {"cpu_temp": 118.94, "unit": "F"}}, {"unit": "F"}),
+        ({"sensors": {"cpu_temp": 48.3, "hot_limit": None, "unit": "C"}}, {"hot_limit": None, "unit": "C"}),
+        ({"sensors": {"cpu_temp": 48.3, "list": [{"name": "probe"}], "other": 1}}, None),
+        ({"sensors": {"cpu_temp": 48.3}}, None),
         ({"sensors": {}}, None),
         ({"sensors": None}, None),
         ({"sensors": []}, None),
@@ -168,8 +165,8 @@ def test_cache_is_not_modified(unit: str) -> None:
     ],
     ids=repr,
 )
-def test_report_keeps_only_the_temperature_entries(padd: Any, expected: dict[str, Any] | None) -> None:
-    """The attributes hold the three entries of Pi-hole as given; the probe list and anything else stay out."""
+def test_report_keeps_only_the_hot_limit_and_the_unit(padd: Any, expected: dict[str, Any] | None) -> None:
+    """The temperature is the state, the probe list and anything else stay out of the attributes."""
     assert _api(padd).cpu_temperature_report() == expected
 
 
@@ -289,7 +286,7 @@ async def test_sensor_state_and_attributes(hass: HomeAssistant) -> None:
     assert state.attributes["device_class"] == SensorDeviceClass.TEMPERATURE
     assert state.attributes["state_class"] == SensorStateClass.MEASUREMENT
     assert state.attributes["friendly_name"].endswith("CPU temperature")
-    assert state.attributes["cpu_temp"] == 48.3
+    assert "cpu_temp" not in state.attributes
     assert state.attributes["hot_limit"] == 60.0
     assert state.attributes["unit"] == "C"
     assert "list" not in state.attributes

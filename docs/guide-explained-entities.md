@@ -384,11 +384,10 @@ The state is `unknown` until the first refresh, or if the current session is not
 **Name:** sensor.<service_name>\_cpu_temperature  
 **Description:** Temperature of the CPU of the machine hosting Pi-hole, as reported by Pi-hole (no additional request).  
 **Unit**: °C  
-**Attributes:** The temperature data reported by Pi-hole, in its own unit.
+**Attributes:** The hot limit reported by Pi-hole, and the unit it uses.
 
 ```json
 {
-  "cpu_temp": 48.3,
   "hot_limit": 60.0,
   "unit": "C"
 }
