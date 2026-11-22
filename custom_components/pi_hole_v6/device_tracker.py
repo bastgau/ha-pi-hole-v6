@@ -13,6 +13,7 @@ from homeassistant.components.device_tracker import (
 from homeassistant.const import Platform
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity, DataUpdateCoordinator
 
 from .const import (
@@ -415,7 +416,7 @@ class PiHoleV6DeviceTracker(  # pyright: ignore[reportIncompatibleVariableOverri
 
     Each tracked device gets its own entry in the Home Assistant device registry,
     identified by its MAC address and created by `async_setup_entry`. This entity
-    auto-attaches to that device registry entry via its `mac_address` property.
+    attaches to that device registry entry through the MAC connection of its `device_info`.
 
     Attributes:
         api (PiholeAPI): The Pi-hole API client instance.
@@ -429,6 +430,7 @@ class PiHoleV6DeviceTracker(  # pyright: ignore[reportIncompatibleVariableOverri
         _presence (PiHoleV6PresenceCoordinator | None): The presence coordinator reading the query log, None when the presence refresh is disabled.
         _reported_connected (bool | None): The last connection state written to the state machine, None before the first one.
         _attr_unique_id (str): The unique identifier of the entity.
+        _attr_device_info (DeviceInfo): The device information of the entity, holding only the MAC connection of the tracked device.
         entity_id (str): The entity id of the entity.
 
     """
@@ -475,6 +477,8 @@ class PiHoleV6DeviceTracker(  # pyright: ignore[reportIncompatibleVariableOverri
         self._ip_address: str | None = None
 
         self._attr_unique_id = f"{server_unique_id}/{self._mac}"
+        # Only the MAC connection: it resolves to the device created in `async_setup_entry`.
+        self._attr_device_info = DeviceInfo(connections={(dr.CONNECTION_NETWORK_MAC, self._mac)})
 
         name: str = coordinator.name
         raw_name: str = f"device_tracker.{name}_{self._mac.replace(':', '_')}"
