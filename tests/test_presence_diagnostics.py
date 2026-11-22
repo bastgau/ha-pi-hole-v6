@@ -38,7 +38,15 @@ DOMAIN_MARKER = "presence.domain.marker.example"
 PSEUDO_MAC = "ip-192.168.77.43"
 FETCHED_AT = datetime(2026, 6, 1, 12, 0, 30, tzinfo=UTC)
 MARKERS = [MAC, IP, DOMAIN_MARKER, PSEUDO_MAC, "192.168.77", "aa:bb"]
-BLOCK_KEYS = {"enabled", "listening", "update_interval", "last_update_success", "last_exception", "last_read"}
+BLOCK_KEYS = {
+    "enabled",
+    "listening",
+    "update_interval",
+    "last_update_success",
+    "last_exception",
+    "last_refresh",
+    "last_read",
+}
 LAST_READ_KEYS = {
     "fetched_at",
     "complete",
@@ -123,6 +131,7 @@ async def test_enabled_coordinator_before_any_read(hass: HomeAssistant, loaded: 
         "update_interval": 30.0,
         "last_update_success": None,
         "last_exception": None,
+        "last_refresh": None,
         "last_read": None,
     }
     assert result["settings"]["update_interval_presence"] == 30
@@ -149,6 +158,15 @@ async def test_last_read_has_the_documented_shape(hass: HomeAssistant, loaded: P
     }
     assert set(presence["last_read"]) == LAST_READ_KEYS
     assert presence["last_update_success"] is True
+
+
+async def test_last_refresh_is_the_time_kept_by_the_client(hass: HomeAssistant, loaded: PiHoleV6ConfigEntry) -> None:
+    """The block reports the same refresh time as the client, the one the latest data refresh sensor reads."""
+    loaded.runtime_data.api.last_refresh["presence"] = FETCHED_AT
+
+    presence = (await async_get_config_entry_diagnostics(hass, loaded))["presence"]
+
+    assert presence["last_refresh"] == FETCHED_AT.isoformat()
 
 
 async def test_incomplete_read_is_reported(hass: HomeAssistant, loaded: PiHoleV6ConfigEntry) -> None:
@@ -206,6 +224,7 @@ async def test_disabled_presence_block(hass: HomeAssistant, overrides: dict[str,
         "update_interval": None,
         "last_update_success": None,
         "last_exception": None,
+        "last_refresh": None,
         "last_read": None,
     }
     assert result["settings"]["update_interval_presence"] == 0
