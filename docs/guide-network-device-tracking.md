@@ -38,7 +38,7 @@ A longer delay avoids devices that query the DNS rarely (a phone in standby, for
 
 ### Ignoring stale devices
 
-Pi-hole keeps every device it has ever seen in its network table, which can leave hundreds of entities and devices (disabled by default in Home Assistant, but still listed) for devices that disappeared months ago. The `Ignore devices inactive for (days)` option (0 to 3650, `0` = disabled, the default) stops creating entities for them.
+Pi-hole keeps every device it has ever seen in its network table, which can leave hundreds of entities and devices (disabled by default in Home Assistant, but still listed) for devices that disappeared months ago. The `Ignore devices inactive for (days)` option (0 to 3650, 30 by default, `0` = disabled) stops creating entities for them.
 
 When set, a device whose last DNS query is older than this number of days, or that never made one, gets **no entity created**. This setting only applies when entities are created:
 

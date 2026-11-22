@@ -98,6 +98,7 @@ class Harness:
             CONF_UPDATE_INTERVAL_LIVE: 120,
             CONF_UPDATE_INTERVAL_STATS: 300,
             CONF_ENABLE_DEVICE_TRACKER: True,
+            CONF_DEVICE_TRACKER_STALE_DAYS: 0,  # The default (30 days) would hide the old fixtures.
         }
         for key, value in options.items():
             if value is None:
@@ -402,8 +403,21 @@ async def test_empty_registries_only_get_the_active_device(harness: Harness) -> 
     assert len(er.async_entries_for_config_entry(entity_registry, harness.entry.entry_id)) == 1  # type: ignore[union-attr]
 
 
-async def test_empty_registries_without_the_setting_create_everything(harness: Harness) -> None:
-    """With the setting at 0 (default), the stale device gets its entity, as before."""
+async def test_an_entry_without_the_setting_uses_the_default_of_30_days(harness: Harness) -> None:
+    """An entry created before the option holds no value: the default applies at creation and nothing breaks."""
+    harness.make_entry(**{CONF_DEVICE_TRACKER_STALE_DAYS: None})
+    harness.prefill("A")
+    harness.devices = [_device("D", STALE), _device("E", FRESH), _device("A", STALE)]
+
+    await harness.setup()
+
+    assert harness.state("E") == STATE_HOME
+    assert harness.entity_id("D") is None
+    assert harness.state("A") == STATE_NOT_HOME  # Already registered: kept, whatever its age.
+
+
+async def test_empty_registries_with_the_setting_at_0_create_everything(harness: Harness) -> None:
+    """With the setting at 0 the stale device gets its entity, as before the option existed."""
     harness.make_entry()
     harness.devices = [_device("D", STALE), _device("E", FRESH)]
 

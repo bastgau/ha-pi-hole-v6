@@ -13,6 +13,7 @@ from custom_components.pi_hole_v6.const import (
     CONF_DEVICE_TRACKER_MAC_LIST,
     CONF_DEVICE_TRACKER_STALE_DAYS,
     CONF_DEVICE_TRACKER_WHITELIST,
+    DEFAULT_DEVICE_TRACKER_STALE_DAYS,
 )
 from custom_components.pi_hole_v6.device_tracker import (
     _build_stale_filter,
@@ -62,16 +63,29 @@ def test_last_query(device: dict[str, Any], expected: int | None) -> None:
     assert _last_query(device) == expected
 
 
-@pytest.mark.parametrize("data", [{}, {CONF_DEVICE_TRACKER_STALE_DAYS: 0}], ids=["not-stored", "zero"])
 @pytest.mark.parametrize("age_days", [None, 0, 1, 30, 3650])
-def test_nothing_is_stale_when_the_setting_is_off(data: dict[str, Any], age_days: int | None) -> None:
-    """With 0 days, or no value at all, no device is stale, whatever its last query."""
-    entry = _entry(**data)
+def test_nothing_is_stale_when_the_setting_is_off(age_days: int | None) -> None:
+    """With 0 days no device is stale, whatever its last query."""
+    entry = _entry(**{CONF_DEVICE_TRACKER_STALE_DAYS: 0})
     is_stale = _build_stale_filter(entry, NOW)
 
     assert not is_stale(_aged(age_days))
     assert not is_stale({"hwaddr": LISTED, "ips": [], "lastQuery": 0})
     assert not is_stale_filter_enabled(entry)
+
+
+@pytest.mark.parametrize(
+    ("age_days", "expected"),
+    [(0, False), (29, False), (30, False), (31, True), (None, True)],
+)
+def test_without_a_stored_value_the_default_of_30_days_applies(age_days: float | None, expected: bool) -> None:
+    """An entry that holds no value, as every entry created before the option, uses the default 30 days."""
+    entry = _entry()
+    is_stale = _build_stale_filter(entry, NOW)
+
+    assert DEFAULT_DEVICE_TRACKER_STALE_DAYS == 30
+    assert is_stale_filter_enabled(entry)
+    assert is_stale(_aged(age_days)) is expected
 
 
 @pytest.mark.parametrize(

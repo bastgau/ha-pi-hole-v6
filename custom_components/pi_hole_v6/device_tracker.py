@@ -163,7 +163,9 @@ def _build_stale_filter(entry: PiHoleV6ConfigEntry, now: datetime) -> Callable[[
     if not is_stale_filter_enabled(entry):
         return lambda _device: False
 
-    limit = now.timestamp() - int(entry.data[CONF_DEVICE_TRACKER_STALE_DAYS]) * 86400
+    limit = (
+        now.timestamp() - int(entry.data.get(CONF_DEVICE_TRACKER_STALE_DAYS, DEFAULT_DEVICE_TRACKER_STALE_DAYS)) * 86400
+    )
 
     def _is_stale(device: dict[str, Any]) -> bool:
         last_query = _last_query(device)

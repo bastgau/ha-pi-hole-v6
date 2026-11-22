@@ -65,7 +65,7 @@ def _field(result: Any, name: str) -> Any:
 
 
 async def test_form_shows_both_fields_and_completes_an_old_entry_with_the_defaults(hass: HomeAssistant) -> None:
-    """Opening the form of an entry that lacks the options stores 240 and 0 and shows them."""
+    """Opening the form of an entry that lacks the options stores 240 and 30 and shows them."""
     entry = _entry(hass)
     assert not any(key in entry.data for key in NEW_KEYS)
 
@@ -73,11 +73,11 @@ async def test_form_shows_both_fields_and_completes_an_old_entry_with_the_defaul
 
     assert result["type"] == FlowResultType.FORM
     assert entry.data[CONF_DEVICE_TRACKER_CONSIDER_HOME] == 240
-    assert entry.data[CONF_DEVICE_TRACKER_STALE_DAYS] == 0
+    assert entry.data[CONF_DEVICE_TRACKER_STALE_DAYS] == 30
     assert entry.data[CONF_DEVICE_TRACKER_CONSIDER_HOME] == DEFAULT_DEVICE_TRACKER_CONSIDER_HOME
     assert entry.data[CONF_DEVICE_TRACKER_STALE_DAYS] == DEFAULT_DEVICE_TRACKER_STALE_DAYS
     assert _field(result, CONF_DEVICE_TRACKER_CONSIDER_HOME).description == {"suggested_value": 240}
-    assert _field(result, CONF_DEVICE_TRACKER_STALE_DAYS).description == {"suggested_value": 0}
+    assert _field(result, CONF_DEVICE_TRACKER_STALE_DAYS).description == {"suggested_value": 30}
 
 
 async def test_form_selectors_are_bounded_boxes_with_their_unit(hass: HomeAssistant) -> None:
@@ -118,7 +118,7 @@ async def test_form_completes_only_the_missing_option(hass: HomeAssistant, missi
     await hass.config_entries.options.async_init(entry.entry_id)
 
     assert entry.data[stored] == (77 if stored == CONF_DEVICE_TRACKER_STALE_DAYS else 700)
-    assert entry.data[missing] == (0 if missing == CONF_DEVICE_TRACKER_STALE_DAYS else 240)
+    assert entry.data[missing] == (30 if missing == CONF_DEVICE_TRACKER_STALE_DAYS else 240)
 
 
 async def test_form_completes_a_stored_none(hass: HomeAssistant) -> None:
@@ -128,7 +128,7 @@ async def test_form_completes_a_stored_none(hass: HomeAssistant) -> None:
     await hass.config_entries.options.async_init(entry.entry_id)
 
     assert entry.data[CONF_DEVICE_TRACKER_CONSIDER_HOME] == 240
-    assert entry.data[CONF_DEVICE_TRACKER_STALE_DAYS] == 0
+    assert entry.data[CONF_DEVICE_TRACKER_STALE_DAYS] == 30
 
 
 async def test_form_keeps_a_stored_zero_stale_days(hass: HomeAssistant) -> None:
@@ -158,7 +158,7 @@ async def test_form_still_completes_the_former_options(hass: HomeAssistant) -> N
     assert entry.data[CONF_DEVICE_TRACKER_WHITELIST] is True
     assert entry.data[CONF_DEVICE_TRACKER_MAC_LIST] == ""
     assert entry.data[CONF_DEVICE_TRACKER_CONSIDER_HOME] == 240
-    assert entry.data[CONF_DEVICE_TRACKER_STALE_DAYS] == 0
+    assert entry.data[CONF_DEVICE_TRACKER_STALE_DAYS] == 30
 
 
 # --------------------------------------------------------------------------------------------------

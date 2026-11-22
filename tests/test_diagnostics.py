@@ -680,7 +680,7 @@ def _network(*ages: int | None) -> list[dict[str, Any]]:
 @pytest.mark.parametrize(
     ("overrides", "stale_days", "consider_home"),
     [
-        ({}, 0, 240),
+        ({}, 30, 240),
         ({CONF_DEVICE_TRACKER_STALE_DAYS: 30, CONF_DEVICE_TRACKER_CONSIDER_HOME: 600}, 30, 600),
         ({CONF_DEVICE_TRACKER_STALE_DAYS: 0, CONF_DEVICE_TRACKER_CONSIDER_HOME: 60}, 0, 60),
         ({CONF_DEVICE_TRACKER_STALE_DAYS: "x", CONF_DEVICE_TRACKER_CONSIDER_HOME: [1]}, None, None),
