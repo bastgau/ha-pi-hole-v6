@@ -180,6 +180,9 @@
       "cpu_use": {
         "name": "Utilisation du processeur"
       },
+      "cpu_temperature": {
+        "name": "Température CPU"
+      },
       "memory_use": {
         "name": "Utilisation de la mémoire"
       },

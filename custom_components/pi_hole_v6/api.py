@@ -3,8 +3,9 @@
 import asyncio
 import json
 import logging
+import math
 from socket import gaierror
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 from aiohttp import (
     ClientConnectorCertificateError,
@@ -551,6 +552,39 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
             "reason": result["reason"],
             "data": result["data"],
         }
+
+    def cpu_temperature_celsius(self) -> float | None:
+        """Return the CPU temperature of the Pi-hole host converted to °C.
+
+        Read from the "sensors" object of the padd cache: no request is made. Pi-hole already converts
+        the value to the unit it is configured with ("C", "F" or "K"), which is converted back here.
+
+        Returns:
+            float | None: The temperature in °C, or None when Pi-hole does not report one (no probe, a value that is not a finite number, an unknown unit or an unexpected shape).
+
+        """
+        padd: Any = self.cache_padd
+        sensors: Any = cast("dict[str, Any]", padd).get("sensors") if isinstance(padd, dict) else None
+
+        if not isinstance(sensors, dict):
+            return None
+
+        value: Any = sensors.get("cpu_temp")  # pyright: ignore[reportUnknownMemberType, reportUnknownVariableType]
+
+        if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value):
+            return None
+
+        unit: str = str(sensors.get("unit", "C")).upper()  # pyright: ignore[reportUnknownMemberType, reportUnknownArgumentType]
+
+        if unit == "C":
+            return float(value)
+        if unit == "F":
+            return (value - 32) / 1.8
+        if unit == "K":
+            return value - 273.15
+
+        _LOGGER.debug("Unknown temperature unit reported by Pi-hole: %s", unit)
+        return None
 
     async def call_get_auth_sessions(self) -> dict[str, Any]:
         """Retrieve all active sessions, and use the outcome to detect the kind of access of the account.

@@ -13,7 +13,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import CONF_NAME, MATCH_ALL, PERCENTAGE, EntityCategory, UnitOfTime
+from homeassistant.const import CONF_NAME, MATCH_ALL, PERCENTAGE, EntityCategory, UnitOfTemperature, UnitOfTime
 from homeassistant.helpers.event import async_track_time_interval
 
 from .common import sensor_update_timer
@@ -150,6 +150,17 @@ SENSOR_TYPES: tuple[PiHoleV6SensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         suggested_display_precision=2,
+        entity_registry_enabled_default=False,
+    ),
+    PiHoleV6SensorEntityDescription(
+        entity_category=EntityCategory.DIAGNOSTIC,
+        key="cpu_temperature",
+        coordinator_key=COORDINATOR_STATS,
+        translation_key="cpu_temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        suggested_display_precision=1,
         entity_registry_enabled_default=False,
     ),
     PiHoleV6SensorEntityDescription(
@@ -344,6 +355,8 @@ class PiHoleV6Sensor(PiHoleV6Entity, SensorEntity):  # pyright: ignore[reportInc
                 return self.api.cache_padd["%mem"]
             case "cpu_use":
                 return self.api.cache_padd["%cpu"]
+            case "cpu_temperature":
+                return self.api.cpu_temperature_celsius()
             case "ftl_info_message_count":
                 return self.api.cache_ftl_info["message_count"]
             case "remaining_until_blocking_mode":
