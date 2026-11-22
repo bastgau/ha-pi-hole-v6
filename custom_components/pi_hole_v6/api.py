@@ -110,10 +110,52 @@ def normalize_ip(value: object) -> str | None:
         return None
 
 
+def _is_hidden_client(address: str) -> bool:
+    """Tell whether Pi-hole replaced the address of a client by a placeholder.
+
+    At its privacy level "hide domains and clients", Pi-hole records every client as 0.0.0.0: no device can own such an address.
+
+    Args:
+        address (str): A normalized IP address.
+
+    Returns:
+        bool: True for an unspecified address (0.0.0.0 or ::).
+
+    """
+    return ipaddress.ip_address(address).is_unspecified
+
+
+def count_hidden_clients(queries: object) -> int:
+    """Count the rows of the query log whose client address is hidden by the privacy level of Pi-hole.
+
+    Args:
+        queries (object): The "queries" value of a GET /queries response.
+
+    Returns:
+        int: The number of rows whose `client.ip` is an unspecified address, 0 when the value is not a list.
+
+    """
+    if not isinstance(queries, list):
+        return 0
+
+    hidden: int = 0
+
+    for row in cast("list[Any]", queries):
+        source: Any = cast("dict[str, Any]", row).get("client") if isinstance(row, dict) else None
+        address: str | None = (
+            normalize_ip(cast("dict[str, Any]", source).get("ip")) if isinstance(source, dict) else None
+        )
+
+        if address is not None and _is_hidden_client(address):
+            hidden += 1
+
+    return hidden
+
+
 def parse_query_activity(queries: object) -> tuple[dict[str, float], int]:
     """Keep the newest query time of each client from the rows of the query log.
 
-    Only `client.ip` and `time` are read: no other field of a row (the domain above all) is looked at or kept.
+    Only `client.ip` and `time` are read: no other field of a row (the domain above all) is looked at or kept. A client whose address is hidden by the privacy level of Pi-hole (0.0.0.0) is skipped, like any row without a usable address.
 
     Args:
         queries (object): The "queries" value of a GET /queries response.
@@ -143,7 +185,7 @@ def parse_query_activity(queries: object) -> tuple[dict[str, float], int]:
             continue
 
         address: str | None = normalize_ip(cast("dict[str, Any]", source).get("ip"))
-        if address is None:
+        if address is None or _is_hidden_client(address):
             continue
 
         if float(moment) > newest.get(address, 0.0):
@@ -1114,7 +1156,7 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
             "data": result["data"],
         }
 
-    async def call_get_query_activity(  # pylint: disable=too-many-locals
+    async def call_get_query_activity(  # pylint: disable=too-many-locals,missing-raises-doc
         self,
         since: float,
         *,
@@ -1126,7 +1168,7 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
 
         The queries made since `since` (Pi-hole clock) are read newest first. The first page is GET /queries?from=..&length=..; the next ones repeat it with the cursor of the first page and a `start` offset, which is how Pi-hole paginates (the cursor alone gives the same page again). The domains travel in the responses but nothing is kept besides the client addresses and times, no cache is filled and the body of the responses is never logged. No filter (domain, client...) is sent.
 
-        It raises QueryLogUnavailableError when the first page comes without cursor (privacy level "maximum"), DataStructureError when a response is not made as expected and ClientConnectorError when the first page times out or the server is unreachable. The other errors of the underlying call propagate unchanged (APIError, CertificateError, CertificateChangedError). The read stops at a page shorter than `page_size` (complete), at `max_pages` or when the time `budget` is spent (incomplete). A timeout on a page after the first ends the read as incomplete.
+        It raises QueryLogUnavailableError when the first page comes without cursor (Pi-hole records nothing, privacy level "anonymous") or when the queries read only hold hidden clients (0.0.0.0, privacy level "hide domains and clients"), DataStructureError when a response is not made as expected and ClientConnectorError when the first page times out or the server is unreachable. The other errors of the underlying call propagate unchanged (APIError, CertificateError, CertificateChangedError). The read stops at a page shorter than `page_size` (complete), at `max_pages` or when the time `budget` is spent (incomplete). A timeout on a page after the first ends the read as incomplete.
 
         Args:
             since (float): The start of the window, as a Pi-hole Unix time in seconds.
@@ -1137,11 +1179,15 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
         Returns:
             QueryActivity: The newest query time per client address, with the counters of the read.
 
+        Raises:
+            QueryLogUnavailableError: If the queries read only hold hidden clients (0.0.0.0).
+
         """
 
         started: float = time.monotonic()
         newest: dict[str, float] = {}
         queries_read: int = 0
+        hidden_clients: int = 0
         pages: int = 0
         complete: bool = False
         cursor: int | None = None
@@ -1168,6 +1214,7 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
                 cursor = self._query_log_cursor(body)
 
             page_newest, rows = parse_query_activity(cast("list[Any]", body["queries"]))
+            hidden_clients += count_hidden_clients(body["queries"])
             pages += 1
             queries_read += rows
 
@@ -1177,6 +1224,10 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
             if rows < page_size:
                 complete = True
                 break
+
+        if not newest and hidden_clients:
+            # Every client read is the placeholder of the privacy level: no device can be matched, now or later.
+            raise QueryLogUnavailableError
 
         return QueryActivity(
             last_seen_by_ip=newest,
@@ -1235,7 +1286,7 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
             int: The cursor.
 
         Raises:
-            QueryLogUnavailableError: If there is no cursor: Pi-hole records nothing at its maximum privacy level.
+            QueryLogUnavailableError: If there is no cursor: Pi-hole records nothing at its anonymous privacy level.
             DataStructureError: If the cursor is not an integer.
 
         """

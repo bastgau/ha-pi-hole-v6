@@ -340,6 +340,10 @@ class PiHoleV6PresenceCoordinator(DataUpdateCoordinator[PresenceSnapshot]):  # p
         if isinstance(err, _AUTH_ERRORS):
             return UpdateFailed(message, retry_after=PRESENCE_RETRY_AFTER_AUTH)
 
+        if isinstance(err, QueryLogUnavailableError):
+            # The message names the privacy level of Pi-hole and holds no data of the log.
+            return UpdateFailed(f"{message} ({err})", retry_after=PRESENCE_RETRY_AFTER_UNUSABLE)
+
         if isinstance(err, _UNUSABLE_ERRORS):
             return UpdateFailed(message, retry_after=PRESENCE_RETRY_AFTER_UNUSABLE)
 

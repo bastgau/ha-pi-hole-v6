@@ -22,6 +22,7 @@ from custom_components.pi_hole_v6.api import (
     QUERY_LOG_PAGE_SIZE,
     Api,
     QueryActivity,
+    count_hidden_clients,
     normalize_ip,
     parse_query_activity,
     parse_retry_after,
@@ -740,3 +741,54 @@ async def test_other_failures_are_still_logged_as_errors(status: int, caplog: py
     errors = [record for record in caplog.records if record.levelno >= logging.ERROR]
     assert len(errors) == 1
     assert MARKER not in caplog.text
+
+
+# --- Clients hidden by the privacy level of Pi-hole (every client recorded as 0.0.0.0) ---
+
+
+@pytest.mark.parametrize("hidden", ["0.0.0.0", "::", "0:0:0:0:0:0:0:0"])  # noqa: S104
+def test_parse_skips_a_hidden_client_but_counts_the_row(hidden: str) -> None:
+    """An unspecified address belongs to no device: the row is read, never kept."""
+    newest, count = parse_query_activity([_row(hidden, SINCE + 9), _row(CLIENT_A, SINCE + 3)])
+
+    assert newest == {CLIENT_A: SINCE + 3}
+    assert count == 2
+
+
+def test_count_hidden_clients() -> None:
+    """Only the rows with an unspecified address are counted, and nothing else is looked at."""
+    rows = [_row("0.0.0.0"), _row("::"), _row(CLIENT_A), "junk", {"client": None}, {"client": {"ip": "nope"}}]  # noqa: S104
+
+    assert count_hidden_clients(rows) == 2
+    assert count_hidden_clients(None) == 0
+    assert count_hidden_clients({"queries": rows}) == 0
+
+
+async def test_a_window_of_hidden_clients_is_unavailable() -> None:
+    """At the level that hides the clients nobody can be matched: the read raises, so the fallback and the long delay apply."""
+    api, _ = _make_api(FakeResponse(body=_page([_row("0.0.0.0"), _row("0.0.0.0")])))  # noqa: S104
+
+    with pytest.raises(QueryLogUnavailableError):
+        await api.call_get_query_activity(SINCE, page_size=5)
+
+
+async def test_hidden_clients_next_to_real_ones_are_not_an_error() -> None:
+    """Right after a change of level the log mixes both: the real addresses are kept."""
+    api, _ = _make_api(FakeResponse(body=_page([_row("0.0.0.0", SINCE + 9), _row(CLIENT_A, SINCE + 5)])))  # noqa: S104
+
+    result = await api.call_get_query_activity(SINCE, page_size=5)
+
+    assert result.last_seen_by_ip == {CLIENT_A: SINCE + 5}
+    assert result.queries_read == 2
+
+
+async def test_hidden_clients_over_two_pages_with_a_real_one_on_the_second() -> None:
+    """The decision is taken on the whole read, not page by page."""
+    api, _ = _make_api(
+        FakeResponse(body=_page([_row("0.0.0.0"), _row("0.0.0.0")])),  # noqa: S104
+        FakeResponse(body=_page([_row(CLIENT_A, SINCE + 2)])),
+    )
+
+    result = await api.call_get_query_activity(SINCE, page_size=2)
+
+    assert result.last_seen_by_ip == {CLIENT_A: SINCE + 2}

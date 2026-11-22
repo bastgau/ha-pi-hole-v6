@@ -663,6 +663,19 @@ async def test_a_failing_query_log_falls_back_and_retries_after_its_delay(
     assert entry.state is ConfigEntryState.LOADED
 
 
+async def test_a_hidden_query_log_names_the_privacy_level_in_the_failure(harness: PresenceHarness) -> None:
+    """The reason of the fallback is readable in the log, and holds nothing of the query log."""
+    harness.make_entry(**OPTION)
+    harness.devices = [_device("A", FRESH)]
+    await harness.setup()
+    harness.error = QueryLogUnavailableError()
+
+    await harness.fire(STEP)
+
+    assert "privacy level" in str(harness.presence.last_exception)
+    assert harness.presence.last_read_error == "QueryLogUnavailableError"
+
+
 async def test_the_failure_is_a_plain_failure_for_the_live_coordinator_and_the_entities(
     harness: PresenceHarness,
 ) -> None:

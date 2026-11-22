@@ -43,14 +43,16 @@ class APIError(PiHoleV6Error):
 class QueryLogUnavailableError(PiHoleV6Error):
     """The class `QueryLogUnavailableError` is raised when the query log cannot be read.
 
-    Pi-hole answers without a cursor when its privacy level is "maximum": nothing is recorded.
+    Pi-hole answers without a cursor at its anonymous privacy level (nothing is recorded), and records every client as 0.0.0.0 at the level that hides the clients: no device can be told from the query log in either case.
 
     Attributes:
         message (str): The message carried by the exception.
 
     """
 
-    message: str = "The Pi-hole query log cannot be read (privacy level maximum)."
+    message: str = (
+        "The Pi-hole query log does not tell the clients apart (its privacy level hides them or records nothing)."
+    )
 
 
 class ActionExecutionError(PiHoleV6Error):
