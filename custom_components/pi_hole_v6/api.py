@@ -28,6 +28,7 @@ from .const import (
     ACCESS_MAIN_PASSWORD,
     ACCESS_RESTRICTED,
     MAX_NETWORK_DEVICES,
+    PRIVACY_LEVELS,
 )
 from .exceptions import (
     AbortLogoutError,
@@ -240,6 +241,7 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
         cache_configured_clients (list[dict[str, Any]]): Cached list of configured clients.
         cache_dhcp_leases (list[dict[str, Any]]): Cached list of active DHCP leases.
         cache_ftl_info (dict[str, Any]): Cached FTL diagnosis messages and status.
+        cache_privacy_level (int | None): Cached privacy level of Pi-hole (0 to 3), None while unknown or when the account is not allowed to read it.
         cache_network_devices (list[dict[str, Any]]): Cached list of known network devices.
         cache_groups (dict[str, dict[str, Any]]): Cached Pi-hole groups indexed by group name.
         cache_padd (dict[str, Any]): Cached Pi-hole dashboard data.
@@ -284,6 +286,7 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
         self.cache_configured_clients: list[dict[str, Any]] = []
         self.cache_dhcp_leases: list[dict[str, Any]] = []
         self.cache_ftl_info: dict[str, Any] = {}
+        self.cache_privacy_level: int | None = None
         self.cache_network_devices: list[dict[str, Any]] = []
         self.cache_groups: dict[str, dict[str, Any]] = {}
         self.cache_padd: dict[str, Any] = {}
@@ -821,6 +824,79 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
 
         _LOGGER.debug("Unknown temperature unit reported by Pi-hole: %s", unit)
         return None
+
+    @property
+    def privacy_level(self) -> str | None:
+        """Return the privacy level of Pi-hole as the state of its sensor.
+
+        Returns:
+            str | None: One of PRIVACY_LEVELS, None while the level is unknown or not readable.
+
+        """
+        level: int | None = self.cache_privacy_level
+
+        if level is None or not 0 <= level < len(PRIVACY_LEVELS):
+            return None
+
+        return PRIVACY_LEVELS[level]
+
+    async def call_get_privacy_level(self) -> dict[str, Any]:
+        """Retrieve the privacy level of Pi-hole.
+
+        A refusal of the route (403, or 404 on an older Pi-hole) is not an error here: it is logged at debug level and the level becomes unknown. A body that does not hold a level from 0 to 3 gives an unknown level too.
+
+        The other errors of the underlying call propagate unchanged: APIError (if the API returns another error status code), ClientConnectorError (if the server is unreachable).
+
+        Returns:
+            dict[str, Any]: A dictionary with the keys "code", "reason", and "data".
+
+        """
+
+        url: str = "/config/misc/privacylevel"
+
+        try:
+            result: dict[str, Any] = await self._call(
+                url,
+                action="privacy_level",
+                method="GET",
+                expected_errors=(ForbiddenError, NotFoundError),
+            )
+        except (ForbiddenError, NotFoundError) as err:
+            self.cache_privacy_level = None
+
+            return {"code": 403 if isinstance(err, ForbiddenError) else 404, "reason": "Refused", "data": {}}
+
+        self.cache_privacy_level = self._read_privacy_level(result["data"])
+
+        return {
+            "code": result["code"],
+            "reason": result["reason"],
+            "data": result["data"],
+        }
+
+    @staticmethod
+    def _read_privacy_level(data: Any) -> int | None:
+        """Read the level from the body of GET /config/misc/privacylevel.
+
+        Args:
+            data (Any): The body of the response, expected as {"config": {"misc": {"privacylevel": <0 to 3>}}}.
+
+        Returns:
+            int | None: The level, None when the body does not hold an integer from 0 to 3.
+
+        """
+        node: Any = data
+
+        for key in ("config", "misc", "privacylevel"):
+            if not isinstance(node, dict):
+                return None
+
+            node = cast("dict[str, Any]", node).get(key)
+
+        if isinstance(node, bool) or not isinstance(node, int) or not 0 <= node < len(PRIVACY_LEVELS):
+            return None
+
+        return node
 
     async def call_get_auth_sessions(self) -> dict[str, Any]:
         """Retrieve all active sessions, and use the outcome to detect the kind of access of the account.

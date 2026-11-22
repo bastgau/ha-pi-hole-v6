@@ -777,3 +777,18 @@ async def test_no_marker_with_the_options_set(hass: HomeAssistant, loaded: PiHol
     assert {"device_tracker_stale_days", "device_tracker_consider_home"} <= set(result["settings"])
     for marker in MARKERS:
         assert marker not in dumped
+
+
+@pytest.mark.parametrize(
+    ("level", "expected"),
+    [(0, "show_everything"), (1, "hide_domains"), (2, "hide_domains_and_clients"), (3, "anonymous"), (None, None)],
+)
+async def test_privacy_level_field(
+    hass: HomeAssistant, loaded: PiHoleV6ConfigEntry, level: int | None, expected: str | None
+) -> None:
+    """The report names the privacy level of Pi-hole, or nothing while it is unknown."""
+    loaded.runtime_data.api.cache_privacy_level = level
+
+    result = await async_get_config_entry_diagnostics(hass, loaded)
+
+    assert result["pihole"]["privacy_level"] == expected

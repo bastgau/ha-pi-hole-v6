@@ -167,6 +167,15 @@
       "latest_data_refresh": {
         "name": "Latest data refresh"
       },
+      "privacy_level": {
+        "name": "Privacy level",
+        "state": {
+          "show_everything": "Show everything",
+          "hide_domains": "Hide domains",
+          "hide_domains_and_clients": "Hide domains and clients",
+          "anonymous": "Anonymous mode"
+        }
+      },
       "cpu_temperature": {
         "name": "CPU temperature"
       },

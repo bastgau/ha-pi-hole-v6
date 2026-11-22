@@ -17,7 +17,13 @@ from homeassistant.const import CONF_NAME, MATCH_ALL, PERCENTAGE, EntityCategory
 from homeassistant.helpers.event import async_track_time_interval
 
 from .common import sensor_update_timer
-from .const import ACCESS_LEVELS, ACCESS_WITHOUT_SESSIONS, COORDINATOR_LIVE, COORDINATOR_STATS
+from .const import (
+    ACCESS_LEVELS,
+    ACCESS_WITHOUT_SESSIONS,
+    COORDINATOR_LIVE,
+    COORDINATOR_STATS,
+    PRIVACY_LEVELS,
+)
 from .entity import PiHoleV6Entity
 from .helper import create_entity_id_name
 
@@ -161,6 +167,15 @@ SENSOR_TYPES: tuple[PiHoleV6SensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         suggested_display_precision=1,
+        entity_registry_enabled_default=False,
+    ),
+    PiHoleV6SensorEntityDescription(
+        entity_category=EntityCategory.DIAGNOSTIC,
+        key="privacy_level",
+        coordinator_key=COORDINATOR_STATS,
+        translation_key="privacy_level",
+        device_class=SensorDeviceClass.ENUM,
+        options=PRIVACY_LEVELS,
         entity_registry_enabled_default=False,
     ),
     PiHoleV6SensorEntityDescription(
@@ -357,6 +372,8 @@ class PiHoleV6Sensor(PiHoleV6Entity, SensorEntity):  # pyright: ignore[reportInc
                 return self.api.cache_padd["%cpu"]
             case "cpu_temperature":
                 return self.api.cpu_temperature_celsius()
+            case "privacy_level":
+                return self.api.privacy_level
             case "ftl_info_message_count":
                 return self.api.cache_ftl_info["message_count"]
             case "remaining_until_blocking_mode":

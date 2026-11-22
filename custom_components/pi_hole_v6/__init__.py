@@ -176,6 +176,9 @@ async def async_get_stats_data(api_client: PiholeAPI) -> None:
     result = await api_client.call_get_ftl_info_messages_count()
     await check_result(result, api_client, "get_ftl_info_messages_count")
 
+    result = await api_client.call_get_privacy_level()
+    await check_result(result, api_client, "get_privacy_level")
+
 
 def migrate_legacy_update_interval(hass: HomeAssistant, entry: PiHoleV6ConfigEntry) -> None:
     """Carry the refresh interval stored under the pre-split option key over to its new name.

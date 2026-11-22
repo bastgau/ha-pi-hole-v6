@@ -448,6 +448,19 @@ _This entity generates frequent and unnecessary data. To improve performance and
 
 </details>
 
+#### - Privacy level
+
+**Name:** sensor.<service_name>\_privacy_level  
+**Description:** Privacy level set in Pi-hole (Settings → Privacy).  
+**Values:**
+
+- `show_everything`: every domain and every client is recorded.
+- `hide_domains`: the domains are recorded as `hidden`, the clients are kept.
+- `hide_domains_and_clients`: the domains are `hidden` and every client is recorded as `0.0.0.0`.
+- `anonymous`: almost nothing is recorded.
+
+The state is `unknown` until the first refresh, or when the account is not allowed to read the configuration of Pi-hole. The faster arrival detection of the device trackers needs one of the first two values.
+
 ### Services
 
 <img src="../img/services.png" width="300">
