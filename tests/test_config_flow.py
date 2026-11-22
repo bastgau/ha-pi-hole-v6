@@ -1,4 +1,4 @@
-"""Run the config, reauth and options flows through Home Assistant's flow manager.
+"""Run the config, reauth and reconfigure flows through Home Assistant's flow manager.
 
 The network boundaries (the connection check and the certificate read) are replaced, because a refused TLS
 handshake cannot be exercised here: the Home Assistant test plugin reports the server side of it as an error.
@@ -120,10 +120,10 @@ async def test_reauth_with_new_password_saves_the_password_with_the_fingerprint(
     assert entry.data[CONF_CERT_FINGERPRINT] == FINGERPRINT
 
 
-async def test_options_turning_verification_off_removes_the_pinned_certificate(
+async def test_reconfigure_turning_verification_off_removes_the_pinned_certificate(
     hass: HomeAssistant, no_setup: None
 ) -> None:
-    """Disabling verification in the options drops the fingerprint, so no stale pin stays behind."""
+    """Disabling verification in the reconfigure flow drops the fingerprint, so no stale pin stays behind."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=URL,
@@ -142,22 +142,17 @@ async def test_options_turning_verification_off_removes_the_pinned_certificate(
     )
     entry.add_to_hass(hass)
 
-    result = await hass.config_entries.options.async_init(entry.entry_id)
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        {
-            CONF_UPDATE_INTERVAL_LIVE: 120,
-            CONF_UPDATE_INTERVAL_STATS: 300,
-            CONF_URL: URL,
-            CONF_ENABLE_DEVICE_TRACKER: False,
-            CONF_DEVICE_TRACKER_WHITELIST: True,
-            CONF_DEVICE_TRACKER_MAC_LIST: "",
-            CONF_VERIFY_SSL: False,
-        },
-    )
+    with patch(f"{CONFIG_FLOW}._async_check_connection", AsyncMock(return_value=({}, False))):
+        result = await entry.start_reconfigure_flow(hass)
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_URL: URL, CONF_VERIFY_SSL: False},
+        )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
     assert entry.data[CONF_VERIFY_SSL] is False
+    assert entry.data[CONF_PASSWORD] == "password"
     assert CONF_CERT_FINGERPRINT not in entry.data
 
 

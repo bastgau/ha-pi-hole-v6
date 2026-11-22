@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 import ssl
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Literal
 
 import probatio
 
@@ -97,14 +97,14 @@ def _map_errors(errors: dict[str, str], fields: set[str]) -> dict[str, str]:
 
 
 def _candidate_config(entry_data: Mapping[str, Any], user_input: Mapping[str, Any]) -> dict[str, Any]:
-    """Build the configuration the options would save, dropping a certificate fingerprint that no longer applies.
+    """Build the connection settings a form would save, dropping a certificate fingerprint that no longer applies.
 
     The fingerprint belongs to one URL and only protects a verified connection: it is removed when verification
     is disabled or when the URL changes.
 
     Args:
         entry_data (Mapping[str, Any]): The data currently stored in the config entry.
-        user_input (Mapping[str, Any]): The values submitted in the options form.
+        user_input (Mapping[str, Any]): The values submitted in the form.
 
     Returns:
         dict[str, Any]: The configuration to test and to store.
@@ -170,6 +170,26 @@ def _get_data_config_schema(user_input: Any) -> probatio.Schema:
     )
 
 
+def _get_reconfigure_schema() -> probatio.Schema:
+    """Build and return the probatio schema for the reconfigure form.
+
+    Returns:
+        probatio.Schema: The schema asking for the address, the optional new password and the verification setting.
+
+    """
+    return probatio.Schema(
+        {
+            probatio.Required(CONF_URL): selector.TextSelector(  # pyright: ignore[reportUnknownMemberType]
+                selector.TextSelectorConfig(type=selector.TextSelectorType.URL)
+            ),
+            probatio.Optional(CONF_PASSWORD): selector.TextSelector(  # pyright: ignore[reportUnknownMemberType]
+                selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD)
+            ),
+            probatio.Required(CONF_VERIFY_SSL): selector.BooleanSelector(),  # pyright: ignore[reportUnknownMemberType]
+        }
+    )
+
+
 class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a Pi-hole V6 config flow.
 
@@ -177,7 +197,7 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         _config (dict[str, Any]): The configuration being entered: name, URL, password, certificate verification and, once confirmed, the pinned certificate fingerprint.
         _certificate_fingerprint (str | None): SHA-256 fingerprint of the certificate read from the Pi-hole, awaiting confirmation.
         _untrusted (bool): Whether the last connection attempt was refused because the certificate is not trusted.
-        _reauth_pin (bool): Whether the certificate confirmation step runs for a reauthentication.
+        _pin_origin (Literal["user", "reauth", "reconfigure"]): The flow the certificate confirmation step runs for.
 
     """
 
@@ -188,7 +208,7 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         self._config: dict[str, Any] = {}
         self._certificate_fingerprint: str | None = None
         self._untrusted: bool = False
-        self._reauth_pin: bool = False
+        self._pin_origin: Literal["user", "reauth", "reconfigure"] = "user"
 
     async def async_step_user(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         """Handle a flow initiated by the user.
@@ -302,7 +322,7 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
 
             if current_fingerprint is not None and current_fingerprint != stored_fingerprint:
                 self._certificate_fingerprint = current_fingerprint
-                self._reauth_pin = True
+                self._pin_origin = "reauth"
                 return await self.async_step_pin_certificate()
 
         return await self.async_step_reauth_confirm()
@@ -337,24 +357,10 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                 self._config[CONF_CERT_FINGERPRINT] = self._certificate_fingerprint
                 connection_errors, _ = await _async_check_connection(self.hass, self._config)
                 if not connection_errors:
-                    if self._reauth_pin:
-                        return self.async_update_reload_and_abort(
-                            self._get_reauth_entry(),
-                            data_updates={
-                                CONF_PASSWORD: self._config[CONF_PASSWORD],
-                                CONF_CERT_FINGERPRINT: self._certificate_fingerprint,
-                            },
-                        )
-                    return self.async_create_entry(title=self._config[CONF_NAME], data=self._config)
+                    return self._async_finish_pinned()
                 # The password or the URL is wrong: the pin step cannot fix it, so go back to the form that owns it.
                 self._config.pop(CONF_CERT_FINGERPRINT, None)
-                if self._reauth_pin:
-                    return self._show_reauth_form({}, _map_errors(connection_errors, {CONF_PASSWORD}))
-                # The password is never sent back to the form in clear text.
-                return self._show_user_form(
-                    {**self._config, CONF_PASSWORD: ""},
-                    _map_errors(connection_errors, {CONF_URL, CONF_PASSWORD}),
-                )
+                return self._show_form_after_pin_failure(connection_errors)
 
         return self.async_show_form(
             step_id="pin_certificate",
@@ -365,6 +371,148 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                 "fingerprint": format_fingerprint(self._certificate_fingerprint or ""),
             },
         )
+
+    async def async_step_reconfigure(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
+        """Change the address, the password or the certificate verification of an existing entry.
+
+        The name is not editable: it names the coordinators and the entity ids. An empty password keeps the
+        stored one. The connection is always tested, and the certificate is confirmed again when the address or
+        the verification setting changed.
+
+        Args:
+            user_input (dict[str, Any] | None): The input submitted by the user, or None when displaying the form.
+
+        Returns:
+            ConfigFlowResult: The result of the reconfigure step.
+
+        """
+        entry = self._get_reconfigure_entry()
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            url = user_input[CONF_URL].strip()
+            other_entry = self.hass.config_entries.async_entry_for_domain_unique_id(DOMAIN, url.lower())
+            if other_entry is not None and other_entry.entry_id != entry.entry_id:
+                errors[CONF_URL] = "already_configured"
+            else:
+                self._config = _candidate_config(
+                    entry.data,
+                    {
+                        CONF_URL: url,
+                        CONF_VERIFY_SSL: user_input.get(
+                            CONF_VERIFY_SSL, entry.data.get(CONF_VERIFY_SSL, LEGACY_VERIFY_SSL)
+                        ),
+                    },
+                )
+                if new_password := user_input.get(CONF_PASSWORD):
+                    self._config[CONF_PASSWORD] = new_password
+                self._pin_origin = "reconfigure"
+                return await self._async_check_reconfigure()
+            return self._show_reconfigure_form({**user_input, CONF_URL: url}, errors)
+
+        return self._show_reconfigure_form(
+            {
+                CONF_URL: entry.data[CONF_URL],
+                CONF_VERIFY_SSL: entry.data.get(CONF_VERIFY_SSL, LEGACY_VERIFY_SSL),
+            },
+            errors,
+        )
+
+    async def _async_check_reconfigure(self) -> ConfigFlowResult:
+        """Test the connection with the reconfigured settings, then save them or ask for what is missing.
+
+        Returns:
+            ConfigFlowResult: The update of the entry, the certificate confirmation, or the form with its errors.
+
+        """
+        errors = await self._async_try_connect()
+        if errors.get(CONF_URL) == "certificate_changed":
+            # The user changed the connection on purpose: forget the old pin and let the server prove itself again.
+            self._config.pop(CONF_CERT_FINGERPRINT, None)
+            errors = await self._async_try_connect()
+
+        if not errors:
+            return self._async_finish_reconfigure()
+        if self._untrusted:
+            # Read the certificate of the URL just submitted, never a fingerprint left over from an earlier attempt.
+            self._certificate_fingerprint = None
+            return await self.async_step_pin_certificate()
+        return self._show_reconfigure_form(self._config, _map_errors(errors, {CONF_URL, CONF_PASSWORD}))
+
+    def _async_finish_reconfigure(self) -> ConfigFlowResult:
+        """Replace the data and the unique id of the reconfigured entry, then reload it.
+
+        The whole data is replaced, not merged, so that a fingerprint that no longer applies is removed. Home
+        Assistant aborts a reauthentication in progress for the entry when it reloads it.
+
+        Returns:
+            ConfigFlowResult: The abort result that ends the flow.
+
+        """
+        _warn_insecure_settings(self._config[CONF_URL], self._config[CONF_VERIFY_SSL])
+        return self.async_update_reload_and_abort(
+            self._get_reconfigure_entry(),
+            unique_id=self._config[CONF_URL].lower(),
+            data=self._config,
+        )
+
+    def _show_reconfigure_form(self, user_input: Mapping[str, Any], errors: dict[str, str]) -> ConfigFlowResult:
+        """Show the reconfigure form, pre-filled with the address and the verification setting, never the password.
+
+        Args:
+            user_input (Mapping[str, Any]): The values to pre-fill the form with.
+            errors (dict[str, str]): The errors to display, keyed by field or "base".
+
+        Returns:
+            ConfigFlowResult: The form to show.
+
+        """
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                _get_reconfigure_schema(),
+                {key: user_input[key] for key in (CONF_URL, CONF_VERIFY_SSL) if key in user_input},
+            ),
+            errors=errors,
+            description_placeholders={"example_url": EXAMPLE_URL},
+        )
+
+    def _async_finish_pinned(self) -> ConfigFlowResult:
+        """Save the configuration whose certificate the user just confirmed, according to the flow that asked for it.
+
+        Returns:
+            ConfigFlowResult: The reauth or reconfigure abort, or the created entry.
+
+        """
+        if self._pin_origin == "reauth":
+            return self.async_update_reload_and_abort(
+                self._get_reauth_entry(),
+                data_updates={
+                    CONF_PASSWORD: self._config[CONF_PASSWORD],
+                    CONF_CERT_FINGERPRINT: self._config[CONF_CERT_FINGERPRINT],
+                },
+            )
+        if self._pin_origin == "reconfigure":
+            return self._async_finish_reconfigure()
+        return self.async_create_entry(title=self._config[CONF_NAME], data=self._config)
+
+    def _show_form_after_pin_failure(self, connection_errors: dict[str, str]) -> ConfigFlowResult:
+        """Go back to the form of the flow that asked for the certificate, with the errors of the connection check.
+
+        Args:
+            connection_errors (dict[str, str]): The errors of the connection check, keyed by field.
+
+        Returns:
+            ConfigFlowResult: The reauth, reconfigure or user form.
+
+        """
+        if self._pin_origin == "reauth":
+            return self._show_reauth_form({}, _map_errors(connection_errors, {CONF_PASSWORD}))
+        errors = _map_errors(connection_errors, {CONF_URL, CONF_PASSWORD})
+        if self._pin_origin == "reconfigure":
+            return self._show_reconfigure_form(self._config, errors)
+        # The password is never sent back to the form in clear text.
+        return self._show_user_form({**self._config, CONF_PASSWORD: ""}, errors)
 
     async def async_step_reauth_confirm(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         """Handle user's reauth credentials.
@@ -390,7 +538,7 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         if self._untrusted:
             # No fingerprint stored yet, or the certificate is no longer trusted: ask the user to confirm it.
             self._certificate_fingerprint = None
-            self._reauth_pin = True
+            self._pin_origin = "reauth"
             return await self.async_step_pin_certificate()
 
         del user_input[CONF_PASSWORD]
@@ -519,15 +667,6 @@ def _get_data_option_schema() -> probatio.Schema:
                 ),
                 probatio.Coerce(str),
             ),
-            probatio.Required(
-                CONF_URL,
-            ): probatio.All(
-                selector.TextSelector(),  # pyright: ignore[reportUnknownMemberType]
-                probatio.Coerce(str),
-            ),
-            probatio.Required(
-                CONF_VERIFY_SSL,
-            ): selector.BooleanSelector(),  # pyright: ignore[reportUnknownMemberType]
         }
     )
 
@@ -554,60 +693,7 @@ async def _async_validate_input(
 
 
 class OptionsFlowHandler(OptionsFlow):
-    """Change the configuration (options) of an existing instance of the integration.
-
-    Attributes:
-        _pending (dict[str, Any]): The submitted options waiting for the confirmation of an untrusted certificate.
-        _certificate_fingerprint (str | None): SHA-256 fingerprint of the certificate read from the Pi-hole, awaiting confirmation.
-
-    """
-
-    def __init__(self) -> None:
-        """Initialize the options flow."""
-        self._pending: dict[str, Any] = {}
-        self._certificate_fingerprint: str | None = None
-
-    async def async_step_pin_certificate(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
-        """Ask the user to confirm the certificate before enabling its verification in the options.
-
-        Args:
-            user_input (dict[str, Any] | None): The input submitted by the user, or None when displaying the form.
-
-        Returns:
-            ConfigFlowResult: The result of the confirmation step.
-
-        """
-        errors: dict[str, str] = {}
-
-        if self._certificate_fingerprint is None:
-            try:
-                self._certificate_fingerprint = await async_get_certificate_fingerprint(
-                    self.hass, self._pending[CONF_URL]
-                )
-            except (OSError, ValueError, ssl.SSLError):
-                return self.async_abort(reason="cannot_connect")
-
-        if user_input is not None:
-            if not user_input.get(CONF_CONFIRM_CERTIFICATE):
-                errors[CONF_CONFIRM_CERTIFICATE] = "certificate_not_confirmed"
-            else:
-                config = {**self._pending, CONF_CERT_FINGERPRINT: self._certificate_fingerprint}
-                connection_errors, _ = await _async_check_connection(self.hass, config)
-                if not connection_errors:
-                    self.hass.config_entries.async_update_entry(self.config_entry, data=config)
-                    return self.async_create_entry(title="", data={})
-                # The password or the URL is wrong: the pin step cannot fix it, so go back to the options form.
-                return self._show_options_form(self._pending, _map_errors(connection_errors, {CONF_URL}))
-
-        return self.async_show_form(
-            step_id="pin_certificate",
-            data_schema=_get_pin_certificate_schema(),
-            errors=errors,
-            description_placeholders={
-                "url": self._pending[CONF_URL],
-                "fingerprint": format_fingerprint(self._certificate_fingerprint or ""),
-            },
-        )
+    """Change the settings of an existing instance of the integration: refresh frequencies and device tracking."""
 
     async def async_step_init(self, user_input: Any) -> ConfigFlowResult:
         """Handle the initial step of the options flow.
@@ -626,20 +712,10 @@ class OptionsFlowHandler(OptionsFlow):
             errors = await _async_validate_input(user_input)
 
             if not errors:
-                config = _candidate_config(self.config_entry.data, user_input)
-                if config[CONF_VERIFY_SSL]:
-                    # Enabling verification must not leave the integration broken: test the connection first.
-                    connection_errors, untrusted = await _async_check_connection(self.hass, config)
-                    if untrusted:
-                        self._pending = config
-                        self._certificate_fingerprint = None
-                        return await self.async_step_pin_certificate()
-                    errors = _map_errors(connection_errors, {CONF_URL})
-
-                if not errors:
-                    _warn_insecure_settings(config[CONF_URL], config[CONF_VERIFY_SSL])
-                    self.hass.config_entries.async_update_entry(self.config_entry, data=config)
-                    return self.async_create_entry(title="", data={})
+                self.hass.config_entries.async_update_entry(
+                    self.config_entry, data={**self.config_entry.data, **user_input}
+                )
+                return self.async_create_entry(title="", data={})
             return self._show_options_form(user_input, dict(errors))
 
         update_interval_live = self.config_entry.data.get(CONF_UPDATE_INTERVAL_LIVE, None)
