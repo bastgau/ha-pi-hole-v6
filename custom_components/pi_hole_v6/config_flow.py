@@ -19,7 +19,7 @@ from homeassistant.helpers import selector
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .api import Api as ClientAPI
-from .certificate import async_get_certificate_fingerprint
+from .certificate import async_get_certificate_fingerprint, format_fingerprint
 from .const import (
     CONF_CERT_FINGERPRINT,
     CONF_DEVICE_TRACKER_MAC_LIST,
@@ -362,7 +362,7 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors,
             description_placeholders={
                 "url": self._config[CONF_URL],
-                "fingerprint": self._certificate_fingerprint or "",
+                "fingerprint": format_fingerprint(self._certificate_fingerprint or ""),
             },
         )
 
@@ -506,12 +506,6 @@ def _get_data_option_schema() -> probatio.Schema:
                 probatio.Coerce(int),
             ),
             probatio.Required(
-                CONF_URL,
-            ): probatio.All(
-                selector.TextSelector(),  # pyright: ignore[reportUnknownMemberType]
-                probatio.Coerce(str),
-            ),
-            probatio.Required(
                 CONF_ENABLE_DEVICE_TRACKER,
             ): selector.BooleanSelector(),  # pyright: ignore[reportUnknownMemberType]
             probatio.Required(
@@ -523,6 +517,12 @@ def _get_data_option_schema() -> probatio.Schema:
                 selector.TextSelector(  # pyright: ignore[reportUnknownMemberType]
                     selector.TextSelectorConfig(multiline=True)
                 ),
+                probatio.Coerce(str),
+            ),
+            probatio.Required(
+                CONF_URL,
+            ): probatio.All(
+                selector.TextSelector(),  # pyright: ignore[reportUnknownMemberType]
                 probatio.Coerce(str),
             ),
             probatio.Required(
@@ -605,7 +605,7 @@ class OptionsFlowHandler(OptionsFlow):
             errors=errors,
             description_placeholders={
                 "url": self._pending[CONF_URL],
-                "fingerprint": self._certificate_fingerprint or "",
+                "fingerprint": format_fingerprint(self._certificate_fingerprint or ""),
             },
         )
 

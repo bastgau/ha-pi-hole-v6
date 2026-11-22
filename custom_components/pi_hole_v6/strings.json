@@ -60,7 +60,7 @@
         "data_description": {
           "confirm_certificate": "Only confirm if the fingerprint above is exactly the one displayed by your Pi-hole."
         },
-        "description": "Your Pi-hole presents a certificate that is not signed by a trusted authority, such as its default self-signed certificate. Its SHA-256 fingerprint is:\n\n`{fingerprint}`\n\nCompare it with the fingerprint displayed by your Pi-hole (`{url}`) before confirming. Confirming trusts this certificate only: if it changes later, you will be asked to confirm the new one.",
+        "description": "Your Pi-hole presents a certificate that is not signed by a trusted authority, such as its default self-signed certificate. Its SHA-256 fingerprint is:\n\n`{fingerprint}`\n\nCompare it with the fingerprint your Pi-hole shows for `{url}` before confirming: run `openssl x509 -in /etc/pihole/tls.pem -noout -fingerprint -sha256` on the Pi-hole (ignore the `sha256 Fingerprint=` prefix), or check the certificate details in your browser. Confirming trusts this certificate only: if it changes later, you will be asked to confirm the new one.",
         "title": "Confirm the Pi-hole certificate"
       }
     }
@@ -74,7 +74,8 @@
           "enable_device_tracker": "Enable network device tracking",
           "device_tracker_whitelist": "Use address list as a whitelist",
           "device_tracker_mac_list": "Filtered addresses",
-          "verify_ssl": "Verify the Pi-hole certificate"
+          "verify_ssl": "Verify the Pi-hole certificate",
+          "url": "Address"
         },
         "data_description": {
           "update_interval_live": "How often the entities that reflect the current state of your Pi-hole are refreshed: service and blocking status, switches, and the live indicators. Lowering it makes the dashboard more reactive, at the cost of more requests to your Pi-hole. Defaults to 120 seconds.",
@@ -82,7 +83,8 @@
           "enable_device_tracker": "Disabled by default. When enabled, retrieves the list of network devices from Pi-hole to create device_tracker entities.",
           "device_tracker_whitelist": "When enabled, only the listed addresses are tracked. When disabled, the listed addresses are excluded and all others are tracked.",
           "verify_ssl": "Keep enabled. It checks that the server is really your Pi-hole. Disabling it lets anyone on your network intercept the password. Pi-hole's self-signed certificate will fail this check unless you disable it.",
-          "device_tracker_mac_list": "One MAC address (or Pi-hole pseudo-MAC, e.g. IP-192.168.1.10) or IP address per line, or separated by commas. IP addresses match a device's current IP and may stop matching if it changes. Leave empty to disable filtering."
+          "device_tracker_mac_list": "One MAC address (or Pi-hole pseudo-MAC, e.g. IP-192.168.1.10) or IP address per line, or separated by commas. IP addresses match a device's current IP and may stop matching if it changes. Leave empty to disable filtering.",
+          "url": "Address of your Pi-hole, with the port and the API path (ex: https://pihole.local:443/api). Use https:// whenever possible: with http://, the password and the session are sent in clear text on your network."
         },
         "description": "After modifying one of these options, it is necessary to reload the service or restart Home Assistant.",
         "title": "Pi-hole V6"
@@ -94,7 +96,7 @@
         "data_description": {
           "confirm_certificate": "Only confirm if the fingerprint above is exactly the one displayed by your Pi-hole."
         },
-        "description": "Your Pi-hole presents a certificate that is not signed by a trusted authority, such as its default self-signed certificate. Its SHA-256 fingerprint is:\n\n`{fingerprint}`\n\nCompare it with the fingerprint displayed by your Pi-hole (`{url}`) before confirming. Confirming trusts this certificate only: if it changes later, you will be asked to confirm the new one.",
+        "description": "Your Pi-hole presents a certificate that is not signed by a trusted authority, such as its default self-signed certificate. Its SHA-256 fingerprint is:\n\n`{fingerprint}`\n\nCompare it with the fingerprint your Pi-hole shows for `{url}` before confirming: run `openssl x509 -in /etc/pihole/tls.pem -noout -fingerprint -sha256` on the Pi-hole (ignore the `sha256 Fingerprint=` prefix), or check the certificate details in your browser. Confirming trusts this certificate only: if it changes later, you will be asked to confirm the new one.",
         "title": "Confirm the Pi-hole certificate"
       }
     },
