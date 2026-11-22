@@ -193,7 +193,7 @@ async def test_full_report(hass: HomeAssistant, loaded: PiHoleV6ConfigEntry) -> 
     """A loaded entry gives the expected keys, types and values."""
     result = await async_get_config_entry_diagnostics(hass, loaded)
 
-    assert set(result) == {"entry", "settings", "loaded", "coordinators", "pihole", "device_tracker"}
+    assert set(result) == {"entry", "settings", "loaded", "coordinators", "pihole", "device_tracker", "presence"}
     assert result["loaded"] is True
     assert result["entry"] == {
         "version": loaded.version,
@@ -302,7 +302,7 @@ async def test_not_loaded_entry(hass: HomeAssistant) -> None:
     assert result["loaded"] is False
     assert result["entry"]["state"] == "setup_retry"
     assert set(result) == {"entry", "settings", "loaded"}
-    assert not {"coordinators", "pihole", "device_tracker"} & set(result)
+    assert not {"coordinators", "pihole", "device_tracker", "presence"} & set(result)
     dumped = json.dumps(result)
     for marker in (HOST, URL, "pihole.example", PASSWORD, FINGERPRINT):
         assert marker not in dumped
