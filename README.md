@@ -90,8 +90,8 @@ Each release declares the minimum Home Assistant version it needs (the `homeassi
 | ------------------ | ---------------------- |
 | v1.24.0 and later  | 2026.11.0              |
 | v1.22.1 to v1.23.0 | 2026.10.0              |
-| v1.7.1 to v1.21.0  | 2025.3                 |
-| v1.0.0 to v1.7.0   | 2025.2                 |
+| v1.7.1 to v1.21.0  | 2025.3.0               |
+| v1.0.0 to v1.7.0   | 2025.2.0               |
 
 ## Pi-hole Card
 
