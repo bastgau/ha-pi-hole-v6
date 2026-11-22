@@ -1,11 +1,16 @@
 """Pi-hole V6 API client for authentication, data retrieval, and blocking management."""
 
 import asyncio
+from dataclasses import dataclass
+from datetime import UTC, datetime
+from email.utils import parsedate_to_datetime
+import ipaddress
 import json
 import logging
 import math
 from socket import gaierror
-from typing import TYPE_CHECKING, Any, cast
+import time
+from typing import Any, cast
 
 from aiohttp import (
     ClientConnectorCertificateError,
@@ -27,19 +32,156 @@ from .const import (
 from .exceptions import (
     AbortLogoutError,
     APIError,
+    BadRequestError,
     CertificateChangedError,
     CertificateError,
     ClientConnectorError,
+    DataStructureError,
     ForbiddenError,
+    MethodNotAllowedError,
+    NotFoundError,
+    QueryLogUnavailableError,
     UnauthorizedError,
     handle_status,
 )
 
-if TYPE_CHECKING:
-    from datetime import datetime
-
-
 _LOGGER = logging.getLogger(__name__)
+
+# Reading of the query log (GET /queries), used to detect the arrival of a device faster.
+QUERY_LOG_PAGE_SIZE = 1000
+QUERY_LOG_MAX_PAGES = 3
+# Refusals that mean the query log cannot be used: the caller handles them, they are not logged as errors.
+_QUERY_LOG_EXPECTED_ERRORS: tuple[type[APIError], ...] = (
+    ForbiddenError,
+    NotFoundError,
+    BadRequestError,
+    MethodNotAllowedError,
+)
+QUERY_LOG_ENDPOINT = "get_query_activity"
+QUERY_LOG_TIMEOUT_MESSAGE = "timeout"
+# Duration allowed to the whole read, every page included, in seconds.
+QUERY_LOG_BUDGET_SECONDS = 8.0
+QUERY_LOG_PAGE_TIMEOUT_SECONDS = 5.0
+# Bounds, in seconds, of the delay taken from a Retry-After header.
+RETRY_AFTER_MIN_SECONDS = 1.0
+RETRY_AFTER_MAX_SECONDS = 3600.0
+# Timeout of an ordinary request, in seconds.
+DEFAULT_REQUEST_TIMEOUT_SECONDS = 60.0
+
+
+@dataclass(frozen=True, slots=True)
+class QueryActivity:
+    """What the integration keeps from the query log: client addresses and times only, never a domain.
+
+    Attributes:
+        last_seen_by_ip (dict[str, float]): Normalized client IP address -> time of its newest query (Pi-hole clock, Unix seconds).
+        newest_time (float | None): The newest query time read, None when the window held no usable query.
+        pages (int): The number of pages read.
+        queries_read (int): The number of rows read (a count only).
+        complete (bool): False when the read stopped at the page limit or the time budget.
+        duration (float): The duration of the read in seconds, the login included.
+
+    """
+
+    last_seen_by_ip: dict[str, float]
+    newest_time: float | None
+    pages: int
+    queries_read: int
+    complete: bool
+    duration: float
+
+
+def normalize_ip(value: object) -> str | None:
+    """Normalize an IP address to its compressed form, so two spellings of an address compare equal.
+
+    Args:
+        value (object): The value to normalize.
+
+    Returns:
+        str | None: The compressed lowercase address, None when the value is not a valid IP address.
+
+    """
+    if not isinstance(value, str):
+        return None
+
+    try:
+        return ipaddress.ip_address(value.strip()).compressed
+    except ValueError:
+        return None
+
+
+def parse_query_activity(queries: object) -> tuple[dict[str, float], int]:
+    """Keep the newest query time of each client from the rows of the query log.
+
+    Only `client.ip` and `time` are read: no other field of a row (the domain above all) is looked at or kept.
+
+    Args:
+        queries (object): The "queries" value of a GET /queries response.
+
+    Returns:
+        tuple[dict[str, float], int]: The newest time per normalized client IP, and the number of rows read. A row that is not a dictionary, with no usable IP or with a time that is not a positive finite number is skipped.
+
+    """
+    if not isinstance(queries, list):
+        return {}, 0
+
+    rows: list[Any] = cast("list[Any]", queries)
+    newest: dict[str, float] = {}
+
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+
+        source: Any = cast("dict[str, Any]", row).get("client")
+        moment: Any = cast("dict[str, Any]", row).get("time")
+
+        if not isinstance(source, dict):
+            continue
+        if isinstance(moment, bool) or not isinstance(moment, (int, float)):
+            continue
+        if not math.isfinite(moment) or moment <= 0:
+            continue
+
+        address: str | None = normalize_ip(cast("dict[str, Any]", source).get("ip"))
+        if address is None:
+            continue
+
+        if float(moment) > newest.get(address, 0.0):
+            newest[address] = float(moment)
+
+    return newest, len(rows)
+
+
+def parse_retry_after(value: str | None, now: datetime) -> float | None:
+    """Read a Retry-After header, given as a number of seconds or as an HTTP date.
+
+    Args:
+        value (str | None): The value of the header, None when absent.
+        now (datetime): The current time, used when the header holds a date.
+
+    Returns:
+        float | None: The delay in seconds, clamped between 1 and 3600, None when the header is absent or unreadable.
+
+    """
+    if value is None or value.strip() == "":
+        return None
+
+    delay: float
+    try:
+        delay = float(value)
+    except ValueError:
+        try:
+            moment: datetime = parsedate_to_datetime(value)
+        except (TypeError, ValueError, IndexError):
+            return None
+        if moment.tzinfo is None:
+            moment = moment.replace(tzinfo=UTC)
+        delay = (moment - now).total_seconds()
+
+    if not math.isfinite(delay):
+        return None
+
+    return min(max(delay, RETRY_AFTER_MIN_SECONDS), RETRY_AFTER_MAX_SECONDS)
 
 
 class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attributes
@@ -109,13 +251,15 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
         self.just_initialized: dict[str, bool] = {}
         self.last_refresh: dict[str, datetime] = {}
 
-    async def _call(  # pylint: disable=too-many-branches
+    async def _call(  # noqa: PLR0913, PLR0917  # pylint: disable=too-many-branches, too-many-arguments, too-many-positional-arguments, too-many-locals
         self,
         route: str,
         method: str,
         action: str = "",
         data: dict[str, Any] | None = None,
         expected_errors: tuple[type[APIError], ...] = (),
+        timeout: float = DEFAULT_REQUEST_TIMEOUT_SECONDS,  # noqa: ASYNC109
+        log_body: bool = True,
     ) -> dict[str, Any]:
         """Send HTTP requests with specified method, route, and data.
 
@@ -125,6 +269,8 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
             action (str): Represents the action name requested.
             data (dict[str, Any] | None): Used to pass a dictionary containing data to be sent in the request when making a POST request.
             expected_errors (tuple[type[APIError], ...]): Errors the caller handles itself: they are still raised, but logged at debug level instead of error level.
+            timeout (float): Seconds allowed to send the request and get its response. Defaults to 60.
+            log_body (bool): Whether the body of the responses is written to the debug log. Pass False for a route whose body must never be logged: only the number of rows of a "queries" list is logged then. Defaults to True.
 
         Returns:
             dict[str, Any]: A dictionary with keys "code", "reason", and "data".
@@ -154,7 +300,7 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
         try:
             method = method.lower()
 
-            async with asyncio.timeout(60):
+            async with asyncio.timeout(timeout):
                 if method == "post":
                     request = await self._session.post(url, json=data, headers=headers, **self._ssl_kwargs)
                 elif method == "put":
@@ -178,14 +324,17 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
         try:
             handle_status(request.status)
         except APIError as api_error:
-            await self._log_api_error(api_error, request, method, url, expected_errors)
+            api_error.retry_after = parse_retry_after(request.headers.get("Retry-After"), datetime.now(UTC))
+            await self._log_api_error(api_error, request, method, url, expected_errors, log_body=log_body)
             raise
 
         result_data: dict[str, Any] | None = None
 
         if request.status < 400 and request.text != "":
             result_data = await self._try_to_retrieve_json_result(request, privacy=False)
-            message: str = await self._create_log_message_on_api_result(request, method, url)
+            message: str = await self._create_log_message_on_api_result(
+                request, method, url, log_body=log_body, parsed=result_data
+            )
 
             if "password incorrect" not in message:
                 _LOGGER.debug(message)
@@ -198,13 +347,15 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
             "data": result_data,
         }
 
-    async def _log_api_error(
+    async def _log_api_error(  # noqa: PLR0913
         self,
         api_error: APIError,
         request: ClientResponse,
         method: str,
         url: str,
         expected_errors: tuple[type[APIError], ...],
+        *,
+        log_body: bool = True,
     ) -> None:
         """Keep the body of an error response on the exception, and log the error.
 
@@ -214,10 +365,13 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
             method (str): The HTTP method used for the request.
             url (str): The URL of the request.
             expected_errors (tuple[type[APIError], ...]): Errors the caller handles itself, logged at debug level instead of error level.
+            log_body (bool): Whether the body of the response may be written to the log. Defaults to True.
 
         """
 
-        log_message: str = await self._create_log_message_on_api_exception(api_error, request, method, url)
+        log_message: str = await self._create_log_message_on_api_exception(
+            api_error, request, method, url, log_body=log_body
+        )
         api_error.body = await self._try_to_retrieve_json_result(request)
 
         if isinstance(api_error, expected_errors):
@@ -269,27 +423,45 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
 
         return text
 
-    async def _create_log_message_on_api_result(self, request: ClientResponse, method: str, url: str) -> str:
+    async def _create_log_message_on_api_result(
+        self,
+        request: ClientResponse,
+        method: str,
+        url: str,
+        *,
+        log_body: bool = True,
+        parsed: dict[str, Any] | None = None,
+    ) -> str:
         """Build a log message string from an HTTP response.
 
         Args:
             request (ClientResponse): The HTTP response object.
             method (str): The HTTP method used for the request.
             url (str): The URL of the request.
+            log_body (bool): Whether the body may appear in the message. When False, the message only holds the number of rows of the "queries" list, if there is one. Defaults to True.
+            parsed (dict[str, Any] | None): The body when the caller has already parsed it, so it is not parsed again to count its rows. Defaults to None.
 
         Returns:
-            str: A formatted log message containing status, reason, method, URL and response body.
+            str: A formatted log message containing status, reason, method, URL and response body (or its number of rows).
 
         """
 
-        text: dict[str, Any] | None = await self._try_to_retrieve_json_result(request)
         status: str = str(request.status)
         reason: str = str(request.reason)
+
+        if not log_body:
+            rows: int = 0
+            if isinstance(parsed, dict):
+                queries: Any = parsed.get("queries")
+                rows = len(cast("list[Any]", queries)) if isinstance(queries, list) else 0
+            return f"{status} {reason} # {method.upper()} {url} : {rows} rows"
+
+        text: dict[str, Any] | None = await self._try_to_retrieve_json_result(request)
 
         return f"{status} {reason} # {method.upper()} {url} : {text}"
 
     async def _create_log_message_on_api_exception(
-        self, api_error: APIError, request: ClientResponse, method: str, url: str
+        self, api_error: APIError, request: ClientResponse, method: str, url: str, *, log_body: bool = True
     ) -> str:
         """Build a log message string from an API exception and its associated HTTP response.
 
@@ -298,13 +470,14 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
             request (ClientResponse): The HTTP response object associated with the error.
             method (str): The HTTP method used for the request.
             url (str): The URL of the request.
+            log_body (bool): Whether the body of the response may appear in the message. Defaults to True.
 
         Returns:
             str: A formatted log message prefixed with the exception type name.
 
         """
 
-        log: str = await self._create_log_message_on_api_result(request, method, url)
+        log: str = await self._create_log_message_on_api_result(request, method, url, log_body=log_body)
         exception_name: str = str(type(api_error))
 
         return f"{exception_name} - {log}"
@@ -907,13 +1080,16 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
             "data": result["data"],
         }
 
-    async def call_get_network_devices(self, max_devices: int = MAX_NETWORK_DEVICES) -> dict[str, Any]:
+    async def call_get_network_devices(
+        self, max_devices: int = MAX_NETWORK_DEVICES, max_addresses: int | None = None
+    ) -> dict[str, Any]:
         """Retrieve the list of known network devices.
 
         The errors of the underlying call propagate unchanged: APIError (if the API returns an error status code), ClientConnectorError (if the server is unreachable).
 
         Args:
             max_devices (int): The maximum number of devices to retrieve. Defaults to MAX_NETWORK_DEVICES.
+            max_addresses (int | None): The maximum number of addresses to retrieve per device. None (default) leaves the parameter out, so Pi-hole answers with its own default of 3.
 
         Returns:
             dict[str, Any]: A dictionary with the keys "code", "reason", and "data".
@@ -921,6 +1097,8 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
         """
 
         url: str = f"/network/devices?max_devices={max_devices}"
+        if max_addresses is not None:
+            url = f"{url}&max_addresses={max_addresses}"
 
         result: dict[str, Any] = await self._call(
             url,
@@ -935,6 +1113,142 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
             "reason": result["reason"],
             "data": result["data"],
         }
+
+    async def call_get_query_activity(  # pylint: disable=too-many-locals
+        self,
+        since: float,
+        *,
+        page_size: int = QUERY_LOG_PAGE_SIZE,
+        max_pages: int = QUERY_LOG_MAX_PAGES,
+        budget: float = QUERY_LOG_BUDGET_SECONDS,
+    ) -> QueryActivity:
+        """Read the time of the latest query of each client, from the query log of the Pi-hole.
+
+        The queries made since `since` (Pi-hole clock) are read newest first. The first page is GET /queries?from=..&length=..; the next ones repeat it with the cursor of the first page and a `start` offset, which is how Pi-hole paginates (the cursor alone gives the same page again). The domains travel in the responses but nothing is kept besides the client addresses and times, no cache is filled and the body of the responses is never logged. No filter (domain, client...) is sent.
+
+        It raises QueryLogUnavailableError when the first page comes without cursor (privacy level "maximum"), DataStructureError when a response is not made as expected and ClientConnectorError when the first page times out or the server is unreachable. The other errors of the underlying call propagate unchanged (APIError, CertificateError, CertificateChangedError). The read stops at a page shorter than `page_size` (complete), at `max_pages` or when the time `budget` is spent (incomplete). A timeout on a page after the first ends the read as incomplete.
+
+        Args:
+            since (float): The start of the window, as a Pi-hole Unix time in seconds.
+            page_size (int): The number of rows asked per page. Defaults to QUERY_LOG_PAGE_SIZE.
+            max_pages (int): The maximum number of pages to read. Defaults to QUERY_LOG_MAX_PAGES.
+            budget (float): The seconds allowed to the whole read, every page included. Defaults to QUERY_LOG_BUDGET_SECONDS.
+
+        Returns:
+            QueryActivity: The newest query time per client address, with the counters of the read.
+
+        """
+
+        started: float = time.monotonic()
+        newest: dict[str, float] = {}
+        queries_read: int = 0
+        pages: int = 0
+        complete: bool = False
+        cursor: int | None = None
+
+        while pages < max_pages:
+            remaining: float = budget - (time.monotonic() - started)
+            if remaining <= 0 < pages:
+                break
+
+            route: str = f"/queries?from={since:.3f}&length={page_size}"
+            if cursor is not None:
+                route = f"{route}&cursor={cursor}&start={pages * page_size}"
+
+            try:
+                body: dict[str, Any] = await self._read_query_page(
+                    route, max(min(QUERY_LOG_PAGE_TIMEOUT_SECONDS, remaining), 0.1)
+                )
+            except ClientConnectorError:
+                if pages == 0:
+                    raise
+                break
+
+            if cursor is None:
+                cursor = self._query_log_cursor(body)
+
+            page_newest, rows = parse_query_activity(cast("list[Any]", body["queries"]))
+            pages += 1
+            queries_read += rows
+
+            for address, moment in page_newest.items():
+                newest[address] = max(moment, newest.get(address, 0.0))
+
+            if rows < page_size:
+                complete = True
+                break
+
+        return QueryActivity(
+            last_seen_by_ip=newest,
+            newest_time=max(newest.values()) if newest else None,
+            pages=pages,
+            queries_read=queries_read,
+            complete=complete,
+            duration=time.monotonic() - started,
+        )
+
+    async def _read_query_page(self, route: str, request_timeout: float) -> dict[str, Any]:
+        """Read one page of the query log, without ever logging its body.
+
+        Args:
+            route (str): The route of the page, with its parameters.
+            request_timeout (float): Seconds allowed to the request. The reading of the body is bounded a little beyond.
+
+        Returns:
+            dict[str, Any]: The body of the response, whose "queries" is a list.
+
+        Raises:
+            ClientConnectorError: If the request or the reading of the body times out.
+            DataStructureError: If the body is not a dictionary holding a list of queries.
+
+        """
+
+        try:
+            # The outer timeout also covers the reading of the body, which `_call` does not bound.
+            async with asyncio.timeout(request_timeout + 2):
+                result: dict[str, Any] = await self._call(
+                    route,
+                    action="query_activity",
+                    method="GET",
+                    timeout=request_timeout,
+                    log_body=False,
+                    expected_errors=_QUERY_LOG_EXPECTED_ERRORS,
+                )
+        except TimeoutError as err:
+            raise ClientConnectorError(QUERY_LOG_TIMEOUT_MESSAGE) from err
+
+        body: Any = result["data"]
+
+        if not isinstance(body, dict) or not isinstance(cast("dict[str, Any]", body).get("queries"), list):
+            raise DataStructureError(QUERY_LOG_ENDPOINT)
+
+        return cast("dict[str, Any]", body)
+
+    @staticmethod
+    def _query_log_cursor(body: dict[str, Any]) -> int:
+        """Read the cursor of the first page of the query log, which freezes the result set for the next pages.
+
+        Args:
+            body (dict[str, Any]): The body of the first page.
+
+        Returns:
+            int: The cursor.
+
+        Raises:
+            QueryLogUnavailableError: If there is no cursor: Pi-hole records nothing at its maximum privacy level.
+            DataStructureError: If the cursor is not an integer.
+
+        """
+
+        cursor: Any = body.get("cursor")
+
+        if cursor is None:
+            raise QueryLogUnavailableError
+
+        if isinstance(cursor, bool) or not isinstance(cursor, int):
+            raise DataStructureError(QUERY_LOG_ENDPOINT)
+
+        return cursor
 
     async def call_group_disable(self, group: str) -> dict[str, Any]:
         """Disable a Pi-hole group.

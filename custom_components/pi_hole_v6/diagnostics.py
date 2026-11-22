@@ -24,6 +24,7 @@ from .const import (
     CONF_DEVICE_TRACKER_WHITELIST,
     CONF_ENABLE_DEVICE_TRACKER,
     CONF_UPDATE_INTERVAL_LIVE,
+    CONF_UPDATE_INTERVAL_PRESENCE,
     CONF_UPDATE_INTERVAL_STATS,
     CONF_VERIFY_SSL,
     COORDINATOR_LIVE,
@@ -33,6 +34,7 @@ from .const import (
     DEFAULT_DEVICE_TRACKER_STALE_DAYS,
     DEFAULT_DEVICE_TRACKER_WHITELIST,
     DEFAULT_ENABLE_DEVICE_TRACKER,
+    DEFAULT_UPDATE_INTERVAL_PRESENCE,
     LEGACY_VERIFY_SSL,
     MAX_NETWORK_DEVICES,
 )
@@ -45,6 +47,7 @@ if TYPE_CHECKING:
 
     from . import PiHoleV6ConfigEntry
     from .api import Api
+    from .presence import PiHoleV6PresenceCoordinator, PresenceSnapshot
 
 # Safety net only: the report is built from an allow list and holds none of these values.
 TO_REDACT: set[str] = {CONF_URL, CONF_PASSWORD, CONF_CERT_FINGERPRINT, CONF_NAME, CONF_DEVICE_TRACKER_MAC_LIST}
@@ -191,6 +194,7 @@ def _settings(entry: PiHoleV6ConfigEntry) -> dict[str, Any]:
     return {
         "update_interval_live": _number(data.get(CONF_UPDATE_INTERVAL_LIVE)),
         "update_interval_stats": _number(data.get(CONF_UPDATE_INTERVAL_STATS)),
+        "update_interval_presence": _number(data.get(CONF_UPDATE_INTERVAL_PRESENCE, DEFAULT_UPDATE_INTERVAL_PRESENCE)),
         "url_scheme": "https" if parts is not None and parts.scheme.lower() == "https" else "http",
         "url_path_ends_with_api": parts is not None and parts.path.rstrip("/").endswith("/api"),
         "verify_ssl": bool(data.get(CONF_VERIFY_SSL, LEGACY_VERIFY_SSL)),
@@ -347,6 +351,56 @@ def _device_tracker(hass: HomeAssistant, entry: PiHoleV6ConfigEntry) -> dict[str
     }
 
 
+def _presence(coordinator: PiHoleV6PresenceCoordinator | None) -> dict[str, Any]:
+    """Describe the presence coordinator, as counters only.
+
+    Never an IP address, a MAC address, a client name, a domain, a cursor or the start of the window: the exception is reported by its class name.
+
+    Args:
+        coordinator (PiHoleV6PresenceCoordinator | None): The presence coordinator, None when the presence refresh is disabled.
+
+    Returns:
+        dict[str, Any]: Whether the coordinator exists and listens, its interval and outcome, and the statistics of its last successful read (None until there is one).
+
+    """
+    if coordinator is None:
+        return {
+            "enabled": False,
+            "listening": False,
+            "update_interval": None,
+            "last_update_success": None,
+            "last_exception": None,
+            "last_read": None,
+        }
+
+    interval = coordinator.update_interval
+    snapshot = cast("PresenceSnapshot | None", coordinator.data)
+    last_read: dict[str, Any] | None = None
+
+    if snapshot is not None:
+        last_read = {
+            "fetched_at": snapshot.fetched_at.isoformat(),
+            "complete": snapshot.complete,
+            "pages": snapshot.pages,
+            "queries_read": snapshot.queries_read,
+            "duration_seconds": round(snapshot.duration, 3),
+            "clients_seen": snapshot.clients_seen,
+            "clients_matched": snapshot.clients_matched,
+        }
+
+    return {
+        "enabled": True,
+        "listening": coordinator.listening,
+        "update_interval": interval.total_seconds() if interval is not None else None,
+        # None until a read has been attempted: Home Assistant starts the flag at True.
+        "last_update_success": (
+            coordinator.last_update_success if snapshot is not None or coordinator.last_read_error is not None else None
+        ),
+        "last_exception": coordinator.last_read_error,
+        "last_read": last_read,
+    }
+
+
 async def async_get_config_entry_diagnostics(hass: HomeAssistant, entry: PiHoleV6ConfigEntry) -> dict[str, Any]:
     """Return the diagnostics of a config entry, without any personal or network data.
 
@@ -377,5 +431,6 @@ async def async_get_config_entry_diagnostics(hass: HomeAssistant, entry: PiHoleV
         }
         result["pihole"] = _pihole(runtime.api)
         result["device_tracker"] = _device_tracker(hass, entry)
+        result["presence"] = _presence(runtime.coordinator_presence)
 
     return cast("dict[str, Any]", async_redact_data(result, TO_REDACT))

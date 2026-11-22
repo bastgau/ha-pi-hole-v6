@@ -32,10 +32,25 @@ class APIError(PiHoleV6Error):
 
     Attributes:
         body (Any): The JSON body of the error response when the API sent one, filled by the client. None otherwise.
+        retry_after (float | None): The delay in seconds, clamped between 1 and 3600, given by the Retry-After header of the error response. None when the header is absent or unreadable.
 
     """
 
     body: Any = None
+    retry_after: float | None = None
+
+
+class QueryLogUnavailableError(PiHoleV6Error):
+    """The class `QueryLogUnavailableError` is raised when the query log cannot be read.
+
+    Pi-hole answers without a cursor when its privacy level is "maximum": nothing is recorded.
+
+    Attributes:
+        message (str): The message carried by the exception.
+
+    """
+
+    message: str = "The Pi-hole query log cannot be read (privacy level maximum)."
 
 
 class ActionExecutionError(PiHoleV6Error):
