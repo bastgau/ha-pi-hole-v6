@@ -43,6 +43,7 @@ MIN_TIME_BETWEEN_UPDATES_STATS = timedelta(seconds=300)
 # "stats" drives the cumulative counters and the periodic checks, whose values only matter as a trend.
 COORDINATOR_LIVE = "live"
 COORDINATOR_STATS = "stats"
+COORDINATOR_PRESENCE = "presence"
 DEFAULT_ENABLE_DEVICE_TRACKER = False
 DEFAULT_DEVICE_TRACKER_WHITELIST = True
 DEFAULT_DEVICE_TRACKER_MAC_LIST = ""

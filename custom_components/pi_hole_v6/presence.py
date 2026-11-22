@@ -18,6 +18,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .api import normalize_ip
 from .const import (
     CONF_UPDATE_INTERVAL_PRESENCE,
+    COORDINATOR_PRESENCE,
     DEFAULT_UPDATE_INTERVAL_PRESENCE,
     PRESENCE_FUTURE_TOLERANCE,
     PRESENCE_LOGOUT_TIMEOUT,
@@ -301,9 +302,11 @@ class PiHoleV6PresenceCoordinator(DataUpdateCoordinator[PresenceSnapshot]):  # p
         last_seen_by_mac, matched = map_activity_to_devices(self._last_seen_by_ip, self._api.cache_network_devices)
         self.last_read_error = None
 
+        self._api.last_refresh[COORDINATOR_PRESENCE] = datetime.now(UTC)
+
         return PresenceSnapshot(
             last_seen_by_mac=last_seen_by_mac,
-            fetched_at=datetime.now(UTC),
+            fetched_at=self._api.last_refresh[COORDINATOR_PRESENCE],
             complete=activity.complete,
             pages=activity.pages,
             queries_read=activity.queries_read,
