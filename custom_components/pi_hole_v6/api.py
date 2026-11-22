@@ -553,6 +553,29 @@ class Api:  # pylint: disable=too-many-public-methods, too-many-instance-attribu
             "data": result["data"],
         }
 
+    def cpu_temperature_report(self) -> dict[str, Any] | None:
+        """Return the temperature data as Pi-hole reports it, for the attributes of the sensor.
+
+        Only the temperature, its hot limit and its unit are kept: the other entries of the "sensors" object (the list of probes) stay out.
+
+        Returns:
+            dict[str, Any] | None: The "cpu_temp", "hot_limit" and "unit" entries that Pi-hole gave, None when the padd cache holds no "sensors" object.
+
+        """
+        padd: Any = self.cache_padd
+        sensors: Any = cast("dict[str, Any]", padd).get("sensors") if isinstance(padd, dict) else None
+
+        if not isinstance(sensors, dict):
+            return None
+
+        report: dict[str, Any] = {
+            key: value
+            for key, value in cast("dict[str, Any]", sensors).items()
+            if key in ("cpu_temp", "hot_limit", "unit")
+        }
+
+        return report or None
+
     def cpu_temperature_celsius(self) -> float | None:
         """Return the CPU temperature of the Pi-hole host converted to °C.
 

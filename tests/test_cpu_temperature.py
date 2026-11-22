@@ -16,7 +16,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from custom_components.pi_hole_v6.api import Api
 from custom_components.pi_hole_v6.const import CONF_UPDATE_INTERVAL_STATS, DOMAIN
-from custom_components.pi_hole_v6.sensor import SENSOR_TYPES
+from custom_components.pi_hole_v6.sensor import SENSOR_TYPES, UNRECORDED_ATTRIBUTES_KEYS
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
@@ -149,6 +149,35 @@ def test_cache_is_not_modified(unit: str) -> None:
     assert padd == before
 
 
+@pytest.mark.parametrize(
+    ("padd", "expected"),
+    [
+        (
+            {"sensors": {"cpu_temp": 48.3, "hot_limit": 60.0, "unit": "C"}},
+            {"cpu_temp": 48.3, "hot_limit": 60.0, "unit": "C"},
+        ),
+        ({"sensors": {"cpu_temp": 118.94, "unit": "F"}}, {"cpu_temp": 118.94, "unit": "F"}),
+        ({"sensors": {"cpu_temp": None, "unit": "C"}}, {"cpu_temp": None, "unit": "C"}),
+        ({"sensors": {"cpu_temp": 48.3, "list": [{"name": "probe"}], "other": 1}}, {"cpu_temp": 48.3}),
+        ({"sensors": {"list": []}}, None),
+        ({"sensors": {}}, None),
+        ({"sensors": None}, None),
+        ({"sensors": []}, None),
+        ({}, None),
+        ([], None),
+    ],
+    ids=repr,
+)
+def test_report_keeps_only_the_temperature_entries(padd: Any, expected: dict[str, Any] | None) -> None:
+    """The attributes hold the three entries of Pi-hole as given; the probe list and anything else stay out."""
+    assert _api(padd).cpu_temperature_report() == expected
+
+
+def test_report_is_empty_before_any_fetch() -> None:
+    """A new client has no padd data."""
+    assert Api(MagicMock()).cpu_temperature_report() is None
+
+
 # --------------------------------------------------------------------------------------------------
 # Sensor
 # --------------------------------------------------------------------------------------------------
@@ -260,6 +289,10 @@ async def test_sensor_state_and_attributes(hass: HomeAssistant) -> None:
     assert state.attributes["device_class"] == SensorDeviceClass.TEMPERATURE
     assert state.attributes["state_class"] == SensorStateClass.MEASUREMENT
     assert state.attributes["friendly_name"].endswith("CPU temperature")
+    assert state.attributes["cpu_temp"] == 48.3
+    assert state.attributes["hot_limit"] == 60.0
+    assert state.attributes["unit"] == "C"
+    assert "list" not in state.attributes
 
     registry_entry = er.async_get(hass).async_get(ENTITY_ID)
     assert registry_entry is not None
@@ -349,3 +382,8 @@ def test_translation_exists(path: str, expected: str) -> None:
     content = json.loads((COMPONENTS_DIR / path).read_text(encoding="utf-8"))
 
     assert content["entity"]["sensor"]["cpu_temperature"]["name"] == expected
+
+
+def test_attributes_are_kept_out_of_the_recorder() -> None:
+    """The attributes repeat the state: like the other system metrics they never reach the recorder."""
+    assert UNIQUE_SUFFIX in UNRECORDED_ATTRIBUTES_KEYS

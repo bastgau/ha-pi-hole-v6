@@ -190,7 +190,7 @@ SENSOR_TYPES: tuple[PiHoleV6SensorEntityDescription, ...] = (
 
 # Sensors whose attributes churn on every refresh (system metrics, active auth sessions) and bring no
 # useful history, so their attributes must never reach the recorder.
-UNRECORDED_ATTRIBUTES_KEYS: frozenset[str] = frozenset({"memory_use", "cpu_use", "auth_sessions"})
+UNRECORDED_ATTRIBUTES_KEYS: frozenset[str] = frozenset({"memory_use", "cpu_use", "cpu_temperature", "auth_sessions"})
 
 
 async def async_setup_entry(
@@ -431,6 +431,9 @@ class PiHoleV6Sensor(PiHoleV6Entity, SensorEntity):  # pyright: ignore[reportInc
 
         if self.entity_description.key == "cpu_use":
             return self.api.cache_padd["system"]["cpu"]
+
+        if self.entity_description.key == "cpu_temperature":
+            return self.api.cpu_temperature_report()
 
         if self.entity_description.key == "ftl_info_message_count":
             raw_messages: list[Any] = self.api.cache_ftl_info["message_list"]
