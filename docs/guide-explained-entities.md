@@ -379,6 +379,15 @@ The attributes `until_date` and `remaining_seconds` are existing only if the ads
 
 The state is `unknown` until the first refresh, or if the current session is not found in the list. When the sessions cannot be listed, the "Active sessions" sensor is `unknown` too.
 
+#### - CPU temperature
+
+**Name:** sensor.<service_name>\_cpu_temperature  
+**Description:** Temperature of the CPU of the machine hosting Pi-hole, as reported by Pi-hole (`GET /padd`, no additional request).  
+**Unit**: °C (or the unit chosen in your Home Assistant settings). Pi-hole may be configured to report °F or K: the value is converted, so the history is not affected by that setting.  
+**Disabled by default:** enable it in the entity settings.  
+**State:** `unknown` when Pi-hole finds no CPU probe (Docker without access to `/sys`, virtual machine, unsupported hardware) or reports an invalid value.  
+**Refresh:** with the `stats` coordinator (see [Configuring the refresh](guide-configuring-refresh.md)).
+
 #### - CPU usage
 
 **Name:** sensor.<service_name>\_cpu_use  
