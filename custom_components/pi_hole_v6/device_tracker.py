@@ -10,20 +10,24 @@ from homeassistant.components.device_tracker import (
     ScannerEntity,  # pyright: ignore[reportPrivateImportUsage]
     SourceType,  # pyright: ignore[reportPrivateImportUsage]
 )
+from homeassistant.const import Platform
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.update_coordinator import CoordinatorEntity, DataUpdateCoordinator
 
 from .const import (
     ATTRIBUTION,
+    CONF_DEVICE_TRACKER_CONSIDER_HOME,
     CONF_DEVICE_TRACKER_MAC_LIST,
+    CONF_DEVICE_TRACKER_STALE_DAYS,
     CONF_DEVICE_TRACKER_WHITELIST,
     CONF_ENABLE_DEVICE_TRACKER,
+    DEFAULT_DEVICE_TRACKER_CONSIDER_HOME,
     DEFAULT_DEVICE_TRACKER_MAC_LIST,
+    DEFAULT_DEVICE_TRACKER_STALE_DAYS,
     DEFAULT_DEVICE_TRACKER_WHITELIST,
     DEFAULT_ENABLE_DEVICE_TRACKER,
     DOMAIN,
-    MIN_TIME_BETWEEN_UPDATES_LIVE,
 )
 from .helper import create_entity_id_name, parse_mac_list
 
@@ -94,6 +98,107 @@ def _build_device_filter(entry: PiHoleV6ConfigEntry) -> Callable[[dict[str, Any]
     if is_whitelist:
         return lambda device: bool(_device_addresses(device) & address_list)
     return lambda device: not _device_addresses(device) & address_list
+
+
+def _last_query(device: dict[str, Any]) -> int | None:
+    """Return the time of the last DNS query of a network device, when it is usable.
+
+    Args:
+        device (dict[str, Any]): The network device data dict.
+
+    Returns:
+        int | None: The Unix timestamp when `lastQuery` is an integer greater than 0, None when it is absent, null, 0, a boolean, negative or not an integer.
+
+    """
+    value: Any = device.get("lastQuery")
+    if isinstance(value, int) and not isinstance(value, bool) and value > 0:
+        return value
+    return None
+
+
+def _is_whitelist_active(entry: PiHoleV6ConfigEntry) -> bool:
+    """Tell whether the address list is used as a whitelist and holds at least one address.
+
+    Args:
+        entry (PiHoleV6ConfigEntry): The config entry providing the filter options.
+
+    Returns:
+        bool: True in whitelist mode with a non-empty list, False otherwise.
+
+    """
+    address_list = parse_mac_list(entry.data.get(CONF_DEVICE_TRACKER_MAC_LIST, DEFAULT_DEVICE_TRACKER_MAC_LIST))
+    return bool(address_list) and bool(entry.data.get(CONF_DEVICE_TRACKER_WHITELIST, DEFAULT_DEVICE_TRACKER_WHITELIST))
+
+
+def is_stale_filter_enabled(entry: PiHoleV6ConfigEntry) -> bool:
+    """Tell whether the stale device setting applies: a number of days is set and no whitelist is active.
+
+    Args:
+        entry (PiHoleV6ConfigEntry): The config entry providing the options.
+
+    Returns:
+        bool: True when stale devices are ignored at creation.
+
+    """
+    days: Any = entry.data.get(CONF_DEVICE_TRACKER_STALE_DAYS, DEFAULT_DEVICE_TRACKER_STALE_DAYS)
+    if not isinstance(days, int) or isinstance(days, bool) or days <= 0:
+        return False
+    return not _is_whitelist_active(entry)
+
+
+def _build_stale_filter(entry: PiHoleV6ConfigEntry, now: datetime) -> Callable[[dict[str, Any]], bool]:
+    """Build a predicate that decides whether a network device is stale.
+
+    A device is stale when it has no usable last query, or when it is older than the configured
+    number of days. Nothing is stale when the setting is 0 or when a whitelist is active.
+
+    Args:
+        entry (PiHoleV6ConfigEntry): The config entry providing the options.
+        now (datetime): The current time, taken once per cycle.
+
+    Returns:
+        Callable[[dict[str, Any]], bool]: A predicate returning True for a device to ignore as stale.
+
+    """
+    if not is_stale_filter_enabled(entry):
+        return lambda _device: False
+
+    limit = (
+        now.timestamp() - int(entry.data.get(CONF_DEVICE_TRACKER_STALE_DAYS, DEFAULT_DEVICE_TRACKER_STALE_DAYS)) * 86400
+    )
+
+    def _is_stale(device: dict[str, Any]) -> bool:
+        last_query = _last_query(device)
+        return last_query is None or last_query < limit
+
+    return _is_stale
+
+
+def _has_registered_entity(entity_registry: er.EntityRegistry, entry_id: str, mac: str) -> bool:
+    """Tell whether this config entry already has a device_tracker entity for a MAC address.
+
+    `ScannerEntity.unique_id` returns the MAC address and ignores `_attr_unique_id`, so entities are
+    registered under the bare lowercase colon-separated MAC. The `{entry_id}/{mac}` form is checked too,
+    in case an older registration used it. Only entities of this config entry count: another Pi-hole
+    entry may track the same MAC.
+
+    Args:
+        entity_registry (er.EntityRegistry): The entity registry.
+        entry_id (str): The id of the config entry.
+        mac (str): The lowercase MAC address of the device.
+
+    Returns:
+        bool: True when a device_tracker entity of this entry is registered for the MAC.
+
+    """
+    for unique_id in (mac, f"{entry_id}/{mac}"):
+        entity_id = entity_registry.async_get_entity_id(Platform.DEVICE_TRACKER, DOMAIN, unique_id)
+        if entity_id is None:
+            continue
+        registered = entity_registry.async_get(entity_id)
+        if registered is not None and registered.config_entry_id == entry_id:
+            return True
+    return False
 
 
 def _purge_network_devices(
@@ -175,6 +280,7 @@ async def async_setup_entry(
     server_unique_id = entry.entry_id
 
     device_registry = dr.async_get(hass)
+    entity_registry = er.async_get(hass)
 
     _purge_network_devices(hass, entry, _build_mac_filter(entry))
 
@@ -188,11 +294,25 @@ async def async_setup_entry(
         Devices that Pi-hole simply stops reporting keep their entity, which then
         naturally reports as not_home. Only devices rejected by the whitelist or
         blacklist filter (matched against MAC and current IP addresses) are actively
-        removed.
+        removed. A stale device only gets no new entity: an entity that already exists
+        (tracked, or kept in the entity registry across a restart) is never removed for it.
 
         """
         async with _add_lock:
             is_device_allowed = _build_device_filter(entry)
+
+            # Staleness is read from the cache only when it is fresh. After a failed refresh no
+            # device is created on that basis: only the ones that already have an entity.
+            is_stale: Callable[[dict[str, Any]], bool]
+            if hole_data.coordinator.last_update_success:
+                is_stale = _build_stale_filter(entry, datetime.now(UTC))
+            else:
+                stale_enabled = is_stale_filter_enabled(entry)
+
+                def _stale_when_enabled(_device: dict[str, Any]) -> bool:
+                    return stale_enabled
+
+                is_stale = _stale_when_enabled
 
             new_entities: list[PiHoleV6DeviceTracker] = []
             current_devices: dict[str, dict[str, Any]] = {}
@@ -205,6 +325,10 @@ async def async_setup_entry(
                     continue
 
                 if mac not in tracked_macs:
+                    # Stale devices only skip the creation; one that already has an entity is attached again.
+                    if is_stale(device) and not _has_registered_entity(entity_registry, entry.entry_id, mac):
+                        continue
+
                     tracked_macs.add(mac)
 
                     # via_device_id expects the registry id of the server device
@@ -409,7 +533,8 @@ class PiHoleV6DeviceTracker(  # pyright: ignore[reportIncompatibleVariableOverri
         """Return True if the device was active recently.
 
         A device is considered connected if its last query timestamp is
-        within the configured threshold.
+        within the away delay of the config entry, read at each evaluation so a
+        change applies without a reload. A device without a usable last query is away.
 
         Returns:
             bool: True if the device has recent activity, False otherwise.
@@ -418,8 +543,18 @@ class PiHoleV6DeviceTracker(  # pyright: ignore[reportIncompatibleVariableOverri
         device = self._find_device()
         if not device:
             return False
-        last_query = datetime.fromtimestamp(device["lastQuery"], tz=UTC)
-        return (datetime.now(UTC) - last_query).total_seconds() <= 2 * MIN_TIME_BETWEEN_UPDATES_LIVE.total_seconds()
+        last_query = _last_query(device)
+        if last_query is None:
+            return False
+        config_entry = self.coordinator.config_entry
+        threshold: Any = (
+            config_entry.data.get(CONF_DEVICE_TRACKER_CONSIDER_HOME, DEFAULT_DEVICE_TRACKER_CONSIDER_HOME)
+            if config_entry is not None
+            else DEFAULT_DEVICE_TRACKER_CONSIDER_HOME
+        )
+        if not isinstance(threshold, (int, float)) or isinstance(threshold, bool):
+            threshold = DEFAULT_DEVICE_TRACKER_CONSIDER_HOME
+        return datetime.now(UTC).timestamp() - last_query <= threshold
 
     @property
     def ip_address(self) -> str | None:  # pyright: ignore[reportIncompatibleVariableOverride]

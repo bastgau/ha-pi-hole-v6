@@ -11,6 +11,10 @@ CONF_UPDATE_INTERVAL_STATS = "update_interval_stats"
 CONF_ENABLE_DEVICE_TRACKER = "enable_device_tracker"
 CONF_DEVICE_TRACKER_WHITELIST = "device_tracker_whitelist"
 CONF_DEVICE_TRACKER_MAC_LIST = "device_tracker_mac_list"
+# Seconds after the last DNS query of a device beyond which it is reported away.
+CONF_DEVICE_TRACKER_CONSIDER_HOME = "device_tracker_consider_home"
+# Days of inactivity beyond which a device gets no entity created (0 disables it).
+CONF_DEVICE_TRACKER_STALE_DAYS = "device_tracker_stale_days"
 # Whether the TLS certificate presented by the Pi-hole must be validated.
 CONF_VERIFY_SSL = "verify_ssl"
 # SHA-256 digest (hexadecimal) of the Pi-hole certificate, confirmed by the user.
@@ -40,6 +44,12 @@ COORDINATOR_STATS = "stats"
 DEFAULT_ENABLE_DEVICE_TRACKER = False
 DEFAULT_DEVICE_TRACKER_WHITELIST = True
 DEFAULT_DEVICE_TRACKER_MAC_LIST = ""
+# Written as a literal, not derived from the default live refresh interval, so changing that interval never moves it.
+DEFAULT_DEVICE_TRACKER_CONSIDER_HOME = 240
+MIN_DEVICE_TRACKER_CONSIDER_HOME = 60
+MAX_DEVICE_TRACKER_CONSIDER_HOME = 86400
+DEFAULT_DEVICE_TRACKER_STALE_DAYS = 30
+MAX_DEVICE_TRACKER_STALE_DAYS = 3650
 MAX_NETWORK_DEVICES = 2048
 
 # Kinds of access the account used by the integration can have, deduced from GET /auth/sessions.

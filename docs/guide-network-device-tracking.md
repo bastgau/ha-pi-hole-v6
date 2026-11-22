@@ -1,6 +1,6 @@
 ## Network device tracking
 
-The integration can create a `device_tracker` entity for each network device known to your Pi-hole instance, reporting `home` when the device made a DNS query recently and `not_home` otherwise.
+The integration can create a `device_tracker` entity for each network device known to your Pi-hole instance, reporting `home` when the device made a DNS query within the [away delay](#away-delay) and `not_home` otherwise.
 
 ### Enabling network device tracking
 
@@ -23,10 +23,35 @@ Leaving the address list empty disables filtering entirely, regardless of the wh
 > [!NOTE]
 > IP addresses match a device's current IP. If a device's IP changes later (for example after a DHCP lease renewal), the filter may stop matching it until the list is updated.
 
+### Away delay
+
+A device is reported `not_home` when its last DNS query is older than the `Away delay (seconds)` option. It defaults to 240 seconds and accepts 60 to 86400 seconds. The value applies from the next live refresh, without reloading. A device with no usable last DNS query is always `not_home`.
+
+The delay is independent from the live refresh frequency. The state is only recomputed at each live refresh, so a departure is noticed between the delay (`T`) and the delay plus the live refresh frequency (`I`) after the last DNS query. An arrival is noticed at most `I` after the first query.
+
+Examples, with the default live refresh frequency of 120 seconds:
+
+- delay of 240 seconds: a phone that goes silent is reported away between 4 and 6 minutes later;
+- delay of 900 seconds: a connected object that queries the DNS every 10 minutes stays `home`, and a departure is noticed between 15 and 17 minutes later.
+
+A longer delay avoids devices that query the DNS rarely (a phone in standby, for instance) flipping to `not_home` between two queries. Pi-hole updates the last query time of a device roughly once a minute, so values below 60 seconds are not accepted.
+
+### Ignoring stale devices
+
+Pi-hole keeps every device it has ever seen in its network table, which can leave hundreds of entities and devices (disabled by default in Home Assistant, but still listed) for devices that disappeared months ago. The `Ignore devices inactive for (days)` option (0 to 3650, 30 by default, `0` = disabled) stops creating entities for them.
+
+When set, a device whose last DNS query is older than this number of days, or that never made one, gets **no entity created**. This setting only applies when entities are created:
+
+- **Nothing is ever removed automatically.** An entity that already exists is kept whatever its age, including after a restart, and keeps working (`not_home` while the device is silent).
+- A device ignored as stale is created as soon as Pi-hole reports a recent DNS query for it.
+- When the address list is used as a **whitelist** and is not empty, this option has no effect: the devices you named are always tracked. With a blacklist or an empty list, listed addresses are still excluded and the option applies to the others.
+
+To clean up entities of old devices, delete them manually (see below). Once deleted, a stale device is not recreated.
+
 ### Removing a device manually
 
 A network device can be removed at any time from the Home Assistant UI (device page > `Delete`), even while Pi-hole still reports it. If Pi-hole reports the same device again on a later refresh, it is recreated automatically.
 
 ### Devices Pi-hole stops reporting
 
-If Pi-hole simply stops reporting a device (it is not excluded by a filter), its entity is kept and naturally reports as `not_home`. It is not removed automatically.
+If Pi-hole simply stops reporting a device (it is not excluded by a filter), its entity is kept and naturally reports as `not_home`. It is not removed automatically, and neither is an entity whose device became stale: see [Ignoring stale devices](#ignoring-stale-devices).

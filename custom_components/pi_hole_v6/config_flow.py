@@ -22,14 +22,18 @@ from .api import Api as ClientAPI
 from .certificate import async_get_certificate_fingerprint, format_fingerprint
 from .const import (
     CONF_CERT_FINGERPRINT,
+    CONF_DEVICE_TRACKER_CONSIDER_HOME,
     CONF_DEVICE_TRACKER_MAC_LIST,
+    CONF_DEVICE_TRACKER_STALE_DAYS,
     CONF_DEVICE_TRACKER_WHITELIST,
     CONF_ENABLE_DEVICE_TRACKER,
     CONF_UPDATE_INTERVAL_LIVE,
     CONF_UPDATE_INTERVAL_STATS,
     CONF_VERIFY_SSL,
     CONFIG_ENTRY_VERSION,
+    DEFAULT_DEVICE_TRACKER_CONSIDER_HOME,
     DEFAULT_DEVICE_TRACKER_MAC_LIST,
+    DEFAULT_DEVICE_TRACKER_STALE_DAYS,
     DEFAULT_DEVICE_TRACKER_WHITELIST,
     DEFAULT_ENABLE_DEVICE_TRACKER,
     DEFAULT_NAME,
@@ -39,6 +43,9 @@ from .const import (
     DOMAIN,
     EXAMPLE_URL,
     LEGACY_VERIFY_SSL,
+    MAX_DEVICE_TRACKER_CONSIDER_HOME,
+    MAX_DEVICE_TRACKER_STALE_DAYS,
+    MIN_DEVICE_TRACKER_CONSIDER_HOME,
     MIN_TIME_BETWEEN_UPDATES_LIVE,
     MIN_TIME_BETWEEN_UPDATES_STATS,
 )
@@ -667,6 +674,34 @@ def _get_data_option_schema() -> probatio.Schema:
                 ),
                 probatio.Coerce(str),
             ),
+            probatio.Optional(
+                CONF_DEVICE_TRACKER_CONSIDER_HOME,
+            ): probatio.All(
+                selector.NumberSelector(  # pyright: ignore[reportUnknownMemberType]
+                    selector.NumberSelectorConfig(
+                        min=MIN_DEVICE_TRACKER_CONSIDER_HOME,
+                        max=MAX_DEVICE_TRACKER_CONSIDER_HOME,
+                        step=1,
+                        mode=selector.NumberSelectorMode.BOX,
+                        unit_of_measurement="s",
+                    )
+                ),
+                probatio.Coerce(int),
+            ),
+            probatio.Optional(
+                CONF_DEVICE_TRACKER_STALE_DAYS,
+            ): probatio.All(
+                selector.NumberSelector(  # pyright: ignore[reportUnknownMemberType]
+                    selector.NumberSelectorConfig(
+                        min=0,
+                        max=MAX_DEVICE_TRACKER_STALE_DAYS,
+                        step=1,
+                        mode=selector.NumberSelectorMode.BOX,
+                        unit_of_measurement="d",
+                    )
+                ),
+                probatio.Coerce(int),
+            ),
         }
     )
 
@@ -688,6 +723,18 @@ async def _async_validate_input(
 
     if user_input[CONF_UPDATE_INTERVAL_STATS] < user_input[CONF_UPDATE_INTERVAL_LIVE]:
         return {CONF_UPDATE_INTERVAL_STATS: "invalid_update_interval_stats"}
+
+    # The selector already bounds both fields in the form; these checks keep the stored values safe whatever the caller.
+    consider_home = user_input.get(CONF_DEVICE_TRACKER_CONSIDER_HOME)
+    if (
+        consider_home is not None
+        and not MIN_DEVICE_TRACKER_CONSIDER_HOME <= consider_home <= MAX_DEVICE_TRACKER_CONSIDER_HOME
+    ):
+        return {CONF_DEVICE_TRACKER_CONSIDER_HOME: "invalid_consider_home"}
+
+    stale_days = user_input.get(CONF_DEVICE_TRACKER_STALE_DAYS)
+    if stale_days is not None and not 0 <= stale_days <= MAX_DEVICE_TRACKER_STALE_DAYS:
+        return {CONF_DEVICE_TRACKER_STALE_DAYS: "invalid_stale_days"}
 
     return {}
 
@@ -718,38 +765,27 @@ class OptionsFlowHandler(OptionsFlow):
                 return self.async_create_entry(title="", data={})
             return self._show_options_form(user_input, dict(errors))
 
-        update_interval_live = self.config_entry.data.get(CONF_UPDATE_INTERVAL_LIVE, None)
-        update_interval_stats = self.config_entry.data.get(CONF_UPDATE_INTERVAL_STATS, None)
-        enable_device_tracker = self.config_entry.data.get(CONF_ENABLE_DEVICE_TRACKER, None)
-        device_tracker_whitelist = self.config_entry.data.get(CONF_DEVICE_TRACKER_WHITELIST, None)
-        device_tracker_mac_list = self.config_entry.data.get(CONF_DEVICE_TRACKER_MAC_LIST, None)
+        data = self.config_entry.data
+        defaults: dict[str, Any] = {
+            CONF_UPDATE_INTERVAL_LIVE: MIN_TIME_BETWEEN_UPDATES_LIVE.seconds,
+            CONF_UPDATE_INTERVAL_STATS: MIN_TIME_BETWEEN_UPDATES_STATS.seconds,
+            CONF_ENABLE_DEVICE_TRACKER: DEFAULT_ENABLE_DEVICE_TRACKER,
+            CONF_DEVICE_TRACKER_WHITELIST: DEFAULT_DEVICE_TRACKER_WHITELIST,
+            CONF_DEVICE_TRACKER_MAC_LIST: DEFAULT_DEVICE_TRACKER_MAC_LIST,
+            CONF_DEVICE_TRACKER_CONSIDER_HOME: DEFAULT_DEVICE_TRACKER_CONSIDER_HOME,
+            CONF_DEVICE_TRACKER_STALE_DAYS: DEFAULT_DEVICE_TRACKER_STALE_DAYS,
+        }
 
-        if (
-            update_interval_live is None
-            or update_interval_stats is None
-            or enable_device_tracker is None
-            or device_tracker_whitelist is None
-            or device_tracker_mac_list is None
-        ):
-            self.hass.config_entries.async_update_entry(
-                self.config_entry,
-                data={
-                    **self.config_entry.data,
-                    CONF_UPDATE_INTERVAL_LIVE: update_interval_live or MIN_TIME_BETWEEN_UPDATES_LIVE.seconds,
-                    CONF_UPDATE_INTERVAL_STATS: (update_interval_stats or MIN_TIME_BETWEEN_UPDATES_STATS.seconds),
-                    CONF_ENABLE_DEVICE_TRACKER: (
-                        DEFAULT_ENABLE_DEVICE_TRACKER if enable_device_tracker is None else enable_device_tracker
-                    ),
-                    CONF_DEVICE_TRACKER_WHITELIST: (
-                        DEFAULT_DEVICE_TRACKER_WHITELIST
-                        if device_tracker_whitelist is None
-                        else device_tracker_whitelist
-                    ),
-                    CONF_DEVICE_TRACKER_MAC_LIST: (
-                        DEFAULT_DEVICE_TRACKER_MAC_LIST if device_tracker_mac_list is None else device_tracker_mac_list
-                    ),
-                },
-            )
+        # Complete an older entry with the options it does not hold yet. The two refresh frequencies also
+        # replace a stored 0, as before.
+        missing = {
+            key: default
+            for key, default in defaults.items()
+            if data.get(key) is None
+            or (key in (CONF_UPDATE_INTERVAL_LIVE, CONF_UPDATE_INTERVAL_STATS) and not data.get(key))
+        }
+        if missing:
+            self.hass.config_entries.async_update_entry(self.config_entry, data={**data, **missing})
 
         # we asked to provide default values for the form
         return self._show_options_form(self.config_entry.data, {})

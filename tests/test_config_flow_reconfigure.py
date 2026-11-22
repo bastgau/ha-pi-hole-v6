@@ -20,7 +20,9 @@ from custom_components.pi_hole_v6.config_flow import (
 )
 from custom_components.pi_hole_v6.const import (
     CONF_CERT_FINGERPRINT,
+    CONF_DEVICE_TRACKER_CONSIDER_HOME,
     CONF_DEVICE_TRACKER_MAC_LIST,
+    CONF_DEVICE_TRACKER_STALE_DAYS,
     CONF_DEVICE_TRACKER_WHITELIST,
     CONF_ENABLE_DEVICE_TRACKER,
     CONF_UPDATE_INTERVAL_LIVE,
@@ -506,6 +508,8 @@ def test_options_schema_has_no_connection_field() -> None:
         CONF_ENABLE_DEVICE_TRACKER,
         CONF_DEVICE_TRACKER_WHITELIST,
         CONF_DEVICE_TRACKER_MAC_LIST,
+        CONF_DEVICE_TRACKER_CONSIDER_HOME,
+        CONF_DEVICE_TRACKER_STALE_DAYS,
     }
 
 
@@ -566,9 +570,10 @@ async def test_saving_options_makes_no_connection_test_and_keeps_the_rest_of_the
 async def test_invalid_options_show_their_error(hass: HomeAssistant, live: int, stats: int, error_field: str) -> None:
     """An invalid interval stays on the options form with its error and changes nothing."""
     entry = _entry(hass)
-    before = dict(entry.data)
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
+    # Opening the form completes an older entry with the defaults of the options it lacks.
+    before = dict(entry.data)
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         {
@@ -752,7 +757,12 @@ def test_options_form_has_no_text_left_from_its_connection_fields(name: str) -> 
     for section in ("data", "data_description"):
         for key in ORPHAN_OPTION_KEYS:
             assert key not in options["step"]["init"][section]
-    assert set(options["error"]) == {"invalid_update_interval_live", "invalid_update_interval_stats"}
+    assert set(options["error"]) == {
+        "invalid_update_interval_live",
+        "invalid_update_interval_stats",
+        "invalid_consider_home",
+        "invalid_stale_days",
+    }
     assert "abort" not in options
 
 

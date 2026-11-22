@@ -6,6 +6,7 @@ config entry or from the caches of the client, so a field added later by Pi-hole
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Any, cast
 from urllib.parse import urlsplit
 
@@ -17,7 +18,9 @@ from homeassistant.helpers import entity_registry as er
 from .const import (
     ACCESS_WITHOUT_SESSIONS,
     CONF_CERT_FINGERPRINT,
+    CONF_DEVICE_TRACKER_CONSIDER_HOME,
     CONF_DEVICE_TRACKER_MAC_LIST,
+    CONF_DEVICE_TRACKER_STALE_DAYS,
     CONF_DEVICE_TRACKER_WHITELIST,
     CONF_ENABLE_DEVICE_TRACKER,
     CONF_UPDATE_INTERVAL_LIVE,
@@ -25,17 +28,18 @@ from .const import (
     CONF_VERIFY_SSL,
     COORDINATOR_LIVE,
     COORDINATOR_STATS,
+    DEFAULT_DEVICE_TRACKER_CONSIDER_HOME,
     DEFAULT_DEVICE_TRACKER_MAC_LIST,
+    DEFAULT_DEVICE_TRACKER_STALE_DAYS,
     DEFAULT_DEVICE_TRACKER_WHITELIST,
     DEFAULT_ENABLE_DEVICE_TRACKER,
     LEGACY_VERIFY_SSL,
     MAX_NETWORK_DEVICES,
 )
+from .device_tracker import _build_stale_filter  # pyright: ignore[reportPrivateUsage]
 from .helper import parse_mac_list
 
 if TYPE_CHECKING:
-    from datetime import datetime
-
     from homeassistant.core import HomeAssistant
     from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -195,6 +199,12 @@ def _settings(entry: PiHoleV6ConfigEntry) -> dict[str, Any]:
         "enable_device_tracker": bool(data.get(CONF_ENABLE_DEVICE_TRACKER, DEFAULT_ENABLE_DEVICE_TRACKER)),
         "device_tracker_whitelist": bool(data.get(CONF_DEVICE_TRACKER_WHITELIST, DEFAULT_DEVICE_TRACKER_WHITELIST)),
         "device_tracker_address_count": len(parse_mac_list(mac_list)) if isinstance(mac_list, str) else 0,
+        "device_tracker_stale_days": _number(
+            data.get(CONF_DEVICE_TRACKER_STALE_DAYS, DEFAULT_DEVICE_TRACKER_STALE_DAYS)
+        ),
+        "device_tracker_consider_home": _number(
+            data.get(CONF_DEVICE_TRACKER_CONSIDER_HOME, DEFAULT_DEVICE_TRACKER_CONSIDER_HOME)
+        ),
     }
 
 
@@ -323,12 +333,17 @@ def _device_tracker(hass: HomeAssistant, entry: PiHoleV6ConfigEntry) -> dict[str
     rows: list[Any] = cast("list[Any]", devices) if isinstance(devices, list) else []
     without_last_query: int = sum(1 for device in rows if not _dict(device).get("lastQuery"))
 
+    # Zero when the setting is off or a whitelist is active.
+    is_stale = _build_stale_filter(entry, datetime.now(UTC))
+    stale: int = sum(1 for device in rows if is_stale(_dict(device)))
+
     return {
         "tracked_entities": tracked,
         "network_devices_reported": len(rows),
         "max_network_devices": MAX_NETWORK_DEVICES,
         "cap_reached": len(rows) >= MAX_NETWORK_DEVICES,
         "without_last_query": without_last_query,
+        "stale": stale,
     }
 
 
