@@ -506,12 +506,6 @@ def _get_data_option_schema() -> probatio.Schema:
                 probatio.Coerce(int),
             ),
             probatio.Required(
-                CONF_URL,
-            ): probatio.All(
-                selector.TextSelector(),  # pyright: ignore[reportUnknownMemberType]
-                probatio.Coerce(str),
-            ),
-            probatio.Required(
                 CONF_ENABLE_DEVICE_TRACKER,
             ): selector.BooleanSelector(),  # pyright: ignore[reportUnknownMemberType]
             probatio.Required(
@@ -523,6 +517,12 @@ def _get_data_option_schema() -> probatio.Schema:
                 selector.TextSelector(  # pyright: ignore[reportUnknownMemberType]
                     selector.TextSelectorConfig(multiline=True)
                 ),
+                probatio.Coerce(str),
+            ),
+            probatio.Required(
+                CONF_URL,
+            ): probatio.All(
+                selector.TextSelector(),  # pyright: ignore[reportUnknownMemberType]
                 probatio.Coerce(str),
             ),
             probatio.Required(
