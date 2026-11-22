@@ -316,7 +316,7 @@ The attributes `until_date` and `remaining_seconds` are existing only if the ads
 #### - Network device
 
 **Name:** device_tracker.<service_name>\_<mac_address\>  
-**Description:** Presence of a network device known to Pi-hole. Reports `home` if the device made a DNS query within the away delay (240 seconds by default, see the [network device tracking guide](guide-network-device-tracking.md#away-delay)), `not_home` otherwise.  
+**Description:** Presence of a network device known to Pi-hole. Reports `home` if the device made a DNS query within the away delay (240 seconds by default, see the [network device tracking guide](guide-network-device-tracking.md#away-delay)), according to the network table or, when the [presence refresh](guide-network-device-tracking.md#faster-arrival-detection) is enabled, to the query log. Reports `not_home` otherwise.  
 **Attributes:** Information about the network device.
 
 ```json
