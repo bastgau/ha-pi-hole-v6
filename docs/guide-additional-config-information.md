@@ -28,4 +28,24 @@ To enable Pi-Hole's app password, in Pi-Hole's web interface:
 > [!NOTE]
 > After completing Step 4, the app password is not recoverable. Be sure to copy it for use in this Integration (and other apps)
 
+### Verify the Pi-hole certificate
+
+Keep this option enabled so that the integration checks that the server is really your Pi-hole. Pi-hole's default self-signed certificate is not signed by a trusted authority: the integration then shows its SHA-256 fingerprint and asks you to compare it with the one displayed by your Pi-hole before confirming. From then on, only this certificate is trusted.
+
+## Change the address, password or certificate settings
+
+You do not need to delete the service to change how it connects to your Pi-hole. The entities, their history and your automations are kept.
+
+1. On the Pi-hole V6 Integration page (_/config/integrations/integration/pi_hole_v6_), open the menu (⋮) of the service and select **Reconfigure**.
+2. Change the address and/or the certificate verification. Enter a new password, or leave the field empty to keep the current one. The name cannot be changed here (you can still rename the service from its menu).
+3. Home Assistant tests the connection, then reloads the service.
+
+The connection is always tested. If you changed the address or the certificate verification, or if the certificate presented by the Pi-hole is no longer the one you confirmed, you are asked to compare and confirm its fingerprint again.
+
+> [!NOTE]
+> The address and the certificate verification are no longer in the options of the service: they are only available from **Reconfigure**. The options keep the refresh frequencies and the network device tracking.
+
+> [!NOTE]
+> If you point the service to another Pi-hole, the same entities are kept and their history continues with the new server. The network devices of the previous Pi-hole are not removed automatically: delete them by hand if you no longer need them.
+
 Enjoy!

@@ -119,6 +119,10 @@ By default, the blocking status, the switches, the network device trackers and t
 
 Some additional information is available if you encounter any problems while adding a new service on this [page](docs/guide-additional-config-information.md).
 
+### How do I change the address, the password or the certificate settings?
+
+Use **Reconfigure** from the menu (⋮) of the service: entities, history and automations are kept, as explained on this [page](docs/guide-additional-config-information.md#change-the-address-password-or-certificate-settings). If the certificate of your Pi-hole changed, Reconfigure is also where you confirm the new one.
+
 ### Need to implement Pi-hole Controls in your dashboard?
 
 A quick example to integrate controls in a dashboard is available on this [page](docs/guide-group-blocking.md).
