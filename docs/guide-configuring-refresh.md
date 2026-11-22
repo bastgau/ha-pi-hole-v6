@@ -45,6 +45,7 @@ Pressing the `Refresh data` button refreshes the `live` and `stats` coordinators
 | `sensor.<service_name>_dns_unique_domains`            | `stats`                                                  |
 | `sensor.<service_name>_domains_blocked`               | `stats`                                                  |
 | `sensor.<service_name>_ftl_info_message_count`        | `stats`                                                  |
+| `sensor.<service_name>_privacy_level`                 | `stats`                                                  |
 | `update.<service_name>_core_update_available`         | `stats`                                                  |
 | `update.<service_name>_docker_update_available`       | `stats`                                                  |
 | `update.<service_name>_ftl_update_available`          | `stats`                                                  |
