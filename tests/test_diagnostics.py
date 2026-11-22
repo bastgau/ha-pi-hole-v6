@@ -6,7 +6,7 @@ fake data holding recognizable markers, which must never appear in the report.
 
 from __future__ import annotations
 
-from datetime import timedelta
+from datetime import UTC, datetime, timedelta
 import json
 from typing import TYPE_CHECKING, Any
 from unittest.mock import AsyncMock, patch
@@ -17,7 +17,10 @@ from custom_components.pi_hole_v6.const import (
     ACCESS_APP_SUDO,
     ACCESS_RESTRICTED,
     CONF_CERT_FINGERPRINT,
+    CONF_DEVICE_TRACKER_CONSIDER_HOME,
     CONF_DEVICE_TRACKER_MAC_LIST,
+    CONF_DEVICE_TRACKER_STALE_DAYS,
+    CONF_DEVICE_TRACKER_WHITELIST,
     CONF_UPDATE_INTERVAL_LIVE,
     CONF_UPDATE_INTERVAL_STATS,
     CONF_VERIFY_SSL,
@@ -39,6 +42,7 @@ if TYPE_CHECKING:
     from collections.abc import AsyncGenerator
 
     from custom_components.pi_hole_v6 import PiHoleV6ConfigEntry
+    from freezegun.api import FrozenDateTimeFactory
     from pytest_homeassistant.typing import ClientSessionGenerator
 
     from homeassistant.core import HomeAssistant
@@ -651,3 +655,125 @@ async def test_cpu_temperature_value_and_probes_are_not_reported(
     assert "48.31337" not in dumped
     assert "61.7" not in dumped
     assert EXTRA not in dumped
+
+
+# --------------------------------------------------------------------------------------------------
+# Network tracking options
+# --------------------------------------------------------------------------------------------------
+
+NOW = datetime(2026, 6, 1, 12, 0, tzinfo=UTC)
+NOW_TS = int(NOW.timestamp())
+DAY = 86400
+
+
+def _network(*ages: int | None) -> list[dict[str, Any]]:
+    """Return network devices whose last query is `age` seconds old, or missing for None."""
+    devices: list[dict[str, Any]] = []
+    for index, age in enumerate(ages):
+        device: dict[str, Any] = {"hwaddr": f"00:00:00:00:00:{index:02x}", "ips": []}
+        if age is not None:
+            device["lastQuery"] = NOW_TS - age
+        devices.append(device)
+    return devices
+
+
+@pytest.mark.parametrize(
+    ("overrides", "stale_days", "consider_home"),
+    [
+        ({}, 0, 240),
+        ({CONF_DEVICE_TRACKER_STALE_DAYS: 30, CONF_DEVICE_TRACKER_CONSIDER_HOME: 600}, 30, 600),
+        ({CONF_DEVICE_TRACKER_STALE_DAYS: 0, CONF_DEVICE_TRACKER_CONSIDER_HOME: 60}, 0, 60),
+        ({CONF_DEVICE_TRACKER_STALE_DAYS: "x", CONF_DEVICE_TRACKER_CONSIDER_HOME: [1]}, None, None),
+    ],
+)
+async def test_settings_report_the_tracking_options(
+    hass: HomeAssistant, overrides: dict[str, Any], stale_days: int | None, consider_home: int | None
+) -> None:
+    """The two options are reported as numbers, with the defaults for an entry that holds none."""
+    entry = _entry(**overrides)
+    entry.add_to_hass(hass)
+
+    settings = (await async_get_config_entry_diagnostics(hass, entry))["settings"]  # type: ignore[arg-type]
+
+    assert settings["device_tracker_stale_days"] == stale_days
+    assert settings["device_tracker_consider_home"] == consider_home
+
+
+@pytest.mark.parametrize(
+    ("whitelist", "stale_days", "expected"),
+    [
+        (False, 0, 0),
+        (False, 30, 2),
+        (True, 30, 0),
+    ],
+    ids=["setting-off", "setting-on", "whitelist-active"],
+)
+async def test_stale_counter(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    loaded: PiHoleV6ConfigEntry,
+    whitelist: bool,
+    stale_days: int,
+    expected: int,
+) -> None:
+    """Stale devices are counted when the setting is on, and none with it off or with an active whitelist."""
+    freezer.move_to(NOW)
+    loaded.runtime_data.api.cache_network_devices = _network(60, 31 * DAY, 0, None)
+    # The entry holds an address list: in whitelist mode it is active, in blacklist mode it is not.
+    hass.config_entries.async_update_entry(
+        loaded,
+        data={**loaded.data, CONF_DEVICE_TRACKER_WHITELIST: whitelist, CONF_DEVICE_TRACKER_STALE_DAYS: stale_days},
+    )
+
+    tracker = (await async_get_config_entry_diagnostics(hass, loaded))["device_tracker"]
+
+    assert tracker["stale"] == expected
+    assert tracker["network_devices_reported"] == 4
+    assert tracker["without_last_query"] == 1
+
+
+async def test_stale_counter_with_an_empty_whitelist(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, loaded: PiHoleV6ConfigEntry
+) -> None:
+    """A whitelist without any address is not active: the stale devices are counted."""
+    freezer.move_to(NOW)
+    loaded.runtime_data.api.cache_network_devices = _network(60, 31 * DAY)
+    hass.config_entries.async_update_entry(
+        loaded,
+        data={
+            **loaded.data,
+            CONF_DEVICE_TRACKER_WHITELIST: True,
+            CONF_DEVICE_TRACKER_MAC_LIST: "",
+            CONF_DEVICE_TRACKER_STALE_DAYS: 30,
+        },
+    )
+
+    assert (await async_get_config_entry_diagnostics(hass, loaded))["device_tracker"]["stale"] == 1
+
+
+@pytest.mark.parametrize("devices", [None, "devices", {"hwaddr": "x"}, [], ["not a dict", 5, None]], ids=repr)
+async def test_stale_counter_on_odd_caches(hass: HomeAssistant, loaded: PiHoleV6ConfigEntry, devices: Any) -> None:
+    """A cache that is not a list of objects gives a counter of zero rows or counts the unusable ones, never an error."""
+    hass.config_entries.async_update_entry(
+        loaded, data={**loaded.data, CONF_DEVICE_TRACKER_WHITELIST: False, CONF_DEVICE_TRACKER_STALE_DAYS: 30}
+    )
+    loaded.runtime_data.api.cache_network_devices = devices
+
+    tracker = (await async_get_config_entry_diagnostics(hass, loaded))["device_tracker"]
+
+    assert tracker["stale"] == (3 if isinstance(devices, list) and devices else 0)
+
+
+async def test_no_marker_with_the_options_set(hass: HomeAssistant, loaded: PiHoleV6ConfigEntry) -> None:
+    """The report with the two options on holds the new keys and still no marker."""
+    hass.config_entries.async_update_entry(
+        loaded, data={**loaded.data, CONF_DEVICE_TRACKER_STALE_DAYS: 30, CONF_DEVICE_TRACKER_CONSIDER_HOME: 600}
+    )
+
+    result = await async_get_config_entry_diagnostics(hass, loaded)
+    dumped = json.dumps(result)
+
+    assert {"stale", "without_last_query"} <= set(result["device_tracker"])
+    assert {"device_tracker_stale_days", "device_tracker_consider_home"} <= set(result["settings"])
+    for marker in MARKERS:
+        assert marker not in dumped

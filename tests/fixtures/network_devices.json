@@ -1,0 +1,50 @@
+{
+  "A": {
+    "hwaddr": "aa:00:00:00:00:0a",
+    "macVendor": "Example Vendor",
+    "interface": "eth0",
+    "firstSeen": 1700000000,
+    "numQueries": 12,
+    "ips": [
+      { "ip": "192.168.10.11", "name": "device-a.lan", "lastSeen": 1700000100 }
+    ]
+  },
+  "B": {
+    "hwaddr": "aa:00:00:00:00:0b",
+    "macVendor": "Example Vendor",
+    "interface": "eth0",
+    "firstSeen": 1700000000,
+    "numQueries": 48,
+    "ips": [
+      { "ip": "192.168.10.12", "name": "device-b.lan", "lastSeen": 1700000100 }
+    ]
+  },
+  "C": {
+    "hwaddr": "aa:00:00:00:00:0c",
+    "macVendor": "",
+    "interface": "eth0",
+    "firstSeen": 1700000000,
+    "numQueries": 3,
+    "ips": [{ "ip": "192.168.10.13", "name": null, "lastSeen": 1700000100 }]
+  },
+  "D": {
+    "hwaddr": "aa:00:00:00:00:0d",
+    "macVendor": "Example Vendor",
+    "interface": "eth0",
+    "firstSeen": 1700000000,
+    "numQueries": 7,
+    "ips": [
+      { "ip": "192.168.10.14", "name": "device-d.lan", "lastSeen": 1700000100 }
+    ]
+  },
+  "E": {
+    "hwaddr": "aa:00:00:00:00:0e",
+    "macVendor": "Example Vendor",
+    "interface": "eth0",
+    "firstSeen": 1700000000,
+    "numQueries": 90,
+    "ips": [
+      { "ip": "192.168.10.15", "name": "device-e.lan", "lastSeen": 1700000100 }
+    ]
+  }
+}
