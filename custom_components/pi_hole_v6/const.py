@@ -87,4 +87,7 @@ ACCESS_LEVELS: list[str] = [ACCESS_MAIN_PASSWORD, ACCESS_APP_SUDO, ACCESS_APP_NO
 # The accesses for which Pi-hole refuses to list the sessions.
 ACCESS_WITHOUT_SESSIONS: frozenset[str] = frozenset({ACCESS_APP_NO_SUDO, ACCESS_RESTRICTED})
 
+# Privacy levels of Pi-hole (`misc.privacylevel`, 0 to 3), as the states of the sensor: the index is the level.
+PRIVACY_LEVELS: list[str] = ["show_everything", "hide_domains", "hide_domains_and_clients", "anonymous"]
+
 ATTRIBUTION = "Data provided by your Pi-hole instance API"

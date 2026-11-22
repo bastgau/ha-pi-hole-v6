@@ -297,6 +297,7 @@ def _pihole(api: Api) -> dict[str, Any]:
         "updates_available": updates,
         "blocking": _text(_dict(api.cache_blocking).get("blocking")),
         "host_model": _truncate(_text(padd.get("host_model"))),
+        "privacy_level": _text(api.privacy_level),
         "cpu_temperature_available": api.cpu_temperature_celsius() is not None,
         "temperature_unit": _truncate(_text(_dict(padd.get("sensors")).get("unit")), _MAX_UNIT_LENGTH),
         "counters": {name: _number(_dict(summary.get(section)).get(key)) for name, section, key in _SUMMARY_COUNTERS},
