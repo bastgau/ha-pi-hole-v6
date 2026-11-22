@@ -28,6 +28,7 @@ from .const import (
     CONF_UPDATE_INTERVAL_STATS,
     CONF_VERIFY_SSL,
     COORDINATOR_LIVE,
+    COORDINATOR_PRESENCE,
     COORDINATOR_STATS,
     DEFAULT_DEVICE_TRACKER_CONSIDER_HOME,
     DEFAULT_DEVICE_TRACKER_MAC_LIST,
@@ -352,16 +353,17 @@ def _device_tracker(hass: HomeAssistant, entry: PiHoleV6ConfigEntry) -> dict[str
     }
 
 
-def _presence(coordinator: PiHoleV6PresenceCoordinator | None) -> dict[str, Any]:
+def _presence(coordinator: PiHoleV6PresenceCoordinator | None, api: Api) -> dict[str, Any]:
     """Describe the presence coordinator, as counters only.
 
     Never an IP address, a MAC address, a client name, a domain, a cursor or the start of the window: the exception is reported by its class name.
 
     Args:
         coordinator (PiHoleV6PresenceCoordinator | None): The presence coordinator, None when the presence refresh is disabled.
+        api (Api): The API client, which keeps the time of the last refresh.
 
     Returns:
-        dict[str, Any]: Whether the coordinator exists and listens, its interval and outcome, and the statistics of its last successful read (None until there is one).
+        dict[str, Any]: Whether the coordinator exists and listens, its interval and outcome, the time of its last refresh, and the statistics of its last successful read (None until there is one).
 
     """
     if coordinator is None:
@@ -371,10 +373,12 @@ def _presence(coordinator: PiHoleV6PresenceCoordinator | None) -> dict[str, Any]
             "update_interval": None,
             "last_update_success": None,
             "last_exception": None,
+            "last_refresh": None,
             "last_read": None,
         }
 
     interval = coordinator.update_interval
+    last_refresh: datetime | None = api.last_refresh.get(COORDINATOR_PRESENCE)
     snapshot = cast("PresenceSnapshot | None", coordinator.data)
     last_read: dict[str, Any] | None = None
 
@@ -398,6 +402,7 @@ def _presence(coordinator: PiHoleV6PresenceCoordinator | None) -> dict[str, Any]
             coordinator.last_update_success if snapshot is not None or coordinator.last_read_error is not None else None
         ),
         "last_exception": coordinator.last_read_error,
+        "last_refresh": last_refresh.isoformat() if last_refresh is not None else None,
         "last_read": last_read,
     }
 
@@ -432,6 +437,6 @@ async def async_get_config_entry_diagnostics(hass: HomeAssistant, entry: PiHoleV
         }
         result["pihole"] = _pihole(runtime.api)
         result["device_tracker"] = _device_tracker(hass, entry)
-        result["presence"] = _presence(runtime.coordinator_presence)
+        result["presence"] = _presence(runtime.coordinator_presence, runtime.api)
 
     return cast("dict[str, Any]", async_redact_data(result, TO_REDACT))
