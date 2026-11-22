@@ -19,7 +19,7 @@ from homeassistant.helpers import selector
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .api import Api as ClientAPI
-from .certificate import async_get_certificate_fingerprint
+from .certificate import async_get_certificate_fingerprint, format_fingerprint
 from .const import (
     CONF_CERT_FINGERPRINT,
     CONF_DEVICE_TRACKER_MAC_LIST,
@@ -362,7 +362,7 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors,
             description_placeholders={
                 "url": self._config[CONF_URL],
-                "fingerprint": self._certificate_fingerprint or "",
+                "fingerprint": format_fingerprint(self._certificate_fingerprint or ""),
             },
         )
 
@@ -605,7 +605,7 @@ class OptionsFlowHandler(OptionsFlow):
             errors=errors,
             description_placeholders={
                 "url": self._pending[CONF_URL],
-                "fingerprint": self._certificate_fingerprint or "",
+                "fingerprint": format_fingerprint(self._certificate_fingerprint or ""),
             },
         )
 

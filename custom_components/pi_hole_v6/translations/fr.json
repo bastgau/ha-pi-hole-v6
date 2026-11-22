@@ -46,7 +46,7 @@
         "data_description": {
           "confirm_certificate": "Ne confirmez que si l'empreinte ci-dessus est exactement celle affichée par votre Pi-hole."
         },
-        "description": "Votre Pi-hole présente un certificat qui n'est pas signé par une autorité de confiance, comme son certificat auto-signé par défaut. Son empreinte SHA-256 est :\n\n`{fingerprint}`\n\nComparez-la avec l'empreinte affichée par votre Pi-hole (`{url}`) avant de confirmer. La confirmation ne fait confiance qu'à ce certificat : s'il change plus tard, il vous sera demandé de confirmer le nouveau.",
+        "description": "Votre Pi-hole présente un certificat qui n'est pas signé par une autorité de confiance, comme son certificat auto-signé par défaut. Son empreinte SHA-256 est :\n\n`{fingerprint}`\n\nComparez-la avec l'empreinte de votre Pi-hole pour `{url}` avant de confirmer : lancez `openssl x509 -in /etc/pihole/tls.pem -noout -fingerprint -sha256` sur le Pi-hole (ignorez le préfixe `sha256 Fingerprint=`), ou consultez les détails du certificat dans votre navigateur. La confirmation ne fait confiance qu'à ce certificat : s'il change plus tard, il vous sera demandé de confirmer le nouveau.",
         "title": "Confirmer le certificat du Pi-hole"
       }
     }
@@ -80,7 +80,7 @@
         "data_description": {
           "confirm_certificate": "Ne confirmez que si l'empreinte ci-dessus est exactement celle affichée par votre Pi-hole."
         },
-        "description": "Votre Pi-hole présente un certificat qui n'est pas signé par une autorité de confiance. Son empreinte SHA-256 est :\n\n`{fingerprint}`\n\nComparez-la avec l'empreinte affichée par votre Pi-hole (`{url}`) avant de confirmer.",
+        "description": "Votre Pi-hole présente un certificat qui n'est pas signé par une autorité de confiance. Son empreinte SHA-256 est :\n\n`{fingerprint}`\n\nComparez-la avec l'empreinte de votre Pi-hole pour `{url}` avant de confirmer : lancez `openssl x509 -in /etc/pihole/tls.pem -noout -fingerprint -sha256` sur le Pi-hole (ignorez le préfixe `sha256 Fingerprint=`), ou consultez les détails du certificat dans votre navigateur.",
         "title": "Confirmer le certificat du Pi-hole"
       }
     },

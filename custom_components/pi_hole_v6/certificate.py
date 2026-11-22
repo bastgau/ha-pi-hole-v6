@@ -11,6 +11,21 @@ if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
 
 DEFAULT_HTTPS_PORT = 443
+
+
+def format_fingerprint(fingerprint: str) -> str:
+    """Format a hexadecimal SHA-256 fingerprint the way openssl displays it: upper case, pairs separated by colons.
+
+    Args:
+        fingerprint (str): The fingerprint in lowercase hexadecimal, without separators.
+
+    Returns:
+        str: The fingerprint as shown by ``openssl x509 -fingerprint -sha256``, for example ``8C:1B:2F:…``.
+
+    """
+    return ":".join(fingerprint[i : i + 2] for i in range(0, len(fingerprint), 2)).upper()
+
+
 # Without a timeout, an unresponsive host would block the executor and the flow indefinitely.
 CERTIFICATE_TIMEOUT_SECONDS = 10
 

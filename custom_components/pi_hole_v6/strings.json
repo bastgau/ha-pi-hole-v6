@@ -60,7 +60,7 @@
         "data_description": {
           "confirm_certificate": "Only confirm if the fingerprint above is exactly the one displayed by your Pi-hole."
         },
-        "description": "Your Pi-hole presents a certificate that is not signed by a trusted authority, such as its default self-signed certificate. Its SHA-256 fingerprint is:\n\n`{fingerprint}`\n\nCompare it with the fingerprint displayed by your Pi-hole (`{url}`) before confirming. Confirming trusts this certificate only: if it changes later, you will be asked to confirm the new one.",
+        "description": "Your Pi-hole presents a certificate that is not signed by a trusted authority, such as its default self-signed certificate. Its SHA-256 fingerprint is:\n\n`{fingerprint}`\n\nCompare it with the fingerprint your Pi-hole shows for `{url}` before confirming: run `openssl x509 -in /etc/pihole/tls.pem -noout -fingerprint -sha256` on the Pi-hole (ignore the `sha256 Fingerprint=` prefix), or check the certificate details in your browser. Confirming trusts this certificate only: if it changes later, you will be asked to confirm the new one.",
         "title": "Confirm the Pi-hole certificate"
       }
     }
@@ -94,7 +94,7 @@
         "data_description": {
           "confirm_certificate": "Only confirm if the fingerprint above is exactly the one displayed by your Pi-hole."
         },
-        "description": "Your Pi-hole presents a certificate that is not signed by a trusted authority, such as its default self-signed certificate. Its SHA-256 fingerprint is:\n\n`{fingerprint}`\n\nCompare it with the fingerprint displayed by your Pi-hole (`{url}`) before confirming. Confirming trusts this certificate only: if it changes later, you will be asked to confirm the new one.",
+        "description": "Your Pi-hole presents a certificate that is not signed by a trusted authority, such as its default self-signed certificate. Its SHA-256 fingerprint is:\n\n`{fingerprint}`\n\nCompare it with the fingerprint your Pi-hole shows for `{url}` before confirming: run `openssl x509 -in /etc/pihole/tls.pem -noout -fingerprint -sha256` on the Pi-hole (ignore the `sha256 Fingerprint=` prefix), or check the certificate details in your browser. Confirming trusts this certificate only: if it changes later, you will be asked to confirm the new one.",
         "title": "Confirm the Pi-hole certificate"
       }
     },

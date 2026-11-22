@@ -192,5 +192,5 @@ async def test_wrong_password_then_url_change_reads_the_new_certificate(hass: Ho
         )
 
     assert result["step_id"] == "pin_certificate"
-    assert result["description_placeholders"]["fingerprint"] == fingerprint_b
+    assert result["description_placeholders"]["fingerprint"] == "BB:" * 31 + "BB"
     assert read.await_count == 2
