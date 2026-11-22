@@ -461,18 +461,6 @@ _This entity generates frequent and unnecessary data. To improve performance and
 
 The state is `unknown` until the first refresh, or when the account is not allowed to read the configuration of Pi-hole. The faster arrival detection of the device trackers needs one of the first two values.
 
-Example of the data Pi-hole reports (`GET /config/misc/privacylevel`):
-
-```json
-{
-  "config": {
-    "misc": {
-      "privacylevel": 0
-    }
-  }
-}
-```
-
 ### Services
 
 <img src="../img/services.png" width="300">
