@@ -28,6 +28,7 @@ from .const import (
     CONF_DEVICE_TRACKER_WHITELIST,
     CONF_ENABLE_DEVICE_TRACKER,
     CONF_UPDATE_INTERVAL_LIVE,
+    CONF_UPDATE_INTERVAL_PRESENCE,
     CONF_UPDATE_INTERVAL_STATS,
     CONF_VERIFY_SSL,
     CONFIG_ENTRY_VERSION,
@@ -38,6 +39,7 @@ from .const import (
     DEFAULT_ENABLE_DEVICE_TRACKER,
     DEFAULT_NAME,
     DEFAULT_PASSWORD,
+    DEFAULT_UPDATE_INTERVAL_PRESENCE,
     DEFAULT_URL,
     DEFAULT_VERIFY_SSL,
     DOMAIN,
@@ -45,9 +47,11 @@ from .const import (
     LEGACY_VERIFY_SSL,
     MAX_DEVICE_TRACKER_CONSIDER_HOME,
     MAX_DEVICE_TRACKER_STALE_DAYS,
+    MAX_UPDATE_INTERVAL_PRESENCE,
     MIN_DEVICE_TRACKER_CONSIDER_HOME,
     MIN_TIME_BETWEEN_UPDATES_LIVE,
     MIN_TIME_BETWEEN_UPDATES_STATS,
+    MIN_UPDATE_INTERVAL_PRESENCE,
 )
 from .exceptions import (
     CertificateChangedError,
@@ -702,6 +706,20 @@ def _get_data_option_schema() -> probatio.Schema:
                 ),
                 probatio.Coerce(int),
             ),
+            probatio.Optional(
+                CONF_UPDATE_INTERVAL_PRESENCE,
+            ): probatio.All(
+                selector.NumberSelector(  # pyright: ignore[reportUnknownMemberType]
+                    selector.NumberSelectorConfig(
+                        min=0,
+                        max=MAX_UPDATE_INTERVAL_PRESENCE,
+                        step=1,
+                        mode=selector.NumberSelectorMode.BOX,
+                        unit_of_measurement="s",
+                    )
+                ),
+                probatio.Coerce(int),
+            ),
         }
     )
 
@@ -735,6 +753,15 @@ async def _async_validate_input(
     stale_days = user_input.get(CONF_DEVICE_TRACKER_STALE_DAYS)
     if stale_days is not None and not 0 <= stale_days <= MAX_DEVICE_TRACKER_STALE_DAYS:
         return {CONF_DEVICE_TRACKER_STALE_DAYS: "invalid_stale_days"}
+
+    # 0 disables the presence refresh; 1 to 14 seconds would only load the Pi-hole (a login per cycle).
+    presence = user_input.get(CONF_UPDATE_INTERVAL_PRESENCE)
+    if (
+        presence is not None
+        and presence != 0
+        and not MIN_UPDATE_INTERVAL_PRESENCE <= presence <= MAX_UPDATE_INTERVAL_PRESENCE
+    ):
+        return {CONF_UPDATE_INTERVAL_PRESENCE: "invalid_update_interval_presence"}
 
     return {}
 
@@ -774,6 +801,7 @@ class OptionsFlowHandler(OptionsFlow):
             CONF_DEVICE_TRACKER_MAC_LIST: DEFAULT_DEVICE_TRACKER_MAC_LIST,
             CONF_DEVICE_TRACKER_CONSIDER_HOME: DEFAULT_DEVICE_TRACKER_CONSIDER_HOME,
             CONF_DEVICE_TRACKER_STALE_DAYS: DEFAULT_DEVICE_TRACKER_STALE_DAYS,
+            CONF_UPDATE_INTERVAL_PRESENCE: DEFAULT_UPDATE_INTERVAL_PRESENCE,
         }
 
         # Complete an older entry with the options it does not hold yet. The two refresh frequencies also

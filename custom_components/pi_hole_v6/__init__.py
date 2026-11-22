@@ -37,6 +37,7 @@ from .const import (
     LEGACY_VERIFY_SSL,
     MIN_TIME_BETWEEN_UPDATES_LIVE,
     MIN_TIME_BETWEEN_UPDATES_STATS,
+    PRESENCE_MAX_ADDRESSES,
 )
 from .exceptions import (
     APIError,
@@ -46,6 +47,7 @@ from .exceptions import (
     PiHoleV6Error,
     UnauthorizedError,
 )
+from .presence import PiHoleV6PresenceCoordinator, get_presence_interval
 
 if TYPE_CHECKING:
     from homeassistant.core import Event, HomeAssistant
@@ -82,12 +84,14 @@ class PiHoleV6Data:
         api (PiholeAPI): The Pi-hole API client instance.
         coordinator (DataUpdateCoordinator[Any]): The "live" coordinator, driving the entities that must reflect the current state of the Pi-hole instance.
         coordinator_stats (DataUpdateCoordinator[Any]): The "stats" coordinator, driving the cumulative counters and the periodic checks, whose values only matter as a trend. Some of its entities read caches filled by the live coordinator and are simply paced by this slower rhythm.
+        coordinator_presence (PiHoleV6PresenceCoordinator | None): The "presence" coordinator, reading the query log to detect the arrival of network devices faster. None unless network device tracking is enabled and the presence refresh frequency is set.
 
     """
 
     api: PiholeAPI
     coordinator: DataUpdateCoordinator[Any]
     coordinator_stats: DataUpdateCoordinator[Any]
+    coordinator_presence: PiHoleV6PresenceCoordinator | None = None
 
 
 async def check_result(result: Any, api_client: PiholeAPI, endpoint: str) -> None:
@@ -111,7 +115,9 @@ async def check_result(result: Any, api_client: PiholeAPI, endpoint: str) -> Non
         raise DataStructureError(endpoint)
 
 
-async def async_get_live_data(api_client: PiholeAPI, *, enable_device_tracker: bool) -> None:
+async def async_get_live_data(
+    api_client: PiholeAPI, *, enable_device_tracker: bool, max_addresses: int | None = None
+) -> None:
     """Fetch the data behind the entities that must stay responsive.
 
     An endpoint belongs here as soon as a single responsive entity needs its value fresh, even when
@@ -123,6 +129,7 @@ async def async_get_live_data(api_client: PiholeAPI, *, enable_device_tracker: b
     Args:
         api_client (PiholeAPI): The Pi-hole API client instance used to perform the calls.
         enable_device_tracker (bool): Whether to also fetch network devices for the device_tracker platform.
+        max_addresses (int | None): The number of addresses per network device to ask Pi-hole for. None (default) keeps the request as it has always been.
 
     """
 
@@ -145,7 +152,7 @@ async def async_get_live_data(api_client: PiholeAPI, *, enable_device_tracker: b
     await check_result(result, api_client, "get_dhcp_leases")
 
     if enable_device_tracker:
-        result = await api_client.call_get_network_devices()
+        result = await api_client.call_get_network_devices(max_addresses=max_addresses)
         await check_result(result, api_client, "get_network_devices")
 
     result = await api_client.call_get_auth_sessions()
@@ -301,6 +308,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: PiHoleV6ConfigEntry) -> 
     # one of them never logs out while the other one is still fetching data.
     refresh_lock = asyncio.Lock()
 
+    # The presence refresh only exists when the network devices are tracked and a frequency is set.
+    presence_interval: timedelta | None = (
+        get_presence_interval(entry)
+        if entry.data.get(CONF_ENABLE_DEVICE_TRACKER, DEFAULT_ENABLE_DEVICE_TRACKER)
+        else None
+    )
+
     async def async_update_data(coordinator_key: str) -> dict[str, Any] | None:
         """Fetch data from API endpoint for the given coordinator.
 
@@ -324,6 +338,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: PiHoleV6ConfigEntry) -> 
             return None
 
         enable_device_tracker: bool = entry.data.get(CONF_ENABLE_DEVICE_TRACKER, DEFAULT_ENABLE_DEVICE_TRACKER)
+        # The query log names a client by one address: ask for more addresses per device so it can be recognized.
+        max_addresses: int | None = PRESENCE_MAX_ADDRESSES if presence_interval is not None else None
 
         result: Any = {}
 
@@ -332,7 +348,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: PiHoleV6ConfigEntry) -> 
 
             try:
                 if coordinator_key == COORDINATOR_LIVE:
-                    await async_get_live_data(api_client=api_client, enable_device_tracker=enable_device_tracker)
+                    await async_get_live_data(
+                        api_client=api_client,
+                        enable_device_tracker=enable_device_tracker,
+                        max_addresses=max_addresses,
+                    )
                 else:
                     await async_get_stats_data(api_client=api_client)
 
@@ -387,7 +407,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: PiHoleV6ConfigEntry) -> 
 
     api_client.just_initialized = {COORDINATOR_LIVE: True, COORDINATOR_STATS: True}
 
-    entry.runtime_data = PiHoleV6Data(api_client, coordinator, coordinator_stats)
+    # No first refresh: the query log is optional, its failure must never prevent the entry from loading.
+    # The first read happens one interval after the first device tracker starts listening.
+    coordinator_presence: PiHoleV6PresenceCoordinator | None = (
+        PiHoleV6PresenceCoordinator(hass, entry, api_client, refresh_lock, presence_interval)
+        if presence_interval is not None
+        else None
+    )
+
+    entry.runtime_data = PiHoleV6Data(api_client, coordinator, coordinator_stats, coordinator_presence)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True

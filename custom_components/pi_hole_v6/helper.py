@@ -1,8 +1,12 @@
 """Helper utility functions for the Pi-hole V6 integration."""
 
+from collections.abc import Mapping
 import re
+from typing import Any
 
 from homeassistant.util import slugify
+
+from .const import CONF_DEVICE_TRACKER_CONSIDER_HOME, DEFAULT_DEVICE_TRACKER_CONSIDER_HOME
 
 
 def create_entity_id_name(input_string: str) -> str:
@@ -42,3 +46,21 @@ def parse_mac_list(raw_list: str) -> set[str]:
 
     """
     return {mac.strip().lower() for mac in re.split(r"[,\n]", raw_list) if mac.strip()}
+
+
+def get_consider_home(data: Mapping[str, Any] | None) -> float:
+    """Read the away delay of the device tracker from the data of a config entry.
+
+    Args:
+        data (Mapping[str, Any] | None): The data of the config entry, None when there is none.
+
+    Returns:
+        float: The away delay in seconds. The default one when the option is absent or is not a number.
+
+    """
+    value: Any = data.get(CONF_DEVICE_TRACKER_CONSIDER_HOME, DEFAULT_DEVICE_TRACKER_CONSIDER_HOME) if data else None
+
+    if not isinstance(value, (int, float)) or isinstance(value, bool):
+        return float(DEFAULT_DEVICE_TRACKER_CONSIDER_HOME)
+
+    return float(value)

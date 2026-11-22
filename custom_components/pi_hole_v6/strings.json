@@ -89,7 +89,8 @@
           "device_tracker_whitelist": "Use address list as a whitelist",
           "device_tracker_mac_list": "Filtered addresses",
           "device_tracker_consider_home": "Away delay (seconds)",
-          "device_tracker_stale_days": "Ignore devices inactive for (days)"
+          "device_tracker_stale_days": "Ignore devices inactive for (days)",
+          "update_interval_presence": "Presence refresh frequency (seconds)"
         },
         "data_description": {
           "update_interval_live": "How often the entities that reflect the current state of your Pi-hole are refreshed: service and blocking status, switches, and the live indicators. Lowering it makes the dashboard more reactive, at the cost of more requests to your Pi-hole. Defaults to 120 seconds.",
@@ -98,7 +99,8 @@
           "device_tracker_whitelist": "When enabled, only the listed addresses are tracked. When disabled, the listed addresses are excluded and all others are tracked.",
           "device_tracker_mac_list": "One MAC address (or Pi-hole pseudo-MAC, e.g. IP-192.168.1.10) or IP address per line, or separated by commas. IP addresses match a device's current IP and may stop matching if it changes. Leave empty to disable filtering.",
           "device_tracker_consider_home": "A device is reported away when its last DNS query is older than this delay. Defaults to 240 seconds, minimum 60. Departures are noticed at the next live refresh, so up to this delay plus the live refresh frequency.",
-          "device_tracker_stale_days": "0 disables it, 30 is the default. Devices whose last DNS query is older than this number of days, or that never made one, get no entity created. Entities that already exist are never removed by this setting: delete them manually if you no longer want them. Has no effect when the address list is used as a whitelist."
+          "device_tracker_stale_days": "0 disables it, 30 is the default. Devices whose last DNS query is older than this number of days, or that never made one, get no entity created. Entities that already exist are never removed by this setting: delete them manually if you no longer want them. Has no effect when the address list is used as a whitelist.",
+          "update_interval_presence": "0 disables it (default). When set, between 15 and 300 seconds (30 is a good value), the network device trackers also read the latest DNS queries of Pi-hole at this frequency, so a device coming home is reported within about this delay instead of up to a few minutes. Each cycle adds a login and a few requests to your Pi-hole. Only client addresses and times are kept: the queried domains are never stored, logged or included in diagnostics. It may be set higher than the live refresh frequency, but is then of little use. Has no effect when network device tracking is disabled. Reload the integration to apply."
         },
         "description": "After modifying one of these options, it is necessary to reload the service or restart Home Assistant.",
         "title": "Pi-hole V6"
@@ -108,7 +110,8 @@
       "invalid_update_interval_live": "Invalid live refresh frequency. Must be higher than 1 second and lower than 3600 seconds.",
       "invalid_update_interval_stats": "Invalid statistics refresh frequency. Must be between 60 and 86400 seconds, and greater than or equal to the live refresh frequency.",
       "invalid_consider_home": "Invalid away delay. Must be between 60 and 86400 seconds.",
-      "invalid_stale_days": "Invalid number of days. Must be between 0 and 3650."
+      "invalid_stale_days": "Invalid number of days. Must be between 0 and 3650.",
+      "invalid_update_interval_presence": "Invalid presence refresh frequency. Must be 0 (disabled) or between 15 and 300 seconds."
     }
   },
   "entity": {

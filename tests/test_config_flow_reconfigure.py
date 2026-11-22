@@ -26,6 +26,7 @@ from custom_components.pi_hole_v6.const import (
     CONF_DEVICE_TRACKER_WHITELIST,
     CONF_ENABLE_DEVICE_TRACKER,
     CONF_UPDATE_INTERVAL_LIVE,
+    CONF_UPDATE_INTERVAL_PRESENCE,
     CONF_UPDATE_INTERVAL_STATS,
     CONF_VERIFY_SSL,
     DOMAIN,
@@ -510,6 +511,7 @@ def test_options_schema_has_no_connection_field() -> None:
         CONF_DEVICE_TRACKER_MAC_LIST,
         CONF_DEVICE_TRACKER_CONSIDER_HOME,
         CONF_DEVICE_TRACKER_STALE_DAYS,
+        CONF_UPDATE_INTERVAL_PRESENCE,
     }
 
 
@@ -762,6 +764,7 @@ def test_options_form_has_no_text_left_from_its_connection_fields(name: str) -> 
         "invalid_update_interval_stats",
         "invalid_consider_home",
         "invalid_stale_days",
+        "invalid_update_interval_presence",
     }
     assert "abort" not in options
 

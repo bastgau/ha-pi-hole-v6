@@ -8,6 +8,8 @@ CONF_UPDATE_INTERVAL_LIVE = "update_interval_live"
 # Key used before the coordinator split, still present in entries created back then.
 LEGACY_CONF_UPDATE_INTERVAL = "update_interval"
 CONF_UPDATE_INTERVAL_STATS = "update_interval_stats"
+# Seconds between two reads of the query log to detect arrivals faster (0 disables it).
+CONF_UPDATE_INTERVAL_PRESENCE = "update_interval_presence"
 CONF_ENABLE_DEVICE_TRACKER = "enable_device_tracker"
 CONF_DEVICE_TRACKER_WHITELIST = "device_tracker_whitelist"
 CONF_DEVICE_TRACKER_MAC_LIST = "device_tracker_mac_list"
@@ -51,6 +53,30 @@ MAX_DEVICE_TRACKER_CONSIDER_HOME = 86400
 DEFAULT_DEVICE_TRACKER_STALE_DAYS = 30
 MAX_DEVICE_TRACKER_STALE_DAYS = 3650
 MAX_NETWORK_DEVICES = 2048
+# Addresses per device asked to /network/devices when the presence refresh is enabled (Pi-hole answers 3 by default).
+PRESENCE_MAX_ADDRESSES = 10
+
+# 0 disables the presence refresh: the coordinator is not created and the query log is never read.
+DEFAULT_UPDATE_INTERVAL_PRESENCE = 0
+MIN_UPDATE_INTERVAL_PRESENCE = 15
+MAX_UPDATE_INTERVAL_PRESENCE = 300
+RECOMMENDED_UPDATE_INTERVAL_PRESENCE = 30
+# Seconds before the next try when the query log cannot be used (rights, old version, privacy level).
+PRESENCE_RETRY_AFTER_UNUSABLE = 600
+# Seconds before the next try when the session is refused (credentials, certificate): never poll the login every cycle.
+PRESENCE_RETRY_AFTER_AUTH = 600
+# Seconds allowed to the logout of a presence cycle, which holds the shared refresh lock.
+PRESENCE_LOGOUT_TIMEOUT = 5
+# Seconds before the next try when Pi-hole is overloaded and did not say when to come back.
+PRESENCE_RETRY_AFTER_BUSY = 60
+# Longest window of the query log read at once, in seconds.
+PRESENCE_MAX_WINDOW = 900
+# Overlap of two consecutive reads, in seconds: covers a query stored with a slightly older time.
+PRESENCE_OVERLAP = 5
+# Seconds a query time may be ahead of the clock of Home Assistant (clock skew) before the row is ignored.
+PRESENCE_FUTURE_TOLERANCE = 5
+# Seconds kept in memory beyond the away delay before an address is forgotten.
+PRESENCE_RETENTION_MARGIN = 300
 
 # Kinds of access the account used by the integration can have, deduced from GET /auth/sessions.
 ACCESS_MAIN_PASSWORD = "main_password"  # noqa: S105
