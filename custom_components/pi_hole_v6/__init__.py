@@ -24,27 +24,45 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .api import Api as PiholeAPI
 from .const import (
+    CONF_CERT_FINGERPRINT,
     CONF_ENABLE_DEVICE_TRACKER,
     CONF_UPDATE_INTERVAL_LIVE,
     CONF_UPDATE_INTERVAL_STATS,
+    CONF_VERIFY_SSL,
     COORDINATOR_LIVE,
     COORDINATOR_STATS,
     DEFAULT_ENABLE_DEVICE_TRACKER,
     DOMAIN,
     LEGACY_CONF_UPDATE_INTERVAL,
+    LEGACY_VERIFY_SSL,
     MIN_TIME_BETWEEN_UPDATES_LIVE,
     MIN_TIME_BETWEEN_UPDATES_STATS,
+    PRESENCE_MAX_ADDRESSES,
 )
-from .exceptions import APIError, DataStructureError, PiHoleV6Error, UnauthorizedError
+from .exceptions import (
+    APIError,
+    CertificateChangedError,
+    CertificateError,
+    DataStructureError,
+    PiHoleV6Error,
+    UnauthorizedError,
+)
+from .presence import PiHoleV6PresenceCoordinator, get_presence_interval
 
 if TYPE_CHECKING:
-    from aiohttp import client
-
     from homeassistant.core import Event, HomeAssistant
 
 
 _LOGGER = logging.getLogger(__name__)
 
+
+# Why the integration asks the user to reauthenticate, per error raised while it runs.
+_AUTH_FAILURE_MESSAGES: dict[type[PiHoleV6Error], str] = {
+    UnauthorizedError: "Credentials must be updated.",
+    # Without a pinned fingerprint, a certificate that is no longer trusted (renewed by another CA, self-signed again...).
+    CertificateError: "The certificate of the Pi-hole is not trusted: confirm it to continue.",
+    CertificateChangedError: "The certificate of the Pi-hole has changed: confirm the new one.",
+}
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
@@ -66,12 +84,14 @@ class PiHoleV6Data:
         api (PiholeAPI): The Pi-hole API client instance.
         coordinator (DataUpdateCoordinator[Any]): The "live" coordinator, driving the entities that must reflect the current state of the Pi-hole instance.
         coordinator_stats (DataUpdateCoordinator[Any]): The "stats" coordinator, driving the cumulative counters and the periodic checks, whose values only matter as a trend. Some of its entities read caches filled by the live coordinator and are simply paced by this slower rhythm.
+        coordinator_presence (PiHoleV6PresenceCoordinator | None): The "presence" coordinator, reading the query log to detect the arrival of network devices faster. None unless network device tracking is enabled and the presence refresh frequency is set.
 
     """
 
     api: PiholeAPI
     coordinator: DataUpdateCoordinator[Any]
     coordinator_stats: DataUpdateCoordinator[Any]
+    coordinator_presence: PiHoleV6PresenceCoordinator | None = None
 
 
 async def check_result(result: Any, api_client: PiholeAPI, endpoint: str) -> None:
@@ -95,7 +115,9 @@ async def check_result(result: Any, api_client: PiholeAPI, endpoint: str) -> Non
         raise DataStructureError(endpoint)
 
 
-async def async_get_live_data(api_client: PiholeAPI, *, enable_device_tracker: bool) -> None:
+async def async_get_live_data(
+    api_client: PiholeAPI, *, enable_device_tracker: bool, max_addresses: int | None = None
+) -> None:
     """Fetch the data behind the entities that must stay responsive.
 
     An endpoint belongs here as soon as a single responsive entity needs its value fresh, even when
@@ -107,6 +129,7 @@ async def async_get_live_data(api_client: PiholeAPI, *, enable_device_tracker: b
     Args:
         api_client (PiholeAPI): The Pi-hole API client instance used to perform the calls.
         enable_device_tracker (bool): Whether to also fetch network devices for the device_tracker platform.
+        max_addresses (int | None): The number of addresses per network device to ask Pi-hole for. None (default) keeps the request as it has always been.
 
     """
 
@@ -129,7 +152,7 @@ async def async_get_live_data(api_client: PiholeAPI, *, enable_device_tracker: b
     await check_result(result, api_client, "get_dhcp_leases")
 
     if enable_device_tracker:
-        result = await api_client.call_get_network_devices()
+        result = await api_client.call_get_network_devices(max_addresses=max_addresses)
         await check_result(result, api_client, "get_network_devices")
 
     result = await api_client.call_get_auth_sessions()
@@ -152,6 +175,9 @@ async def async_get_stats_data(api_client: PiholeAPI) -> None:
 
     result = await api_client.call_get_ftl_info_messages_count()
     await check_result(result, api_client, "get_ftl_info_messages_count")
+
+    result = await api_client.call_get_privacy_level()
+    await check_result(result, api_client, "get_privacy_level")
 
 
 def migrate_legacy_update_interval(hass: HomeAssistant, entry: PiHoleV6ConfigEntry) -> None:
@@ -177,6 +203,54 @@ def migrate_legacy_update_interval(hass: HomeAssistant, entry: PiHoleV6ConfigEnt
 
     _LOGGER.debug("Migrating %s option to %s", LEGACY_CONF_UPDATE_INTERVAL, CONF_UPDATE_INTERVAL_LIVE)
     hass.config_entries.async_update_entry(entry, data=data)
+
+
+def migrate_legacy_verify_ssl(hass: HomeAssistant, entry: PiHoleV6ConfigEntry) -> bool:
+    """Store the certificate verification option, keeping the legacy behaviour for entries that predate it.
+
+    Entries created before the option existed were always connected without verifying the certificate.
+    They are kept that way on purpose: enabling verification would break a self-signed certificate
+    without the user knowing why. The value is stored once, so the options form shows it.
+
+    Args:
+        hass (HomeAssistant): The Home Assistant instance.
+        entry (PiHoleV6ConfigEntry): The config entry to migrate.
+
+    Returns:
+        bool: Whether the TLS certificate must be verified.
+
+    """
+
+    if CONF_VERIFY_SSL in entry.data:
+        return bool(entry.data[CONF_VERIFY_SSL])
+
+    data: dict[str, Any] = {**entry.data, CONF_VERIFY_SSL: LEGACY_VERIFY_SSL}
+    _LOGGER.debug("Storing %s option for an entry created before it existed", CONF_VERIFY_SSL)
+    hass.config_entries.async_update_entry(entry, data=data)
+    return LEGACY_VERIFY_SSL
+
+
+def _create_api_client(hass: HomeAssistant, entry: PiHoleV6ConfigEntry, verify_ssl: bool) -> PiholeAPI:
+    """Create the Pi-hole API client of a config entry, pinned to its confirmed certificate when there is one.
+
+    Args:
+        hass (HomeAssistant): The Home Assistant instance.
+        entry (PiHoleV6ConfigEntry): The config entry the client belongs to.
+        verify_ssl (bool): Whether the TLS certificate is verified against the CA store.
+
+    Returns:
+        PiholeAPI: The API client.
+
+    """
+    url: str = entry.data[CONF_URL]
+    certificate_fingerprint: str | None = entry.data.get(CONF_CERT_FINGERPRINT)
+
+    return PiholeAPI(
+        session=async_get_clientsession(hass, verify_ssl=verify_ssl),
+        url=url,
+        password=entry.data.get(CONF_PASSWORD, ""),
+        certificate_fingerprint=bytes.fromhex(certificate_fingerprint) if certificate_fingerprint else None,
+    )
 
 
 def get_update_interval(entry: PiHoleV6ConfigEntry, conf_key: str, default: timedelta) -> timedelta:
@@ -214,21 +288,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: PiHoleV6ConfigEntry) -> 
 
     """
 
-    password = entry.data.get(CONF_PASSWORD, "")
     name = entry.data[CONF_NAME]
     url = entry.data[CONF_URL]
 
     _LOGGER.debug("Setting up %s integration with host %s", DOMAIN, url)
 
     migrate_legacy_update_interval(hass, entry)
-
-    session: client.ClientSession = async_get_clientsession(hass, verify_ssl=False)
-
-    api_client: PiholeAPI = PiholeAPI(
-        session=session,
-        url=url,
-        password=password,
-    )
+    api_client: PiholeAPI = _create_api_client(hass, entry, migrate_legacy_verify_ssl(hass, entry))
 
     async def async_logout(_: Event) -> None:
         """Log out from the Pi-hole API when Home Assistant stops.
@@ -244,6 +310,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: PiHoleV6ConfigEntry) -> 
     # Both coordinators drive the same authenticated API session: serialize their refresh cycles so
     # one of them never logs out while the other one is still fetching data.
     refresh_lock = asyncio.Lock()
+
+    # The presence refresh only exists when the network devices are tracked and a frequency is set.
+    presence_interval: timedelta | None = (
+        get_presence_interval(entry)
+        if entry.data.get(CONF_ENABLE_DEVICE_TRACKER, DEFAULT_ENABLE_DEVICE_TRACKER)
+        else None
+    )
 
     async def async_update_data(coordinator_key: str) -> dict[str, Any] | None:
         """Fetch data from API endpoint for the given coordinator.
@@ -268,6 +341,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: PiHoleV6ConfigEntry) -> 
             return None
 
         enable_device_tracker: bool = entry.data.get(CONF_ENABLE_DEVICE_TRACKER, DEFAULT_ENABLE_DEVICE_TRACKER)
+        # The query log names a client by one address: ask for more addresses per device so it can be recognized.
+        max_addresses: int | None = PRESENCE_MAX_ADDRESSES if presence_interval is not None else None
 
         result: Any = {}
 
@@ -276,13 +351,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: PiHoleV6ConfigEntry) -> 
 
             try:
                 if coordinator_key == COORDINATOR_LIVE:
-                    await async_get_live_data(api_client=api_client, enable_device_tracker=enable_device_tracker)
+                    await async_get_live_data(
+                        api_client=api_client,
+                        enable_device_tracker=enable_device_tracker,
+                        max_addresses=max_addresses,
+                    )
                 else:
                     await async_get_stats_data(api_client=api_client)
 
-            except UnauthorizedError as err:
-                msg: str = "Credentials must be updated."
-                raise ConfigEntryAuthFailed(msg) from err
+            except (UnauthorizedError, CertificateError, CertificateChangedError) as err:
+                message: str = _AUTH_FAILURE_MESSAGES.get(type(err), _AUTH_FAILURE_MESSAGES[UnauthorizedError])
+                raise ConfigEntryAuthFailed(message) from err
 
             except PiHoleV6Error as err:
                 raise UpdateFailed(str(err)) from err
@@ -331,7 +410,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: PiHoleV6ConfigEntry) -> 
 
     api_client.just_initialized = {COORDINATOR_LIVE: True, COORDINATOR_STATS: True}
 
-    entry.runtime_data = PiHoleV6Data(api_client, coordinator, coordinator_stats)
+    # No first refresh: the query log is optional, its failure must never prevent the entry from loading.
+    # The first read happens one interval after the first device tracker starts listening.
+    coordinator_presence: PiHoleV6PresenceCoordinator | None = (
+        PiHoleV6PresenceCoordinator(hass, entry, api_client, refresh_lock, presence_interval)
+        if presence_interval is not None
+        else None
+    )
+
+    entry.runtime_data = PiHoleV6Data(api_client, coordinator, coordinator_stats, coordinator_presence)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True

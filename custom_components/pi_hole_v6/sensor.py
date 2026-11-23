@@ -13,11 +13,18 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import CONF_NAME, MATCH_ALL, PERCENTAGE, EntityCategory, UnitOfTime
+from homeassistant.const import CONF_NAME, MATCH_ALL, PERCENTAGE, EntityCategory, UnitOfTemperature, UnitOfTime
 from homeassistant.helpers.event import async_track_time_interval
 
 from .common import sensor_update_timer
-from .const import ACCESS_LEVELS, ACCESS_WITHOUT_SESSIONS, COORDINATOR_LIVE, COORDINATOR_STATS
+from .const import (
+    ACCESS_LEVELS,
+    ACCESS_WITHOUT_SESSIONS,
+    COORDINATOR_LIVE,
+    COORDINATOR_PRESENCE,
+    COORDINATOR_STATS,
+    PRIVACY_LEVELS,
+)
 from .entity import PiHoleV6Entity
 from .helper import create_entity_id_name
 
@@ -153,6 +160,26 @@ SENSOR_TYPES: tuple[PiHoleV6SensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
     ),
     PiHoleV6SensorEntityDescription(
+        entity_category=EntityCategory.DIAGNOSTIC,
+        key="cpu_temperature",
+        coordinator_key=COORDINATOR_STATS,
+        translation_key="cpu_temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        suggested_display_precision=1,
+        entity_registry_enabled_default=False,
+    ),
+    PiHoleV6SensorEntityDescription(
+        entity_category=EntityCategory.DIAGNOSTIC,
+        key="privacy_level",
+        coordinator_key=COORDINATOR_STATS,
+        translation_key="privacy_level",
+        device_class=SensorDeviceClass.ENUM,
+        options=PRIVACY_LEVELS,
+        entity_registry_enabled_default=False,
+    ),
+    PiHoleV6SensorEntityDescription(
         key="ftl_info_message_count",
         coordinator_key=COORDINATOR_STATS,
         translation_key="ftl_info_message_count",
@@ -179,7 +206,7 @@ SENSOR_TYPES: tuple[PiHoleV6SensorEntityDescription, ...] = (
 
 # Sensors whose attributes churn on every refresh (system metrics, active auth sessions) and bring no
 # useful history, so their attributes must never reach the recorder.
-UNRECORDED_ATTRIBUTES_KEYS: frozenset[str] = frozenset({"memory_use", "cpu_use", "auth_sessions"})
+UNRECORDED_ATTRIBUTES_KEYS: frozenset[str] = frozenset({"memory_use", "cpu_use", "cpu_temperature", "auth_sessions"})
 
 
 async def async_setup_entry(
@@ -202,6 +229,10 @@ async def async_setup_entry(
         COORDINATOR_LIVE: hole_data.coordinator,
         COORDINATOR_STATS: hole_data.coordinator_stats,
     }
+
+    # The presence coordinator only exists when the network devices are tracked and a frequency is set.
+    if hole_data.coordinator_presence is not None:
+        coordinators[COORDINATOR_PRESENCE] = hole_data.coordinator_presence
 
     def get_extra_coordinators(
         description: PiHoleV6SensorEntityDescription,
@@ -269,6 +300,7 @@ class PiHoleV6Sensor(PiHoleV6Entity, SensorEntity):  # pyright: ignore[reportInc
             "note",
             "live_data_refresh",
             "stats_data_refresh",
+            "presence_data_refresh",
         }
     )
 
@@ -344,6 +376,10 @@ class PiHoleV6Sensor(PiHoleV6Entity, SensorEntity):  # pyright: ignore[reportInc
                 return self.api.cache_padd["%mem"]
             case "cpu_use":
                 return self.api.cache_padd["%cpu"]
+            case "cpu_temperature":
+                return self.api.cpu_temperature_celsius()
+            case "privacy_level":
+                return self.api.privacy_level
             case "ftl_info_message_count":
                 return self.api.cache_ftl_info["message_count"]
             case "remaining_until_blocking_mode":
@@ -410,14 +446,24 @@ class PiHoleV6Sensor(PiHoleV6Entity, SensorEntity):  # pyright: ignore[reportInc
             return {
                 "live_data_refresh": self.api.last_refresh.get(COORDINATOR_LIVE),
                 "stats_data_refresh": self.api.last_refresh.get(COORDINATOR_STATS),
-                "note": "Most recent refresh of the two coordinators.",
+                "presence_data_refresh": self.api.last_refresh.get(COORDINATOR_PRESENCE),
+                "note": "Most recent refresh of the live, stats and presence coordinators.",
             }
 
         if self.entity_description.key == "memory_use":
-            return self.api.cache_padd["system"]["memory"]
+            return {**self.api.cache_padd["system"]["memory"], "note": "Memory usage of the machine hosting Pi-hole."}
 
         if self.entity_description.key == "cpu_use":
-            return self.api.cache_padd["system"]["cpu"]
+            return {**self.api.cache_padd["system"]["cpu"], "note": "CPU usage of the machine hosting Pi-hole."}
+
+        if self.entity_description.key == "cpu_temperature":
+            return {
+                **(self.api.cpu_temperature_report() or {}),
+                "note": "CPU temperature of the machine hosting Pi-hole, in °C.",
+            }
+
+        if self.entity_description.key == "privacy_level":
+            return {"note": "Privacy level set in Pi-hole."}
 
         if self.entity_description.key == "ftl_info_message_count":
             raw_messages: list[Any] = self.api.cache_ftl_info["message_list"]

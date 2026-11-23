@@ -9,7 +9,8 @@
 #   client        the bundled API client (only if CLIENT_PACKAGE is set)
 #   integration   the Home Assistant side (never descends into the client)
 #   tests         the whole test suite
-#   repo          prettier over the repo's json/yaml/markdown
+#   repo          prettier over the repo's json/yaml/markdown/js, then eslint and node --check over the js
+#   js            prettier --check, node --check and eslint over the js alone (what CI runs; no writing)
 #   src           shorthand for: client integration
 #   all           every scope (the default)
 #
@@ -75,9 +76,9 @@ for arg in "${requested[@]}"; do
     client | integration | tests)
       scope_paths "$arg" > /dev/null || { echo -e "${RED}Scope '$arg' does not exist in this repository.${NC}" >&2; exit 2; }
       scopes+=("$arg") ;;
-    repo) scopes+=("$arg") ;;
+    repo | js) scopes+=("$arg") ;;
     *)
-      echo -e "${RED}Unknown scope '$arg'.${NC} Expected: client, integration, tests, repo, src or all." >&2
+      echo -e "${RED}Unknown scope '$arg'.${NC} Expected: client, integration, tests, repo, js, src or all." >&2
       exit 2
       ;;
   esac
@@ -143,10 +144,17 @@ PRETTIER_VERSION="3.6.2"
 # .copier-answers.yml is written by Copier; reformatting it would make every
 # `copier update` fight Prettier over quotes and indentation.
 # card/ is a vendored third-party card and bruno/ folders are generated API collections.
-PRETTIER_GLOBS=("**/*.{json,yaml,yml,md}" "!.copier-answers.yml" "!card/**" "!**/bruno/**")
+PRETTIER_GLOBS=("**/*.{json,yaml,yml,md,js,mjs}" "!.copier-answers.yml" "!card/**" "!**/bruno/**")
 
+# $1 is the scope name, $2 the mode (write by default, "check" to only report),
+# the rest the globs (PRETTIER_GLOBS by default).
 run_prettier() {
-  local scope_name="$1"
+  local scope_name="$1" mode="${2:-write}"
+  shift 2 2> /dev/null || shift $#
+  local globs=("$@")
+  [ ${#globs[@]} -gt 0 ] || globs=("${PRETTIER_GLOBS[@]}")
+  local flag=(--write)
+  [ "$mode" = "check" ] && flag=(--check)
 
   echo -e "\n${YELLOW}> Format with Prettier :${NC}\n"
 
@@ -160,7 +168,7 @@ run_prettier() {
   fi
 
   local output status
-  output=$("${runner[@]}" --write --log-level warn "${PRETTIER_GLOBS[@]}" 2>&1)
+  output=$("${runner[@]}" "${flag[@]}" --log-level warn "${globs[@]}" 2>&1)
   status=$?
   # npx chatter is noise here; prettier's own findings are not.
   echo "$output" | grep -vE "^npm (notice|warn)" | grep -v "^$"
@@ -173,11 +181,70 @@ run_prettier() {
   fi
 }
 
+# The JavaScript a repository ships (a Lovelace card and its tests), if any. No
+# package.json and no node_modules: eslint comes from a pinned `npx`, and
+# eslint.config.mjs imports nothing. Skipped when there is no JavaScript or no
+# node/npx, like prettier.
+ESLINT_VERSION="9.39.5"
+
+run_js_checks() {
+  local scope_name="$1"
+  local files=()
+  mapfile -t files < <(find custom_components tests \( -name '*.js' -o -name '*.mjs' \) -not -path '*/node_modules/*' 2> /dev/null | sort)
+
+  if [ ${#files[@]} -eq 0 ]; then
+    return
+  fi
+  if ! command -v node > /dev/null 2>&1 || ! command -v npx > /dev/null 2>&1; then
+    echo -e "\n${YELLOW}> Lint with ESLint :${NC}\n"
+    echo "node or npx not found - the JavaScript is not checked here."
+    echo -e "\n${BLUE}[Lint with ESLint]${NC} ${YELLOW}- Skipped.${NC} ${PURPLE}(${scope_name})${NC}"
+    return
+  fi
+
+  echo -e "\n${YELLOW}> Check the JavaScript syntax with node :${NC}\n"
+  local file failed=0
+  for file in "${files[@]}"; do
+    node --check "$file" || failed=1
+  done
+  if [ $failed -eq 0 ]; then
+    echo -e "\n${BLUE}[node --check]${NC} ${GREEN}✓ Done.${NC} ${PURPLE}(${scope_name})${NC}"
+  else
+    echo -e "\n${BLUE}[node --check]${NC} ${RED}✗ Failed.${NC} ${PURPLE}(${scope_name})${NC}"
+    exit_code=1
+  fi
+
+  echo -e "\n${YELLOW}> Lint with ESLint :${NC}\n"
+  local output status
+  output=$(npx --yes "eslint@${ESLINT_VERSION}" --config eslint.config.mjs "${files[@]}" 2>&1)
+  status=$?
+  echo "$output" | grep -vE "^npm (notice|warn)" | grep -v "^$"
+  if [ $status -eq 0 ]; then
+    echo -e "\n${BLUE}[Lint with ESLint]${NC} ${GREEN}✓ Done.${NC} ${PURPLE}(${scope_name})${NC}"
+  else
+    echo -e "\n${BLUE}[Lint with ESLint]${NC} ${RED}✗ Failed.${NC} ${PURPLE}(${scope_name})${NC}"
+    exit_code=1
+  fi
+}
+
 for scope in "${scopes[@]}"; do
+  if [ "$scope" = "js" ]; then
+    echo -e "\n${YELLOW}==================== scope: js ====================${NC}\n"
+    # Prettier fails when its glob matches nothing: only run it when there is JavaScript.
+    if [ -n "$(find custom_components tests \( -name '*.js' -o -name '*.mjs' \) -not -path '*/node_modules/*' 2> /dev/null | head -n 1)" ]; then
+      run_prettier "js" check "**/*.{js,mjs}" "!card/**" "!**/node_modules/**"
+    else
+      echo "No JavaScript in this repository: nothing to check."
+    fi
+    run_js_checks "js"
+    continue
+  fi
+
   if [ "$scope" = "repo" ]; then
     echo -e "\n${YELLOW}==================== scope: repo ====================${NC}\n"
-    printf "%s\n" "json/yaml/markdown (excluding: card/, bruno/)"
+    printf "%s\n" "json/yaml/markdown/js (excluding: card/, bruno/), then eslint and node --check on the js"
     run_prettier "repo"
+    run_js_checks "repo"
     continue
   fi
 

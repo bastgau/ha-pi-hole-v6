@@ -46,14 +46,24 @@ jobs:
               - "custom_components/**/*.py"
               - "tests/**/*.py"
               - "pyproject.toml"
+              - "hacs.json"
               - "uv.lock"
               - ".coveragerc*"
+              - "custom_components/**/*.js"
+              - "tests/**/*.mjs"
+              - "tests/**/fixtures/*.json"
               - ".github/workflows/test.yml"
 
   # Each scope covers 100% of what it owns, alone, with its own floor:
   # COVERAGE_FAIL_UNDER in .devcontainer/.common-env (95 by default).
+  #
+  # The integration scope also runs against the minimum Home Assistant version (the
+  # homeassistant key of hacs.json), next to the locked one. pytest-homeassistant is
+  # released with the same number as Home Assistant, so both are installed at that
+  # version on top of the locked environment. The client never starts Home Assistant:
+  # it runs once.
   test:
-    name: "${{ matrix.scope }}"
+    name: "${{ matrix.scope }}${{ matrix.ha == 'minimum' && ' (minimum Home Assistant)' || '' }}"
     needs: "changes"
     if: "needs.changes.outputs.python == 'true' && needs.changes.outputs.scopes != '[]'"
     runs-on: "ubuntu-latest"
@@ -64,6 +74,10 @@ jobs:
       fail-fast: false
       matrix:
         scope: "${{ fromJSON(needs.changes.outputs.scopes) }}"
+        ha: ["locked", "minimum"]
+        exclude:
+          - scope: "client"
+            ha: "minimum"
 
     steps:
       - name: "Check out the repository"
@@ -74,6 +88,12 @@ jobs:
         # .devcontainer/.common-env is the single source of truth for the
         # integration domain and the client package; scripts/ read it too.
         run: grep -E '^[A-Z_]+=' .devcontainer/.common-env >> "$GITHUB_ENV"
+
+      # The Lovelace card's JavaScript tests run under Node (>= 22), from pytest.
+      - name: "Set up Node.js"
+        uses: "actions/setup-node@v7"
+        with:
+          node-version: "22"
 
       - name: "Install uv"
         uses: "astral-sh/setup-uv@v7"
@@ -86,6 +106,13 @@ jobs:
         run: |
           uv sync --frozen --no-default-groups --group homeassistant \
             ${{ matrix.scope == 'client' && '--group test-client' || '--group test' }}
+
+      - name: "Install the minimum Home Assistant"
+        if: "matrix.ha == 'minimum'"
+        run: |
+          minimum=$(python3 -c "import json; print(json.load(open('hacs.json'))['homeassistant'])")
+          echo "Minimum Home Assistant: ${minimum}"
+          uv pip install "homeassistant==${minimum}" "pytest-homeassistant==${minimum}"
 
       - name: "Run the ${{ matrix.scope }} tests"
         run: scripts/test ${{ matrix.scope }}

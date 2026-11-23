@@ -32,10 +32,27 @@ class APIError(PiHoleV6Error):
 
     Attributes:
         body (Any): The JSON body of the error response when the API sent one, filled by the client. None otherwise.
+        retry_after (float | None): The delay in seconds, clamped between 1 and 3600, given by the Retry-After header of the error response. None when the header is absent or unreadable.
 
     """
 
     body: Any = None
+    retry_after: float | None = None
+
+
+class QueryLogUnavailableError(PiHoleV6Error):
+    """The class `QueryLogUnavailableError` is raised when the query log cannot be read.
+
+    Pi-hole answers without a cursor at its anonymous privacy level (nothing is recorded), and records every client as 0.0.0.0 at the level that hides the clients: no device can be told from the query log in either case.
+
+    Attributes:
+        message (str): The message carried by the exception.
+
+    """
+
+    message: str = (
+        "The Pi-hole query log does not tell the clients apart (its privacy level hides them or records nothing)."
+    )
 
 
 class ActionExecutionError(PiHoleV6Error):
@@ -47,6 +64,28 @@ class ActionExecutionError(PiHoleV6Error):
     """
 
     message: str = "The action requested has failed. Please check HA logs or Pi-hole logs."
+
+
+class CertificateError(PiHoleV6Error):
+    """The class `CertificateError` is raised when the certificate of the Pi-hole cannot be validated by the CA store.
+
+    Attributes:
+        message (str): The message carried by the exception.
+
+    """
+
+    message: str = "The certificate of the Pi-hole is not trusted."
+
+
+class CertificateChangedError(PiHoleV6Error):
+    """The class `CertificateChangedError` is raised when the certificate pinned for the Pi-hole has changed.
+
+    Attributes:
+        message (str): The message carried by the exception.
+
+    """
+
+    message: str = "The certificate of the Pi-hole has changed since it was confirmed."
 
 
 class AbortLogoutError(PiHoleV6Error):

@@ -4,28 +4,31 @@ from __future__ import annotations
 
 import asyncio
 from datetime import UTC, datetime
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 from homeassistant.components.device_tracker import (
     ScannerEntity,  # pyright: ignore[reportPrivateImportUsage]
     SourceType,  # pyright: ignore[reportPrivateImportUsage]
 )
+from homeassistant.const import Platform
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity, DataUpdateCoordinator
 
 from .const import (
     ATTRIBUTION,
     CONF_DEVICE_TRACKER_MAC_LIST,
+    CONF_DEVICE_TRACKER_STALE_DAYS,
     CONF_DEVICE_TRACKER_WHITELIST,
     CONF_ENABLE_DEVICE_TRACKER,
     DEFAULT_DEVICE_TRACKER_MAC_LIST,
+    DEFAULT_DEVICE_TRACKER_STALE_DAYS,
     DEFAULT_DEVICE_TRACKER_WHITELIST,
     DEFAULT_ENABLE_DEVICE_TRACKER,
     DOMAIN,
-    MIN_TIME_BETWEEN_UPDATES_LIVE,
 )
-from .helper import create_entity_id_name, parse_mac_list
+from .helper import create_entity_id_name, get_consider_home, parse_mac_list
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -36,6 +39,7 @@ if TYPE_CHECKING:
 
     from . import PiHoleV6ConfigEntry
     from .api import Api as PiholeAPI
+    from .presence import PiHoleV6PresenceCoordinator, PresenceSnapshot
 
 
 def _build_mac_filter(entry: PiHoleV6ConfigEntry) -> Callable[[str], bool]:
@@ -94,6 +98,107 @@ def _build_device_filter(entry: PiHoleV6ConfigEntry) -> Callable[[dict[str, Any]
     if is_whitelist:
         return lambda device: bool(_device_addresses(device) & address_list)
     return lambda device: not _device_addresses(device) & address_list
+
+
+def _last_query(device: dict[str, Any]) -> int | None:
+    """Return the time of the last DNS query of a network device, when it is usable.
+
+    Args:
+        device (dict[str, Any]): The network device data dict.
+
+    Returns:
+        int | None: The Unix timestamp when `lastQuery` is an integer greater than 0, None when it is absent, null, 0, a boolean, negative or not an integer.
+
+    """
+    value: Any = device.get("lastQuery")
+    if isinstance(value, int) and not isinstance(value, bool) and value > 0:
+        return value
+    return None
+
+
+def _is_whitelist_active(entry: PiHoleV6ConfigEntry) -> bool:
+    """Tell whether the address list is used as a whitelist and holds at least one address.
+
+    Args:
+        entry (PiHoleV6ConfigEntry): The config entry providing the filter options.
+
+    Returns:
+        bool: True in whitelist mode with a non-empty list, False otherwise.
+
+    """
+    address_list = parse_mac_list(entry.data.get(CONF_DEVICE_TRACKER_MAC_LIST, DEFAULT_DEVICE_TRACKER_MAC_LIST))
+    return bool(address_list) and bool(entry.data.get(CONF_DEVICE_TRACKER_WHITELIST, DEFAULT_DEVICE_TRACKER_WHITELIST))
+
+
+def is_stale_filter_enabled(entry: PiHoleV6ConfigEntry) -> bool:
+    """Tell whether the stale device setting applies: a number of days is set and no whitelist is active.
+
+    Args:
+        entry (PiHoleV6ConfigEntry): The config entry providing the options.
+
+    Returns:
+        bool: True when stale devices are ignored at creation.
+
+    """
+    days: Any = entry.data.get(CONF_DEVICE_TRACKER_STALE_DAYS, DEFAULT_DEVICE_TRACKER_STALE_DAYS)
+    if not isinstance(days, int) or isinstance(days, bool) or days <= 0:
+        return False
+    return not _is_whitelist_active(entry)
+
+
+def _build_stale_filter(entry: PiHoleV6ConfigEntry, now: datetime) -> Callable[[dict[str, Any]], bool]:
+    """Build a predicate that decides whether a network device is stale.
+
+    A device is stale when it has no usable last query, or when it is older than the configured
+    number of days. Nothing is stale when the setting is 0 or when a whitelist is active.
+
+    Args:
+        entry (PiHoleV6ConfigEntry): The config entry providing the options.
+        now (datetime): The current time, taken once per cycle.
+
+    Returns:
+        Callable[[dict[str, Any]], bool]: A predicate returning True for a device to ignore as stale.
+
+    """
+    if not is_stale_filter_enabled(entry):
+        return lambda _device: False
+
+    limit = (
+        now.timestamp() - int(entry.data.get(CONF_DEVICE_TRACKER_STALE_DAYS, DEFAULT_DEVICE_TRACKER_STALE_DAYS)) * 86400
+    )
+
+    def _is_stale(device: dict[str, Any]) -> bool:
+        last_query = _last_query(device)
+        return last_query is None or last_query < limit
+
+    return _is_stale
+
+
+def _has_registered_entity(entity_registry: er.EntityRegistry, entry_id: str, mac: str) -> bool:
+    """Tell whether this config entry already has a device_tracker entity for a MAC address.
+
+    `ScannerEntity.unique_id` returns the MAC address and ignores `_attr_unique_id`, so entities are
+    registered under the bare lowercase colon-separated MAC. The `{entry_id}/{mac}` form is checked too,
+    in case an older registration used it. Only entities of this config entry count: another Pi-hole
+    entry may track the same MAC.
+
+    Args:
+        entity_registry (er.EntityRegistry): The entity registry.
+        entry_id (str): The id of the config entry.
+        mac (str): The lowercase MAC address of the device.
+
+    Returns:
+        bool: True when a device_tracker entity of this entry is registered for the MAC.
+
+    """
+    for unique_id in (mac, f"{entry_id}/{mac}"):
+        entity_id = entity_registry.async_get_entity_id(Platform.DEVICE_TRACKER, DOMAIN, unique_id)
+        if entity_id is None:
+            continue
+        registered = entity_registry.async_get(entity_id)
+        if registered is not None and registered.config_entry_id == entry_id:
+            return True
+    return False
 
 
 def _purge_network_devices(
@@ -175,6 +280,7 @@ async def async_setup_entry(
     server_unique_id = entry.entry_id
 
     device_registry = dr.async_get(hass)
+    entity_registry = er.async_get(hass)
 
     _purge_network_devices(hass, entry, _build_mac_filter(entry))
 
@@ -188,11 +294,25 @@ async def async_setup_entry(
         Devices that Pi-hole simply stops reporting keep their entity, which then
         naturally reports as not_home. Only devices rejected by the whitelist or
         blacklist filter (matched against MAC and current IP addresses) are actively
-        removed.
+        removed. A stale device only gets no new entity: an entity that already exists
+        (tracked, or kept in the entity registry across a restart) is never removed for it.
 
         """
         async with _add_lock:
             is_device_allowed = _build_device_filter(entry)
+
+            # Staleness is read from the cache only when it is fresh. After a failed refresh no
+            # device is created on that basis: only the ones that already have an entity.
+            is_stale: Callable[[dict[str, Any]], bool]
+            if hole_data.coordinator.last_update_success:
+                is_stale = _build_stale_filter(entry, datetime.now(UTC))
+            else:
+                stale_enabled = is_stale_filter_enabled(entry)
+
+                def _stale_when_enabled(_device: dict[str, Any]) -> bool:
+                    return stale_enabled
+
+                is_stale = _stale_when_enabled
 
             new_entities: list[PiHoleV6DeviceTracker] = []
             current_devices: dict[str, dict[str, Any]] = {}
@@ -205,6 +325,10 @@ async def async_setup_entry(
                     continue
 
                 if mac not in tracked_macs:
+                    # Stale devices only skip the creation; one that already has an entity is attached again.
+                    if is_stale(device) and not _has_registered_entity(entity_registry, entry.entry_id, mac):
+                        continue
+
                     tracked_macs.add(mac)
 
                     # via_device_id expects the registry id of the server device
@@ -231,6 +355,7 @@ async def async_setup_entry(
                         hole_data.coordinator,
                         server_unique_id,
                         device,
+                        hole_data.coordinator_presence,
                     )
                     new_entities.append(entity)
                     tracked_entities[mac] = entity
@@ -283,7 +408,7 @@ async def async_setup_entry(
     entry.async_on_unload(hass.bus.async_listen(dr.EVENT_DEVICE_REGISTRY_UPDATED, _forget_manually_removed_device))
 
 
-class PiHoleV6DeviceTracker(  # pyright: ignore[reportIncompatibleVariableOverride]
+class PiHoleV6DeviceTracker(  # pyright: ignore[reportIncompatibleVariableOverride]  # pylint: disable=too-many-instance-attributes
     CoordinatorEntity[DataUpdateCoordinator[None]],
     ScannerEntity,
 ):
@@ -291,7 +416,7 @@ class PiHoleV6DeviceTracker(  # pyright: ignore[reportIncompatibleVariableOverri
 
     Each tracked device gets its own entry in the Home Assistant device registry,
     identified by its MAC address and created by `async_setup_entry`. This entity
-    auto-attaches to that device registry entry via its `mac_address` property.
+    attaches to that device registry entry through the MAC connection of its `device_info`.
 
     Attributes:
         api (PiholeAPI): The Pi-hole API client instance.
@@ -302,7 +427,10 @@ class PiHoleV6DeviceTracker(  # pyright: ignore[reportIncompatibleVariableOverri
         _mac (str): The MAC address of the tracked device.
         _hostname (str): The hostname of the tracked device.
         _ip_address (str): The IP address of the tracked device.
+        _presence (PiHoleV6PresenceCoordinator | None): The presence coordinator reading the query log, None when the presence refresh is disabled.
+        _reported_connected (bool | None): The last connection state written to the state machine, None before the first one.
         _attr_unique_id (str): The unique identifier of the entity.
+        _attr_device_info (DeviceInfo): The device information of the entity, holding only the MAC connection of the tracked device.
         entity_id (str): The entity id of the entity.
 
     """
@@ -327,6 +455,7 @@ class PiHoleV6DeviceTracker(  # pyright: ignore[reportIncompatibleVariableOverri
         coordinator: DataUpdateCoordinator[None],
         server_unique_id: str,
         device: dict[str, Any],
+        presence: PiHoleV6PresenceCoordinator | None = None,
     ) -> None:
         """Initialize a Pi-hole V6 device tracker entity.
 
@@ -335,16 +464,21 @@ class PiHoleV6DeviceTracker(  # pyright: ignore[reportIncompatibleVariableOverri
             coordinator (DataUpdateCoordinator[None]): The data update coordinator.
             server_unique_id (str): A unique identifier for the server entry.
             device (dict[str, Any]): The network device data dict containing hwaddr, macVendor, ips, lastQuery, and other fields.
+            presence (PiHoleV6PresenceCoordinator | None): The presence coordinator, None when the presence refresh is disabled. Defaults to None.
 
         """
         super().__init__(coordinator)
         self.api = api
+        self._presence = presence
+        self._reported_connected: bool | None = None
 
         self._mac: str = device["hwaddr"].lower()
         self._hostname: str | None = None
         self._ip_address: str | None = None
 
         self._attr_unique_id = f"{server_unique_id}/{self._mac}"
+        # Only the MAC connection: it resolves to the device created in `async_setup_entry`.
+        self._attr_device_info = DeviceInfo(connections={(dr.CONNECTION_NETWORK_MAC, self._mac)})
 
         name: str = coordinator.name
         raw_name: str = f"device_tracker.{name}_{self._mac.replace(':', '_')}"
@@ -404,12 +538,40 @@ class PiHoleV6DeviceTracker(  # pyright: ignore[reportIncompatibleVariableOverri
         """
         return SourceType.ROUTER
 
+    def _last_activity(self, device: dict[str, Any]) -> float | None:
+        """Return the time of the latest activity of the device.
+
+        It is the newest of its last query in the network table and in the query log. Both measure the same thing, a DNS query, with a different precision and delay. The time read from the query log is a Pi-hole time of a query that really took place, so it can never make the device appear active longer than that query allows.
+
+        Args:
+            device (dict[str, Any]): The network device data dict.
+
+        Returns:
+            float | None: The Unix time of the latest activity, None when neither source knows one.
+
+        """
+        times: list[float] = []
+
+        last_query = _last_query(device)
+        if last_query is not None:
+            times.append(float(last_query))
+
+        snapshot = cast("PresenceSnapshot | None", self._presence.data) if self._presence is not None else None
+        if snapshot is not None:
+            from_query_log = snapshot.last_seen_by_mac.get(self._mac)
+            if from_query_log is not None:
+                times.append(from_query_log)
+
+        return max(times) if times else None
+
     @property
     def is_connected(self) -> bool:
         """Return True if the device was active recently.
 
-        A device is considered connected if its last query timestamp is
-        within the configured threshold.
+        A device is considered connected if its latest activity is within the away delay of the
+        config entry, read at each evaluation so a change applies without a reload. The latest
+        activity is the last query of the network table, or the one read from the query log when the
+        presence refresh is enabled, whichever is newer. A device without any is away.
 
         Returns:
             bool: True if the device has recent activity, False otherwise.
@@ -418,8 +580,40 @@ class PiHoleV6DeviceTracker(  # pyright: ignore[reportIncompatibleVariableOverri
         device = self._find_device()
         if not device:
             return False
-        last_query = datetime.fromtimestamp(device["lastQuery"], tz=UTC)
-        return (datetime.now(UTC) - last_query).total_seconds() <= 2 * MIN_TIME_BETWEEN_UPDATES_LIVE.total_seconds()
+        last_activity = self._last_activity(device)
+        if last_activity is None:
+            return False
+        return datetime.now(UTC).timestamp() - last_activity <= get_consider_home(
+            self.coordinator.config_entry.data if self.coordinator.config_entry is not None else None
+        )
+
+    async def async_added_to_hass(self) -> None:
+        """Start listening to the presence coordinator, when there is one.
+
+        The listener is removed with the entity. It is what makes the presence coordinator poll.
+
+        """
+        await super().async_added_to_hass()
+
+        self._reported_connected = self.is_connected
+
+        if self._presence is not None:
+            self.async_on_remove(self._presence.async_add_listener(self._handle_presence_update))
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Write the state after a live refresh, and remember the connection state it holds."""
+        self._reported_connected = self.is_connected
+        super()._handle_coordinator_update()
+
+    @callback
+    def _handle_presence_update(self) -> None:
+        """Re-evaluate the connection after a presence refresh, and write the state only when it changed."""
+        connected = self.is_connected
+
+        if connected != self._reported_connected:
+            self._reported_connected = connected
+            self.async_write_ha_state()
 
     @property
     def ip_address(self) -> str | None:  # pyright: ignore[reportIncompatibleVariableOverride]

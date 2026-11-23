@@ -40,6 +40,6 @@ jobs:
           zip ${{ env.INTEGRATION_DOMAIN }}.zip -r ./ -x "*.md" -x "*.bru" -x "bruno/*" -x "*/bruno/*"
 
       - name: "Upload the ZIP file to the release"
-        uses: softprops/action-gh-release@v3.0.3
+        uses: softprops/action-gh-release@v3.0.4
         with:
           files: ${{ github.workspace }}/custom_components/${{ env.INTEGRATION_DOMAIN }}/${{ env.INTEGRATION_DOMAIN }}.zip

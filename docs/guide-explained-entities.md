@@ -316,7 +316,7 @@ The attributes `until_date` and `remaining_seconds` are existing only if the ads
 #### - Network device
 
 **Name:** device_tracker.<service_name>\_<mac_address\>  
-**Description:** Presence of a network device known to Pi-hole. Reports `home` if the device made a DNS query recently, `not_home` otherwise.  
+**Description:** Presence of a network device known to Pi-hole. Reports `home` if the device made a DNS query within the away delay (240 seconds by default, see the [network device tracking guide](guide-network-device-tracking.md#away-delay)), according to the network table or, when the [presence refresh](guide-network-device-tracking.md#faster-arrival-detection) is enabled, to the query log. Reports `not_home` otherwise.  
 **Attributes:** Information about the network device.
 
 ```json
@@ -379,6 +379,22 @@ The attributes `until_date` and `remaining_seconds` are existing only if the ads
 
 The state is `unknown` until the first refresh, or if the current session is not found in the list. When the sessions cannot be listed, the "Active sessions" sensor is `unknown` too.
 
+#### - CPU temperature
+
+**Name:** sensor.<service_name>\_cpu_temperature  
+**Description:** Temperature of the CPU of the machine hosting Pi-hole, as reported by Pi-hole (no additional request).  
+**Unit**: °C  
+**Attributes:** The hot limit reported by Pi-hole, and the unit it uses.
+
+```json
+{
+  "hot_limit": 60.0,
+  "unit": "C"
+}
+```
+
+The state is always in °C: if Pi-hole is configured to report °F or K, the value is converted. It is `unknown` when Pi-hole finds no CPU probe (Docker without access to `/sys`, virtual machine, unsupported hardware).
+
 #### - CPU usage
 
 **Name:** sensor.<service_name>\_cpu_use  
@@ -401,7 +417,8 @@ The state is `unknown` until the first refresh, or if the current session is not
 
 **Name:** sensor.<service_name>\_latest_data_refresh  
 **Description:** Last data update from the Pi-hole API.  
-**Unit**: date
+**Unit**: date  
+**Attributes**: `live_data_refresh`, `stats_data_refresh` and `presence_data_refresh` (last refresh of each coordinator; the presence one stays empty while that coordinator has not read the query log). The state is the most recent of the three, and the sensor is written on each refresh of any of them.
 
 _This entity generates frequent and unnecessary data. To improve performance and reduce database size, exclude it from the recorder by adding it to the recorder.exclude list in your configuration.yaml._
 
@@ -431,6 +448,19 @@ _This entity generates frequent and unnecessary data. To improve performance and
 ```
 
 </details>
+
+#### - Privacy level
+
+**Name:** sensor.<service_name>\_privacy_level  
+**Description:** Privacy level set in Pi-hole (Settings → Privacy).  
+**Values:**
+
+- `show_everything`: every domain and every client is recorded.
+- `hide_domains`: the domains are recorded as `hidden`, the clients are kept.
+- `hide_domains_and_clients`: the domains are `hidden` and every client is recorded as `0.0.0.0`.
+- `anonymous`: almost nothing is recorded.
+
+The state is `unknown` until the first refresh, or when the account is not allowed to read the configuration of Pi-hole. The faster arrival detection of the device trackers needs one of the first two values.
 
 ### Services
 

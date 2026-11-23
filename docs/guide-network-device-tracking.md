@@ -1,6 +1,6 @@
 ## Network device tracking
 
-The integration can create a `device_tracker` entity for each network device known to your Pi-hole instance, reporting `home` when the device made a DNS query recently and `not_home` otherwise.
+The integration can create a `device_tracker` entity for each network device known to your Pi-hole instance, reporting `home` when the device made a DNS query within the [away delay](#away-delay) and `not_home` otherwise.
 
 ### Enabling network device tracking
 
@@ -23,10 +23,49 @@ Leaving the address list empty disables filtering entirely, regardless of the wh
 > [!NOTE]
 > IP addresses match a device's current IP. If a device's IP changes later (for example after a DHCP lease renewal), the filter may stop matching it until the list is updated.
 
+### Away delay
+
+A device is reported `not_home` when its last DNS query is older than the `Away delay (seconds)` option. It defaults to 240 seconds and accepts 60 to 86400 seconds. The value applies from the next live refresh, without reloading. A device with no usable last DNS query is always `not_home`.
+
+The delay is independent from the live refresh frequency. The state is only recomputed at each live refresh, so a departure is noticed between the delay (`T`) and the delay plus the live refresh frequency (`I`) after the last DNS query. An arrival is noticed at most `I` after the first query (or sooner, see [Faster arrival detection](#faster-arrival-detection)).
+
+Examples, with the default live refresh frequency of 120 seconds:
+
+- delay of 240 seconds: a phone that goes silent is reported away between 4 and 6 minutes later;
+- delay of 900 seconds: a connected object that queries the DNS every 10 minutes stays `home`, and a departure is noticed between 15 and 17 minutes later.
+
+A longer delay avoids devices that query the DNS rarely (a phone in standby, for instance) flipping to `not_home` between two queries. Pi-hole updates the last query time of a device roughly once a minute, so values below 60 seconds are not accepted, even with the presence refresh.
+
+### Faster arrival detection
+
+By default a device that comes back is noticed only once Pi-hole publishes its last DNS query in the network table (about once a minute) and the next live refresh runs (every 120 seconds by default): often a minute or two, up to three. The `Presence refresh frequency (seconds)` option reads the **query log** of Pi-hole (`/api/queries`), where a query appears within a couple of seconds, so an arrival is reported within about this frequency instead.
+
+- **Disabled by default.** `0` disables it. Otherwise enter 15 to 300 seconds (1 to 14 is refused); 30 seconds is a good value. It only has an effect when `Enable network device tracking` is checked and at least one `device_tracker` entity is enabled (they are disabled by default in Home Assistant). Reload the integration after changing it.
+- **What it does.** Each cycle looks at the DNS queries made since the previous one, matches the address of the client to a device of the network table, and reports the device `home` if its latest query, in the log or in the table, is within the [away delay](#away-delay). A device whose address is not in the table is ignored: **no entity is ever created or removed because of a query.**
+- **What it does not do for departures.** A departure is still reported once the away delay has passed since the last query, so the log does not make it earlier. The only gain is that the state is re-evaluated at every presence refresh: a departure is noticed between the away delay and the away delay plus the presence frequency (240 to 270 seconds with the defaults and 30 seconds), instead of plus the live frequency.
+- **Cost.** Each cycle adds at least four requests to your Pi-hole (a login, a session check, one request per page of up to 1000 queries, and a logout), plus an answer that can weigh a few tens of kilobytes. On a very small Pi-hole, prefer 60 seconds or more. A read is limited to 3 pages and 8 seconds.
+- **Privacy.** Pi-hole cannot send the client addresses without the domains, so the domain of every query goes through Home Assistant while the log is read. They are **never stored, written to the logs (even in debug) or included in the diagnostics**: only the address of the client and the time of its latest query are kept, in memory, and forgotten after the away delay.
+- **Limits.** A query made from an address that Pi-hole does not list for the device in its network table (a temporary IPv6 address, a new DHCP lease not yet published) is not matched: the network table then takes over as before. The table used to match addresses is the one of the last live refresh: if Pi-hole reassigned an address by DHCP to another device since, that other device may appear `home` for at most the away delay. When two devices share an address in the table, the one seen last owns it; if they are tied, nobody does. The option needs a privacy level that keeps the addresses of the clients: **"Show everything" or "Hide domains"** (Pi-hole, Settings → Privacy). At "Hide domains and clients" Pi-hole records every client as `0.0.0.0`, and at "Anonymous mode" it records almost nothing: no device can be matched. The integration then notices it, logs it once and falls back on the network table (see below). A change of level only applies to the queries made afterwards, so for a few minutes the log can mix both kinds.
+- **Automatic fallback.** If the query log cannot be read (account without permission, old Pi-hole, a privacy level that hides the clients, refused session, Pi-hole busy), the trackers keep working exactly as without the option, from the network table. The failure is logged once by the logger `custom_components.pi_hole_v6.presence` and the next try comes 10 minutes later (also after a refused session, so a wrong password is not sent every cycle; 1 minute, or what Pi-hole asks, when it is busy). It never prevents the integration from loading, and never starts a reauthentication: only the live refresh does.
+- Time is compared as it is for the rest of the tracking: the clocks of Home Assistant and of Pi-hole should be in sync.
+- The `Refresh data` button does not refresh the presence. Unchecking `Enable polling for changes` in the system options suspends it, like the other refreshes.
+
+### Ignoring stale devices
+
+Pi-hole keeps every device it has ever seen in its network table, which can leave hundreds of entities and devices (disabled by default in Home Assistant, but still listed) for devices that disappeared months ago. The `Ignore devices inactive for (days)` option (0 to 3650, 30 by default, `0` = disabled) stops creating entities for them.
+
+When set, a device whose last DNS query is older than this number of days, or that never made one, gets **no entity created**. This setting only applies when entities are created:
+
+- **Nothing is ever removed automatically.** An entity that already exists is kept whatever its age, including after a restart, and keeps working (`not_home` while the device is silent).
+- A device ignored as stale is created as soon as Pi-hole reports a recent DNS query for it.
+- When the address list is used as a **whitelist** and is not empty, this option has no effect: the devices you named are always tracked. With a blacklist or an empty list, listed addresses are still excluded and the option applies to the others.
+
+To clean up entities of old devices, delete them manually (see below). Once deleted, a stale device is not recreated.
+
 ### Removing a device manually
 
 A network device can be removed at any time from the Home Assistant UI (device page > `Delete`), even while Pi-hole still reports it. If Pi-hole reports the same device again on a later refresh, it is recreated automatically.
 
 ### Devices Pi-hole stops reporting
 
-If Pi-hole simply stops reporting a device (it is not excluded by a filter), its entity is kept and naturally reports as `not_home`. It is not removed automatically.
+If Pi-hole simply stops reporting a device (it is not excluded by a filter), its entity is kept and naturally reports as `not_home`. It is not removed automatically, and neither is an entity whose device became stale: see [Ignoring stale devices](#ignoring-stale-devices).

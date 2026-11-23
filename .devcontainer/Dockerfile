@@ -16,6 +16,7 @@ RUN \
             ffmpeg \
             gcc \
             git \
+            jq \
             libavcodec-dev \
             libavdevice-dev \
             libavfilter-dev \

@@ -31,6 +31,7 @@ jobs:
       pull-requests: read
     outputs:
       python: "${{ steps.filter.outputs.python }}"
+      javascript: "${{ steps.filter.outputs.javascript }}"
       scopes: "${{ steps.scopes.outputs.scopes }}"
     steps:
       - uses: "actions/checkout@v7"
@@ -53,6 +54,12 @@ jobs:
               - "tests/**/*.py"
               - "pyproject.toml"
               - "uv.lock"
+              - ".github/workflows/lint.yml"
+            javascript:
+              - "custom_components/**/*.js"
+              - "tests/**/*.mjs"
+              - "eslint.config.mjs"
+              - "scripts/lint"
               - ".github/workflows/lint.yml"
 
   # One job per scope rather than one over everything, so a failure names its
@@ -120,3 +127,29 @@ jobs:
       - name: "Lint with docstring-linter"
         if: "!cancelled()"
         run: uv run --no-sync docstring-linter ${{ steps.paths.outputs.paths }}
+
+  # The JavaScript the repository ships (the Lovelace card and its tests):
+  # node --check and ESLint, no npm dependency in the repository.
+  javascript:
+    name: "javascript"
+    needs: "changes"
+    if: "needs.changes.outputs.javascript == 'true'"
+    runs-on: "ubuntu-latest"
+    permissions:
+      contents: read
+
+    steps:
+      - name: "Check out the repository"
+        uses: "actions/checkout@v7"
+
+      - name: "Set up Node.js"
+        uses: "actions/setup-node@v7"
+        with:
+          node-version: "22"
+
+      - name: "Load the project variables"
+        shell: "bash"
+        run: grep -E '^[A-Z_]+=' .devcontainer/.common-env >> "$GITHUB_ENV"
+
+      - name: "Lint the JavaScript"
+        run: scripts/lint js

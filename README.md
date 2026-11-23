@@ -82,6 +82,17 @@ The integration is currently translated in few langages :
 
 [![Add Integration](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=pi_hole_v6)
 
+### Supported Home Assistant versions
+
+Each release declares the minimum Home Assistant version it needs (the `homeassistant` key of `hacs.json`). If your Home Assistant is older than what the latest release requires, install the most recent release listed for your version.
+
+| Release            | Minimum Home Assistant |
+| ------------------ | ---------------------- |
+| v1.24.0 and later  | 2026.11.0              |
+| v1.22.1 to v1.23.0 | 2026.10.0              |
+| v1.7.1 to v1.21.0  | 2025.3.0               |
+| v1.0.0 to v1.7.0   | 2025.2.0               |
+
 ## Pi-hole Card
 
 After installing this integration, you can enhance your Home Assistant setup with the `Pi-hole Card`.
@@ -118,6 +129,10 @@ By default, the blocking status, the switches, the network device trackers and t
 ### Need more (noobs) information to install/configure the integration?
 
 Some additional information is available if you encounter any problems while adding a new service on this [page](docs/guide-additional-config-information.md).
+
+### How do I change the address, the password or the certificate settings?
+
+Use **Reconfigure** from the menu (⋮) of the service: entities, history and automations are kept, as explained on this [page](docs/guide-additional-config-information.md#change-the-address-password-or-certificate-settings). If the certificate of your Pi-hole changed, Reconfigure is also where you confirm the new one.
 
 ### Need to implement Pi-hole Controls in your dashboard?
 
@@ -160,6 +175,7 @@ I listed the implemented features in the **HA Pi-hole V6 Integration** and the *
 |                | [Ads percentage blocked during the last 24h](https://github.com/bastgau/ha-pi-hole-v6/blob/develop/docs/guide-explained-entities.md#--ads-percentage-blocked-during-the-last-24-hours)                                                                                             |           ✅           |        ✅        |
 |                | [Average number of DNS queries (queries/min)](https://github.com/bastgau/ha-pi-hole-v6/blob/develop/docs/guide-explained-entities.md#--average-number-of-dns-queries)                                                                                                              |           ✅           |        ❌        |
 |                | [Configured clients](https://github.com/bastgau/ha-pi-hole-v6/blob/develop/docs/guide-explained-entities.md#--configured-clients)                                                                                                                                                  |        ✅ + ℹ️         |        ❌        |
+|                | [CPU temperature](https://github.com/bastgau/ha-pi-hole-v6/blob/develop/docs/guide-explained-entities.md#--cpu-temperature)                                                                                                                                                        |           ✅           |        ❌        |
 |                | [CPU usage](https://github.com/bastgau/ha-pi-hole-v6/blob/develop/docs/guide-explained-entities.md#--cpu-usage)                                                                                                                                                                    |        ✅ + ℹ️         |        ❌        |
 |                | [DNS queries cached](https://github.com/bastgau/ha-pi-hole-v6/blob/develop/docs/guide-explained-entities.md#--dns-queries-cached)                                                                                                                                                  |           ✅           |        ✅        |
 |                | [DNS queries during the last 24 hours](https://github.com/bastgau/ha-pi-hole-v6/blob/develop/docs/guide-explained-entities.md#--dns-queries-during-the-last-24-hours)                                                                                                              |           ✅           |        ✅        |
@@ -170,6 +186,7 @@ I listed the implemented features in the **HA Pi-hole V6 Integration** and the *
 |                | [FTL diagnosis messages count](https://github.com/bastgau/ha-pi-hole-v6/blob/develop/docs/guide-explained-entities.md#--ftl-diagnosis-messages-count)                                                                                                                              |        ✅ + ℹ️         |        ❌        |
 |                | [Latest data refresh](https://github.com/bastgau/ha-pi-hole-v6/blob/develop/docs/guide-explained-entities.md#--latest-data-refresh)                                                                                                                                                |           ✅           |        ❌        |
 |                | [Memory usage](https://github.com/bastgau/ha-pi-hole-v6/blob/develop/docs/guide-explained-entities.md#--memory-usage)                                                                                                                                                              |           ✅           |        ❌        |
+|                | [Privacy level](https://github.com/bastgau/ha-pi-hole-v6/blob/develop/docs/guide-explained-entities.md#--privacy-level)                                                                                                                                                            |           ✅           |        ❌        |
 |                | [Remaining until blocking mode](https://github.com/bastgau/ha-pi-hole-v6/blob/develop/docs/guide-explained-entities.md#--remaining-until-blocking-mode)                                                                                                                            |        ✅ + 🕜         |        ❌        |
 |                | [Seen clients](https://github.com/bastgau/ha-pi-hole-v6/blob/develop/docs/guide-explained-entities.md#--seen-clients)                                                                                                                                                              |           ✅           |        ✅        |
 | Switch         | [Global](https://github.com/bastgau/ha-pi-hole-v6/blob/develop/docs/guide-explained-entities.md#--global-switch)                                                                                                                                                                   |           ✅           |        ✅        |

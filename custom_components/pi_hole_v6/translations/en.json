@@ -2,24 +2,32 @@
   "config": {
     "abort": {
       "already_configured": "Service is already configured.",
-      "reauth_successful": "Re-authentication was successful."
+      "cannot_connect": "Failed to connect to the server to read its certificate. Ensure that the server address is correct.",
+      "reauth_successful": "Re-authentication was successful.",
+      "reconfigure_successful": "Reconfiguration was successful."
     },
     "error": {
       "incorrect_data_expected": "Failed to retrieve the data in the correct structure.",
       "cannot_connect": "Failed to connect to the server. Ensure that the server address and the port are correct.",
       "invalid_auth": "Invalid password provided. Ensure that your password is correct.",
-      "invalid_path": "Invalid API path specified. Please verify the endpoint URL."
+      "invalid_path": "Invalid API path specified. Please verify the endpoint URL.",
+      "untrusted_certificate": "The certificate of the Pi-hole is not trusted. Confirm its fingerprint to continue.",
+      "certificate_changed": "The certificate of the Pi-hole does not match the one you confirmed earlier.",
+      "certificate_not_confirmed": "Confirm that the fingerprint matches to continue.",
+      "already_configured": "Service is already configured."
     },
     "step": {
       "user": {
         "data": {
           "name": "Name",
           "password": "Password",
-          "url": "Address"
+          "url": "Address",
+          "verify_ssl": "Verify the Pi-hole certificate"
         },
         "data_description": {
           "password": "Password to be used for login",
-          "url": "URL or address of your Pi-hole (ie: {example_url})"
+          "url": "URL or address of your Pi-hole (ie: {example_url}). Use https:// whenever possible: with http://, the password and the session are sent in clear text on your network.",
+          "verify_ssl": "Keep enabled. It checks that the server is really your Pi-hole. Disabling it lets anyone on your network intercept the password. Pi-hole's self-signed certificate will fail this check unless you disable it."
         },
         "description": "This integration allows you to retrieve statistics and interact with a Pi-hole V6 system.",
         "title": "Pi-hole V6"
@@ -33,6 +41,30 @@
         },
         "description": "From this screen, you can change the password to access the Pi-hole instance.",
         "title": "Pi-hole V6"
+      },
+      "pin_certificate": {
+        "data": {
+          "confirm_certificate": "I have compared this fingerprint with the one shown by my Pi-hole"
+        },
+        "data_description": {
+          "confirm_certificate": "Only confirm if the fingerprint above is exactly the one displayed by your Pi-hole."
+        },
+        "description": "Your Pi-hole presents a certificate that is not signed by a trusted authority, such as its default self-signed certificate. Its SHA-256 fingerprint is:\n\n`{fingerprint}`\n\nCompare it with the fingerprint your Pi-hole shows for `{url}` before confirming: run `openssl x509 -in /etc/pihole/tls.pem -noout -fingerprint -sha256` on the Pi-hole (ignore the `sha256 Fingerprint=` prefix), or check the certificate details in your browser. Confirming trusts this certificate only: if it changes later, you will be asked to confirm the new one.",
+        "title": "Confirm the Pi-hole certificate"
+      },
+      "reconfigure": {
+        "title": "Reconfigure Pi-hole V6",
+        "description": "Change the address, the password or the certificate verification of this Pi-hole. The name, the entities and their history are kept. If you point to another Pi-hole, the same entities keep their history and continue on the new server.",
+        "data": {
+          "url": "Address",
+          "password": "Password",
+          "verify_ssl": "Verify the Pi-hole certificate"
+        },
+        "data_description": {
+          "url": "URL or address of your Pi-hole (ie: {example_url}). Use https:// whenever possible: with http://, the password and the session are sent in clear text on your network.",
+          "password": "Leave empty to keep the current password.",
+          "verify_ssl": "Keep enabled. It checks that the server is really your Pi-hole. Disabling it lets anyone on your network intercept the password. Pi-hole's self-signed certificate will fail this check unless you disable it."
+        }
       }
     }
   },
@@ -44,14 +76,20 @@
           "update_interval_stats": "Statistics refresh frequency (seconds)",
           "enable_device_tracker": "Enable network device tracking",
           "device_tracker_whitelist": "Use address list as a whitelist",
-          "device_tracker_mac_list": "Filtered addresses"
+          "device_tracker_mac_list": "Filtered addresses",
+          "device_tracker_consider_home": "Away delay (seconds)",
+          "device_tracker_stale_days": "Ignore devices inactive for (days)",
+          "update_interval_presence": "Presence refresh frequency (seconds)"
         },
         "data_description": {
           "update_interval_live": "How often the entities that reflect the current state of your Pi-hole are refreshed: service and blocking status, switches, and the live indicators. Lowering it makes the dashboard more reactive, at the cost of more requests to your Pi-hole. Defaults to 120 seconds.",
           "update_interval_stats": "How often the cumulative counters and the periodic checks are refreshed. Their values keep moving but are only meaningful as a trend, so a longer interval reduces the number of rows written to the recorder database without losing any data. Must be greater than or equal to the live refresh frequency. Defaults to 300 seconds.",
           "enable_device_tracker": "Disabled by default. When enabled, retrieves the list of network devices from Pi-hole to create device_tracker entities.",
           "device_tracker_whitelist": "When enabled, only the listed addresses are tracked. When disabled, the listed addresses are excluded and all others are tracked.",
-          "device_tracker_mac_list": "One MAC address (or Pi-hole pseudo-MAC, e.g. IP-192.168.1.10) or IP address per line, or separated by commas. IP addresses match a device's current IP and may stop matching if it changes. Leave empty to disable filtering."
+          "device_tracker_mac_list": "One MAC address (or Pi-hole pseudo-MAC, e.g. IP-192.168.1.10) or IP address per line, or separated by commas. IP addresses match a device's current IP and may stop matching if it changes. Leave empty to disable filtering.",
+          "device_tracker_consider_home": "A device is reported away when its last DNS query is older than this delay. Defaults to 240 seconds, minimum 60. Departures are noticed at the next live refresh, so up to this delay plus the live refresh frequency.",
+          "device_tracker_stale_days": "0 disables it, 30 is the default. Devices whose last DNS query is older than this number of days, or that never made one, get no entity created. Entities that already exist are never removed by this setting: delete them manually if you no longer want them. Has no effect when the address list is used as a whitelist.",
+          "update_interval_presence": "0 disables it (default). When set, between 15 and 300 seconds (30 is a good value), the network device trackers also read the latest DNS queries of Pi-hole at this frequency, so a device coming home is reported within about this delay instead of up to a few minutes. Each cycle adds a login and a few requests to your Pi-hole. Only client addresses and times are kept: the queried domains are never stored, logged or included in diagnostics. It may be set higher than the live refresh frequency, but is then of little use. Has no effect when network device tracking is disabled. Reload the integration to apply."
         },
         "description": "After modifying one of these options, it is necessary to reload the service or restart Home Assistant.",
         "title": "Pi-hole V6"
@@ -59,7 +97,10 @@
     },
     "error": {
       "invalid_update_interval_live": "Invalid live refresh frequency. Must be higher than 1 second and lower than 3600 seconds.",
-      "invalid_update_interval_stats": "Invalid statistics refresh frequency. Must be between 60 and 86400 seconds, and greater than or equal to the live refresh frequency."
+      "invalid_update_interval_stats": "Invalid statistics refresh frequency. Must be between 60 and 86400 seconds, and greater than or equal to the live refresh frequency.",
+      "invalid_consider_home": "Invalid away delay. Must be between 60 and 86400 seconds.",
+      "invalid_stale_days": "Invalid number of days. Must be between 0 and 3650.",
+      "invalid_update_interval_presence": "Invalid presence refresh frequency. Must be 0 (disabled) or between 15 and 300 seconds."
     }
   },
   "entity": {
@@ -141,6 +182,18 @@
       },
       "cpu_use": {
         "name": "CPU usage"
+      },
+      "privacy_level": {
+        "name": "Privacy level",
+        "state": {
+          "show_everything": "Show everything",
+          "hide_domains": "Hide domains",
+          "hide_domains_and_clients": "Hide domains and clients",
+          "anonymous": "Anonymous mode"
+        }
+      },
+      "cpu_temperature": {
+        "name": "CPU temperature"
       },
       "memory_use": {
         "name": "Memory usage"

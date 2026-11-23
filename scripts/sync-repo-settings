@@ -1,0 +1,205 @@
+#!/bin/bash
+# Compare and align GitHub repository settings against a reference repository.
+#
+#   sync-repo-settings.sh snapshot <ref>                     (JSON on stdout)
+#   sync-repo-settings.sh diff     <ref> <target>...
+#   sync-repo-settings.sh apply    <ref> <target>... [--yes]
+#
+# <ref> is either OWNER/REPO (read live) or a settings file, written with
+# `snapshot <ref> > file` and passed as `--from file`.
+# Targets are given as OWNER/REPO. `apply` is a dry-run unless --yes is passed.
+# Settings that GitHub does not expose for a repo (plan limits, 403/404) are
+# read as null and skipped. The default branch is reported but never changed.
+# Keys listed (one per line) in .github/repo-settings.ignore are never compared nor applied.
+
+set -euo pipefail
+
+IGNORE_FILE="${IGNORE_FILE:-$(cd "$(dirname "$0")/.." && pwd)/.github/repo-settings.ignore}"
+
+die() { echo "error: $*" >&2; exit 1; }
+command -v gh >/dev/null || die "gh is required"
+command -v jq >/dev/null || die "jq is required"
+
+# Stops with a clear message when gh has no credentials, before any API call.
+require_auth() {
+  gh auth status >/dev/null 2>&1 \
+    || die "not logged in to GitHub. Run: gh auth login (or set GH_TOKEN)"
+}
+
+# Prints the body of a GET, or "null" when the endpoint is unavailable.
+api_get() { gh api "$@" 2>/dev/null || echo null; }
+
+# Prints a normalized JSON object of the settings of repo $1.
+read_settings() {
+  local repo=$1 general actions workflow fixes alerts
+  general=$(gh api "repos/$repo") || die "cannot read $repo"
+  actions=$(api_get "repos/$repo/actions/permissions")
+  workflow=$(api_get "repos/$repo/actions/permissions/workflow")
+  fixes=$(api_get "repos/$repo/automated-security-fixes")
+  if gh api "repos/$repo/vulnerability-alerts" >/dev/null 2>&1; then alerts=true; else alerts=false; fi
+
+  jq -n --argjson g "$general" --argjson a "$actions" --argjson w "$workflow" \
+        --argjson f "$fixes" --argjson alerts "$alerts" '
+    {
+      default_branch: $g.default_branch,
+      has_issues: $g.has_issues,
+      has_projects: $g.has_projects,
+      has_wiki: $g.has_wiki,
+      has_discussions: $g.has_discussions,
+      allow_forking: $g.allow_forking,
+      web_commit_signoff_required: $g.web_commit_signoff_required,
+      allow_squash_merge: $g.allow_squash_merge,
+      allow_merge_commit: $g.allow_merge_commit,
+      allow_rebase_merge: $g.allow_rebase_merge,
+      allow_auto_merge: $g.allow_auto_merge,
+      allow_update_branch: $g.allow_update_branch,
+      delete_branch_on_merge: $g.delete_branch_on_merge,
+      squash_merge_commit_title: $g.squash_merge_commit_title,
+      squash_merge_commit_message: $g.squash_merge_commit_message,
+      merge_commit_title: $g.merge_commit_title,
+      merge_commit_message: $g.merge_commit_message,
+      actions_enabled: $a.enabled,
+      actions_allowed_actions: $a.allowed_actions,
+      default_workflow_permissions: $w.default_workflow_permissions,
+      can_approve_pull_request_reviews: $w.can_approve_pull_request_reviews,
+      vulnerability_alerts: $alerts,
+      automated_security_fixes: $f.enabled,
+      secret_scanning: $g.security_and_analysis.secret_scanning.status,
+      secret_scanning_push_protection: $g.security_and_analysis.secret_scanning_push_protection.status
+    }'
+}
+
+ignored_keys() {
+  if [[ -f $IGNORE_FILE ]]; then
+    grep -vE '^\s*(#|$)' "$IGNORE_FILE" | jq -R . | jq -s .
+  else
+    echo '[]'
+  fi
+}
+
+# Prints a JSON object {key: {ref, target}} of differing settings.
+compute_diff() {
+  local ref=$1 target=$2
+  jq -n --argjson r "$ref" --argjson t "$target" --argjson ignore "$(ignored_keys)" '
+    $r | to_entries
+    | map(select(.key as $k | ($ignore | index($k) | not)
+                 and .value != null and $t[$k] != null and .value != $t[$k])
+          | {key, value: {ref: .value, target: $t[.key]}})
+    | from_entries'
+}
+
+print_diff() {
+  jq -r 'to_entries[] | "  \(.key): \(.value.target) -> \(.value.ref)"' <<<"$1"
+}
+
+# Applies the differences in JSON $2 to repo $1.
+apply_diff() {
+  local repo=$1 d=$2
+  has() { jq -e --arg k "$1" 'has($k)' <<<"$d" >/dev/null; }
+  ref_of() { jq -r --arg k "$1" '.[$k].ref' <<<"$d"; }
+
+  # Plain repository fields.
+  local patch
+  patch=$(jq 'del(.default_branch, .actions_enabled, .actions_allowed_actions,
+                  .default_workflow_permissions, .can_approve_pull_request_reviews,
+                  .vulnerability_alerts, .automated_security_fixes,
+                  .secret_scanning, .secret_scanning_push_protection)
+              | map_values(.ref)' <<<"$d")
+  [[ $patch != '{}' ]] && gh api -X PATCH "repos/$repo" --input - <<<"$patch" >/dev/null
+
+  if has actions_enabled || has actions_allowed_actions; then
+    gh api -X PUT "repos/$repo/actions/permissions" --input - >/dev/null < <(
+      jq -n --argjson d "$d" '
+        {enabled: ($d.actions_enabled.ref // true)}
+        + (if $d.actions_allowed_actions then {allowed_actions: $d.actions_allowed_actions.ref} else {} end)')
+  fi
+
+  if has default_workflow_permissions || has can_approve_pull_request_reviews; then
+    gh api -X PUT "repos/$repo/actions/permissions/workflow" --input - >/dev/null < <(
+      jq -n --argjson d "$d" '
+        (if $d.default_workflow_permissions then {default_workflow_permissions: $d.default_workflow_permissions.ref} else {} end)
+        + (if $d.can_approve_pull_request_reviews then {can_approve_pull_request_reviews: $d.can_approve_pull_request_reviews.ref} else {} end)')
+  fi
+
+  local key endpoint
+  for key in vulnerability_alerts automated_security_fixes; do
+    has "$key" || continue
+    endpoint=${key//_/-}
+    if [[ $(ref_of "$key") == true ]]; then
+      gh api -X PUT "repos/$repo/$endpoint" >/dev/null
+    else
+      gh api -X DELETE "repos/$repo/$endpoint" >/dev/null
+    fi
+  done
+
+  if has secret_scanning || has secret_scanning_push_protection; then
+    gh api -X PATCH "repos/$repo" --input - >/dev/null < <(
+      jq -n --argjson d "$d" '{security_and_analysis:
+        (if $d.secret_scanning then {secret_scanning: {status: $d.secret_scanning.ref}} else {} end)
+        + (if $d.secret_scanning_push_protection then {secret_scanning_push_protection: {status: $d.secret_scanning_push_protection.ref}} else {} end)}')
+  fi
+}
+
+cmd=${1:-}; shift || true
+case $cmd in
+  snapshot)
+    [[ $# -eq 1 ]] || die "usage: snapshot <ref>"
+    require_auth
+    read_settings "$1"
+    ;;
+  diff | apply)
+    require_auth
+    orig_args=("$@")
+    yes=false
+    from_file=
+    args=()
+    while [[ $# -gt 0 ]]; do
+      case $1 in
+        --yes) yes=true ;;
+        --from) [[ $# -ge 2 ]] || die "--from needs a file"; from_file=$2; shift ;;
+        *) args+=("$1") ;;
+      esac
+      shift
+    done
+    if [[ -n $from_file ]]; then
+      [[ ${#args[@]} -ge 1 ]] || die "usage: $cmd --from <file> <target>..."
+      jq -e 'type == "object" and has("default_branch")' "$from_file" >/dev/null \
+        || die "$from_file is not a settings file (see: snapshot)"
+      ref_repo=$from_file
+      ref_settings=$(jq -c . "$from_file")
+      targets=("${args[@]}")
+    else
+      [[ ${#args[@]} -ge 2 ]] || die "usage: $cmd <ref> <target>..."
+      ref_repo=${args[0]}
+      ref_settings=$(read_settings "$ref_repo")
+      targets=("${args[@]:1}")
+    fi
+    status=0
+    for target in "${targets[@]}"; do
+      d=$(compute_diff "$ref_settings" "$(read_settings "$target")")
+      if [[ $d == '{}' ]]; then
+        echo "$target: aligned with $ref_repo"
+        continue
+      fi
+      status=1
+      if [[ $cmd == diff || $yes == false ]]; then
+        echo "$target: differs from $ref_repo (target -> reference)"
+      else
+        echo "$target: applying (target -> reference)"
+      fi
+      print_diff "$d"
+      if jq -e 'has("default_branch")' <<<"$d" >/dev/null; then
+        echo "  note: default_branch is never changed automatically (rename it by hand)"
+      fi
+      if [[ $cmd == apply && $yes == true ]]; then
+        apply_diff "$target" "$d"
+      fi
+    done
+    [[ $cmd == apply && $yes == false && $status -ne 0 ]] && echo "dry-run: nothing was changed. To apply, run: scripts/sync-repo-settings apply ${orig_args[*]} --yes"
+    exit "$status"
+    ;;
+  *)
+    sed -n '2,13p' "$0" | sed 's/^# \{0,1\}//'
+    exit 2
+    ;;
+esac
