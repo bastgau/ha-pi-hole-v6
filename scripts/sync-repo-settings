@@ -20,6 +20,12 @@ die() { echo "error: $*" >&2; exit 1; }
 command -v gh >/dev/null || die "gh is required"
 command -v jq >/dev/null || die "jq is required"
 
+# Stops with a clear message when gh has no credentials, before any API call.
+require_auth() {
+  gh auth status >/dev/null 2>&1 \
+    || die "not logged in to GitHub. Run: gh auth login (or set GH_TOKEN)"
+}
+
 # Prints the body of a GET, or "null" when the endpoint is unavailable.
 api_get() { gh api "$@" 2>/dev/null || echo null; }
 
@@ -138,9 +144,12 @@ cmd=${1:-}; shift || true
 case $cmd in
   snapshot)
     [[ $# -eq 1 ]] || die "usage: snapshot <ref>"
+    require_auth
     read_settings "$1"
     ;;
   diff | apply)
+    require_auth
+    orig_args=("$@")
     yes=false
     from_file=
     args=()
@@ -186,7 +195,7 @@ case $cmd in
         apply_diff "$target" "$d"
       fi
     done
-    [[ $cmd == apply && $yes == false && $status -ne 0 ]] && echo "dry-run: pass --yes to apply"
+    [[ $cmd == apply && $yes == false && $status -ne 0 ]] && echo "dry-run: nothing was changed. To apply, run: scripts/sync-repo-settings apply ${orig_args[*]} --yes"
     exit "$status"
     ;;
   *)
